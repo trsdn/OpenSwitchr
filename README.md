@@ -109,7 +109,7 @@ Nothing has been published under this name yet, so the collision is currently
 free to fix:
 
 ```bash
-bash scripts/rename-product.sh OpenSwitchr
+bash scripts/rename-product.sh <NewName>
 ```
 
 ## License
