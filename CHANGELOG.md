@@ -42,6 +42,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   thumbnails previously fired eight redundant queries and captures did not
   overlap; parallel capture went from ~730 ms to ~540 ms.
 
+### Changed
+
+- Removed `⌘-Tab` from the hold-modifier choices. macOS dispatches it to the
+  system app switcher before any session event tap, so the setting could be
+  selected but would never fire. Stored values fall back to `⌥`.
+
 ### Fixed
 
 - The single-window linking fallback no longer ignores the minimized check, so
@@ -49,3 +55,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   CoreGraphics window.
 - Untitled helper and overlay surfaces with no accessibility counterpart are no
   longer listed as switchable windows.
+- Settings controls no longer snap back to their previous value. `PreferencesStore`
+  exposed every preference as a computed property over `UserDefaults`, and the
+  `@Observable` macro only tracks *stored* properties, so SwiftUI never
+  registered a dependency and re-rendered the old value after a change. The
+  preferences are now stored properties that write through on `didSet`.
+- The thumbnail memory budget now takes effect immediately instead of at the
+  next launch.
+- The event tap no longer swallows every Tab key-up system-wide. Only the
+  key-up matching a Tab that was actually swallowed on the way down is
+  consumed, so plain Tab keeps moving focus in other apps.
+- A failed event tap installation is now surfaced in the menu bar and settings
+  instead of leaving the switcher silently dead.

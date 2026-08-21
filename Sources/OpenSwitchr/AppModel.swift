@@ -15,7 +15,7 @@ import OSLog
 public final class AppModel {
 
     public let permissions = PermissionsManager()
-    public let preferences = PreferencesStore()
+    public let preferences: PreferencesStore
     public let index = WindowIndex()
     public let thumbnails: ThumbnailProvider
 
@@ -42,10 +42,21 @@ public final class AppModel {
     public private(set) var isRunning = false
     public private(set) var dockHoverActive = false
 
+    /// Whether the event tap is actually installed. Creating a tap can fail
+    /// even with the permission granted, and a switcher whose hotkey silently
+    /// does nothing is indistinguishable from a broken app.
+    public private(set) var switcherHotkeyActive = false
+
     public init() {
+        let preferences = PreferencesStore()
+        self.preferences = preferences
         thumbnails = ThumbnailProvider(
-            store: ThumbnailStore(budgetBytes: max(16, PreferencesStore().thumbnailBudgetMB) * 1024 * 1024)
+            store: ThumbnailStore(budgetBytes: Self.budgetBytes(preferences.thumbnailBudgetMB))
         )
+    }
+
+    private static func budgetBytes(_ megabytes: Int) -> Int {
+        max(16, megabytes) * 1024 * 1024
     }
 
     // MARK: - Lifecycle
@@ -84,17 +95,22 @@ public final class AppModel {
         permissions.stopWatching()
         isRunning = false
         dockHoverActive = false
+        switcherHotkeyActive = false
     }
 
     /// Applies preference changes that affect running subsystems.
     public func applyPreferences() {
         hotkeys.holdModifier = preferences.holdModifier
 
+        let budget = Self.budgetBytes(preferences.thumbnailBudgetMB)
+        Task { [store = thumbnails.store] in await store.setBudget(bytes: budget) }
+
         if preferences.switcherEnabled {
-            hotkeys.start()
+            switcherHotkeyActive = hotkeys.start()
         } else {
             switcher.close()
             hotkeys.stop()
+            switcherHotkeyActive = false
         }
 
         if preferences.dockHoverEnabled {
@@ -131,7 +147,7 @@ public final class AppModel {
                 self.scheduleRebuild()
             }
         }
-        hotkeys.start()
+        switcherHotkeyActive = hotkeys.start()
     }
 
     private func startDockHover() {

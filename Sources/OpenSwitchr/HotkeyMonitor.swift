@@ -17,16 +17,22 @@ import OSLog
 public final class HotkeyMonitor {
 
     /// Modifier the user holds to keep the switcher open.
+    /// The modifier held down while pressing Tab.
+    ///
+    /// `⌘` is deliberately absent. The system app switcher is a WindowServer
+    /// symbolic hotkey, which is dispatched before session event taps, so a
+    /// `⌘-Tab` binding here would be accepted in the UI and then silently never
+    /// fire. Taking it over needs either a HID-level tap (root only) or the
+    /// private symbolic-hotkey API, and both are out of bounds. Offering a
+    /// setting that cannot work is worse than not offering it.
     public enum HoldModifier: String, CaseIterable, Sendable {
         case option
         case control
-        case command
 
         public var flag: CGEventFlags {
             switch self {
             case .option: .maskAlternate
             case .control: .maskControl
-            case .command: .maskCommand
             }
         }
 
@@ -34,7 +40,6 @@ public final class HotkeyMonitor {
             switch self {
             case .option: "⌥"
             case .control: "⌃"
-            case .command: "⌘"
             }
         }
     }
@@ -59,6 +64,10 @@ public final class HotkeyMonitor {
 
     public var holdModifier: HoldModifier = .option
     public var onAction: ((Action) -> Void)?
+
+    /// Tracks whether the last Tab key-down was swallowed, so the matching
+    /// key-up can be swallowed too and nothing else.
+    private var swallowedTabKeyDown = false
 
     private var tap: CFMachPort?
     private var runLoopSource: CFRunLoopSource?
@@ -103,6 +112,7 @@ public final class HotkeyMonitor {
     }
 
     public func stop() {
+        swallowedTabKeyDown = false
         if let tap {
             CGEvent.tapEnable(tap: tap, enable: false)
         }
@@ -156,10 +166,15 @@ public final class HotkeyMonitor {
             return handleKeyDown(event)
 
         case .keyUp:
-            // Swallow the matching key-up for keys we swallowed on the way
-            // down, so the focused app never sees half a keystroke.
+            // Only swallow the key-up of a Tab we actually swallowed on the
+            // way down. Swallowing every Tab key-up would leak into apps that
+            // never saw the hotkey, where plain Tab still moves focus.
             let keyCode = Int(event.getIntegerValueField(.keyboardEventKeycode))
-            return isOverlayVisible || keyCode == kVK_Tab
+            if keyCode == kVK_Tab && swallowedTabKeyDown {
+                swallowedTabKeyDown = false
+                return true
+            }
+            return isOverlayVisible
 
         default:
             return false
@@ -173,6 +188,7 @@ public final class HotkeyMonitor {
 
         if keyCode == kVK_Tab && flags.contains(holdModifier.flag) {
             onAction?(isOverlayVisible ? .advance(reverse: reverse) : .open(reverse: reverse))
+            swallowedTabKeyDown = true
             return true
         }
 

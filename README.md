@@ -94,6 +94,18 @@ swift run openswitchr-diag --bench --capture  # plus timings
 It reports per-app `CG` / `AX` / `LINKED` counts, which separates "the linking
 heuristic failed" from "this app exposes no accessibility windows at all".
 
+## Why not ⌘-Tab?
+
+Because it cannot be made to work without private APIs, so OpenSwitchr does not
+pretend otherwise and leaves it out of the settings entirely.
+
+The system app switcher is a WindowServer symbolic hotkey, dispatched before
+any session event tap sees the keystroke. Intercepting it needs either a
+HID-level tap, which is root-only, or the private symbolic-hotkey API. A
+`⌘-Tab` option would therefore be accepted in the UI and then silently never
+fire, which is worse than not offering it. `⌥-Tab` is the default; `⌃-Tab` is
+the alternative.
+
 ## Scope: current Space only
 
 Windows on other Spaces are deliberately not shown. The public accessibility

@@ -55,9 +55,16 @@ public actor ThumbnailStore {
         let content: SCShareableContent
     }
 
-    private let budgetBytes: Int
+    private var budgetBytes: Int
     private let maxAge: TimeInterval
     private let logger = Logger(subsystem: "com.openswitchr.app", category: "ThumbnailStore")
+
+    /// Changing the budget takes effect immediately, so lowering it in the
+    /// settings frees memory now rather than at the next launch.
+    public func setBudget(bytes: Int) {
+        budgetBytes = max(1, bytes)
+        evictIfNeeded()
+    }
 
     public init(budgetBytes: Int = 96 * 1024 * 1024, maxAge: TimeInterval = ThumbnailStore.defaultMaxAge) {
         self.budgetBytes = budgetBytes

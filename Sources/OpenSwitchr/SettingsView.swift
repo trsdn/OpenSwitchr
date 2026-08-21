@@ -39,9 +39,18 @@ struct SettingsView: View {
                 }
                 .disabled(!model.preferences.switcherEnabled)
 
-                Text("⌘-Tab is left untouched so the system switcher keeps working.")
+                Text("⌘-Tab cannot be reassigned. macOS dispatches it to the system app switcher before any app sees it, so it is not offered here.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
+
+                if model.preferences.switcherEnabled && !model.switcherHotkeyActive {
+                    Label(
+                        "The keyboard hotkey is not installed. Check the Accessibility permission below.",
+                        systemImage: "exclamationmark.triangle"
+                    )
+                    .font(.caption)
+                    .foregroundStyle(.orange)
+                }
             }
 
             Section("Dock previews") {
@@ -98,7 +107,7 @@ struct SettingsView: View {
                         "\(model.preferences.thumbnailBudgetMB) MB",
                         value: Binding(
                             get: { model.preferences.thumbnailBudgetMB },
-                            set: { model.preferences.thumbnailBudgetMB = $0 }
+                            set: { model.preferences.thumbnailBudgetMB = $0; model.applyPreferences() }
                         ),
                         in: 16...512,
                         step: 16

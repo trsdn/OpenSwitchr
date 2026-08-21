@@ -20,6 +20,40 @@ public final class PreferencesStore {
 
     private let defaults: UserDefaults
 
+    // Every preference is a *stored* property that writes through to
+    // UserDefaults on change. The @Observable macro only tracks stored
+    // properties: computed accessors over UserDefaults are invisible to
+    // SwiftUI, so a Picker would write the new value and then re-render with
+    // the old one, which looks exactly like a setting that refuses to change.
+
+    public var holdModifier: HotkeyMonitor.HoldModifier {
+        didSet { defaults.set(holdModifier.rawValue, forKey: Key.holdModifier) }
+    }
+
+    public var switcherEnabled: Bool {
+        didSet { defaults.set(switcherEnabled, forKey: Key.switcherEnabled) }
+    }
+
+    public var dockHoverEnabled: Bool {
+        didSet { defaults.set(dockHoverEnabled, forKey: Key.dockHoverEnabled) }
+    }
+
+    public var dockHoverDelay: TimeInterval {
+        didSet { defaults.set(dockHoverDelay, forKey: Key.dockHoverDelay) }
+    }
+
+    public var dockHideDelay: TimeInterval {
+        didSet { defaults.set(dockHideDelay, forKey: Key.dockHideDelay) }
+    }
+
+    public var thumbnailBudgetMB: Int {
+        didSet { defaults.set(thumbnailBudgetMB, forKey: Key.thumbnailBudgetMB) }
+    }
+
+    public var tileWidth: Double {
+        didSet { defaults.set(tileWidth, forKey: Key.tileWidth) }
+    }
+
     public init(defaults: UserDefaults = .standard) {
         self.defaults = defaults
         defaults.register(defaults: [
@@ -31,59 +65,40 @@ public final class PreferencesStore {
             Key.thumbnailBudgetMB: 96,
             Key.tileWidth: 200.0
         ])
+
+        // An unknown stored modifier means the value was removed from the app,
+        // so it falls back rather than leaving the switcher without a hotkey.
+        holdModifier = HotkeyMonitor.HoldModifier(
+            rawValue: defaults.string(forKey: Key.holdModifier) ?? ""
+        ) ?? .option
+        switcherEnabled = defaults.bool(forKey: Key.switcherEnabled)
+        dockHoverEnabled = defaults.bool(forKey: Key.dockHoverEnabled)
+        dockHoverDelay = defaults.double(forKey: Key.dockHoverDelay)
+        dockHideDelay = defaults.double(forKey: Key.dockHideDelay)
+        thumbnailBudgetMB = defaults.integer(forKey: Key.thumbnailBudgetMB)
+        tileWidth = defaults.double(forKey: Key.tileWidth)
+        launchAtLogin = SMAppService.mainApp.status == .enabled
     }
 
-    public var holdModifier: HotkeyMonitor.HoldModifier {
-        get {
-            HotkeyMonitor.HoldModifier(rawValue: defaults.string(forKey: Key.holdModifier) ?? "") ?? .option
-        }
-        set { defaults.set(newValue.rawValue, forKey: Key.holdModifier) }
-    }
-
-    public var switcherEnabled: Bool {
-        get { defaults.bool(forKey: Key.switcherEnabled) }
-        set { defaults.set(newValue, forKey: Key.switcherEnabled) }
-    }
-
-    public var dockHoverEnabled: Bool {
-        get { defaults.bool(forKey: Key.dockHoverEnabled) }
-        set { defaults.set(newValue, forKey: Key.dockHoverEnabled) }
-    }
-
-    public var dockHoverDelay: TimeInterval {
-        get { defaults.double(forKey: Key.dockHoverDelay) }
-        set { defaults.set(newValue, forKey: Key.dockHoverDelay) }
-    }
-
-    public var dockHideDelay: TimeInterval {
-        get { defaults.double(forKey: Key.dockHideDelay) }
-        set { defaults.set(newValue, forKey: Key.dockHideDelay) }
-    }
-
-    public var thumbnailBudgetMB: Int {
-        get { defaults.integer(forKey: Key.thumbnailBudgetMB) }
-        set { defaults.set(newValue, forKey: Key.thumbnailBudgetMB) }
-    }
-
-    public var tileWidth: Double {
-        get { defaults.double(forKey: Key.tileWidth) }
-        set { defaults.set(newValue, forKey: Key.tileWidth) }
-    }
-
-    /// Reflects the real registration state rather than a stored flag, so the
-    /// UI cannot drift from what the system actually does.
+    /// Mirrors the real registration state rather than trusting a stored flag,
+    /// but has to be a stored property so SwiftUI can observe it. The setter
+    /// performs the registration and then re-reads what the system actually
+    /// did, so a failed registration snaps the toggle back instead of lying.
     public var launchAtLogin: Bool {
-        get { SMAppService.mainApp.status == .enabled }
-        set {
+        didSet {
             do {
-                if newValue {
+                if launchAtLogin {
                     try SMAppService.mainApp.register()
                 } else {
                     try SMAppService.mainApp.unregister()
                 }
             } catch {
-                // Registration fails for unsigned or non-bundled builds; the
-                // toggle simply stays off in that case.
+                // Registration fails for unsigned or non-bundled builds.
+            }
+
+            let actual = SMAppService.mainApp.status == .enabled
+            if actual != launchAtLogin {
+                launchAtLogin = actual
             }
         }
     }

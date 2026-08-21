@@ -39,6 +39,9 @@ struct MenuBarView: View {
         Group {
             Text("\(model.index.windows.count) windows on this Space")
             Text("Switcher: \(model.preferences.holdModifier.symbol)-Tab")
+            if model.preferences.switcherEnabled && !model.switcherHotkeyActive {
+                Text("Switcher hotkey unavailable")
+            }
             if model.preferences.dockHoverEnabled && !model.dockHoverActive {
                 Text("Dock hover unavailable")
             }
