@@ -67,3 +67,9 @@ The bundle identifier is part of every TCC grant. If it ever changes again,
 old grants for the previous identifier stay behind in System Settings under
 Privacy & Security, pointing at an app that no longer exists. Remove them so
 users are not asked to trust two entries for one app.
+
+`tccutil reset Accessibility <old-bundle-id>` does **not** help here: once the
+old bundle is gone from disk, LaunchServices can no longer resolve the
+identifier and `tccutil` fails with OSStatus -10814. The leftover rows have to
+be removed by hand with the `-` button in System Settings, so it is worth
+doing the reset *before* deleting the old app bundle.
