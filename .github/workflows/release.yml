@@ -1,0 +1,229 @@
+name: Release macOS
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Existing tag to build, for example v1.2.1
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  macos-release:
+    name: Build signed and notarized macOS artifacts
+    runs-on: macos-latest
+    steps:
+      - name: Resolve release metadata
+        id: release
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            tag="${{ inputs.tag }}"
+          else
+            tag="${GITHUB_REF_NAME}"
+          fi
+          if [[ ! "$tag" =~ ^v[0-9]+\.[0-9]+\.[0-9]+([-+][0-9A-Za-z.-]+)?$ ]]; then
+            echo "Release tag must be a version such as v1.2.1: $tag"
+            exit 1
+          fi
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+          echo "version=${tag#v}" >> "$GITHUB_OUTPUT"
+
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ steps.release.outputs.tag }}
+          fetch-depth: 0
+
+      - name: Import Developer ID certificate
+        shell: bash
+        env:
+          MACOS_CERTIFICATE: ${{ secrets.MACOS_CERTIFICATE }}
+          MACOS_CERTIFICATE_PWD: ${{ secrets.MACOS_CERTIFICATE_PWD }}
+        run: |
+          set -euo pipefail
+          if [[ -z "$MACOS_CERTIFICATE" || -z "$MACOS_CERTIFICATE_PWD" ]]; then
+            echo "MACOS_CERTIFICATE and MACOS_CERTIFICATE_PWD secrets are required."
+            exit 1
+          fi
+
+          signing_dir="$GITHUB_WORKSPACE/.build/ci-signing-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          cert_file="$signing_dir/developer-id.p12"
+          ca_file="$signing_dir/DeveloperIDG2CA.cer"
+          keychain_file="$signing_dir/build.keychain-db"
+          keychain_password="$(openssl rand -base64 32)"
+          import_succeeded=false
+
+          cleanup_import() {
+            rm -f -- "$cert_file" "$ca_file"
+            if [[ "$import_succeeded" != true ]]; then
+              security delete-keychain "$keychain_file" 2>/dev/null || true
+              rm -f -- "$keychain_file"
+              rmdir -- "$signing_dir" 2>/dev/null || true
+            fi
+          }
+          trap cleanup_import EXIT
+          trap 'exit 129' HUP
+          trap 'exit 130' INT
+          trap 'exit 143' TERM
+
+          mkdir -p "$signing_dir"
+          set +x
+          printf '%s' "$MACOS_CERTIFICATE" | base64 --decode > "$cert_file"
+          curl --fail --silent --show-error --location \
+            "https://www.apple.com/certificateauthority/DeveloperIDG2CA.cer" \
+            --output "$ca_file"
+
+          security create-keychain -p "$keychain_password" "$keychain_file"
+          security set-keychain-settings -lut 21600 "$keychain_file"
+          security unlock-keychain -p "$keychain_password" "$keychain_file"
+          security import "$ca_file" -k "$keychain_file" -T /usr/bin/codesign
+          security import "$cert_file" -P "$MACOS_CERTIFICATE_PWD" -A -t cert -f pkcs12 -k "$keychain_file"
+          security set-key-partition-list -S apple-tool:,apple: -k "$keychain_password" "$keychain_file"
+          security list-keychains -d user -s "$keychain_file" $(security list-keychains -d user | tr -d '"')
+
+          identity="$(
+            security find-identity -v -p codesigning "$keychain_file" |
+              awk -F'"' '/Developer ID Application/ && !identity { identity = $2 } END { print identity }'
+          )"
+          if [[ -z "$identity" ]]; then
+            echo "Developer ID Application identity not found."
+            exit 1
+          fi
+
+          echo "CODE_SIGN_IDENTITY=$identity" >> "$GITHUB_ENV"
+          echo "OPENSWITCHR_SIGNING_IDENTITY=$identity" >> "$GITHUB_ENV"
+          echo "KEYCHAIN_FILE=$keychain_file" >> "$GITHUB_ENV"
+          echo "SIGNING_DIR=$signing_dir" >> "$GITHUB_ENV"
+          import_succeeded=true
+
+      - name: Build Developer ID signed app
+        shell: bash
+        run: |
+          set -euo pipefail
+          chmod +x scripts/*.sh
+          scripts/build-app.sh
+
+      - name: Notarize app and package ZIP
+        shell: bash
+        env:
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          APPLE_APP_PASSWORD: ${{ secrets.APPLE_APP_PASSWORD }}
+          APP_PATH: .build/release/OpenSwitchr.app
+          ZIP_PATH: dist/OpenSwitchr-v${{ steps.release.outputs.version }}-macOS-arm64.zip
+        run: |
+          set -euo pipefail
+          scripts/notarize_app.sh
+
+      - name: Build signed DMG from stapled app
+        shell: bash
+        env:
+          APP_PATH: .build/release/OpenSwitchr.app
+          DMG_PATH: dist/OpenSwitchr-v${{ steps.release.outputs.version }}-macOS-arm64.dmg
+          REQUIRE_NOTARIZED_APP: "true"
+        run: |
+          set -euo pipefail
+          scripts/make_dmg.sh
+
+      - name: Notarize DMG
+        shell: bash
+        env:
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          APPLE_APP_PASSWORD: ${{ secrets.APPLE_APP_PASSWORD }}
+          DMG_PATH: dist/OpenSwitchr-v${{ steps.release.outputs.version }}-macOS-arm64.dmg
+        run: |
+          set -euo pipefail
+          scripts/notarize_dmg.sh
+
+      - name: Cleanup keychain
+        if: always()
+        shell: bash
+        run: |
+          if [[ -n "${KEYCHAIN_FILE:-}" ]]; then
+            security delete-keychain "$KEYCHAIN_FILE" 2>/dev/null || true
+            rm -f -- "$KEYCHAIN_FILE"
+          fi
+          if [[ -n "${SIGNING_DIR:-}" ]]; then
+            rmdir -- "$SIGNING_DIR" 2>/dev/null || true
+          fi
+
+      - name: Verify release artifacts
+        shell: bash
+        env:
+          APP_PATH: .build/release/OpenSwitchr.app
+          ASSET_BASE: dist/OpenSwitchr-v${{ steps.release.outputs.version }}-macOS-arm64
+        run: |
+          set -euo pipefail
+          artifacts=(
+            "$ASSET_BASE.zip"
+            "$ASSET_BASE.zip.sha256"
+            "$ASSET_BASE.dmg"
+            "$ASSET_BASE.dmg.sha256"
+          )
+          for artifact in "${artifacts[@]}"; do
+            if [[ ! -f "$artifact" ]]; then
+              echo "Expected release artifact is missing: $artifact"
+              exit 1
+            fi
+          done
+
+          codesign --verify --deep --strict --verbose=2 "$APP_PATH"
+          xcrun stapler validate "$APP_PATH"
+          spctl --assess --type execute --verbose=2 "$APP_PATH"
+          codesign --verify --strict --verbose=2 "$ASSET_BASE.dmg"
+          xcrun stapler validate "$ASSET_BASE.dmg"
+          spctl --assess --type open --context context:primary-signature --verbose=2 "$ASSET_BASE.dmg"
+          hdiutil verify "$ASSET_BASE.dmg"
+          (
+            cd "$(dirname "$ASSET_BASE")"
+            asset_name="$(basename "$ASSET_BASE")"
+            shasum -a 256 -c "$asset_name.zip.sha256"
+            shasum -a 256 -c "$asset_name.dmg.sha256"
+          )
+
+      - name: Upload workflow artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: OpenSwitchr-v${{ steps.release.outputs.version }}-macOS-arm64
+          if-no-files-found: error
+          path: |
+            dist/OpenSwitchr-v${{ steps.release.outputs.version }}-macOS-arm64.zip
+            dist/OpenSwitchr-v${{ steps.release.outputs.version }}-macOS-arm64.zip.sha256
+            dist/OpenSwitchr-v${{ steps.release.outputs.version }}-macOS-arm64.dmg
+            dist/OpenSwitchr-v${{ steps.release.outputs.version }}-macOS-arm64.dmg.sha256
+
+      - name: Attach assets to GitHub Release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ steps.release.outputs.tag }}
+          RELEASE_VERSION: ${{ steps.release.outputs.version }}
+        run: |
+          set -euo pipefail
+          asset_base="dist/OpenSwitchr-v${RELEASE_VERSION}-macOS-arm64"
+          assets=(
+            "$asset_base.zip"
+            "$asset_base.zip.sha256"
+            "$asset_base.dmg"
+            "$asset_base.dmg.sha256"
+          )
+          for asset in "${assets[@]}"; do
+            if [[ ! -f "$asset" ]]; then
+              echo "Expected release asset is missing: $asset"
+              exit 1
+            fi
+          done
+
+          if ! gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
+            gh release create "$RELEASE_TAG" --title "OpenSwitchr ${RELEASE_VERSION}" --notes "Signed and notarized macOS DMG and ZIP."
+          fi
+          gh release upload "$RELEASE_TAG" "${assets[@]}" --clobber

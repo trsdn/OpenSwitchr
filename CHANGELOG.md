@@ -42,6 +42,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   thumbnails previously fired eight redundant queries and captures did not
   overlap; parallel capture went from ~730 ms to ~540 ms.
 
+### Added
+
+- Release tooling: `scripts/release_macos.sh`, `make_dmg.sh`, `notarize_app.sh`
+  and `notarize_dmg.sh`, plus `RELEASE_CHECKLIST.md`. The unnotarized path is
+  exercised locally and produces a signed, checksummed DMG.
+- GitHub Actions: `ci.yml` builds with warnings-as-errors and runs the tests;
+  `release.yml` builds, notarizes and attaches assets on a `v*` tag.
+
 ### Changed
 
 - Removed `⌘-Tab` from the hold-modifier choices. macOS dispatches it to the

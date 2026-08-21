@@ -55,6 +55,19 @@ open /Applications/OpenSwitchr.app
 
 There is no Xcode project; the app bundle is assembled by the build script.
 
+## Release
+
+```bash
+bash scripts/release_macos.sh v0.1.0   # build, notarize, sign a DMG into dist/
+```
+
+Notarization needs Apple credentials (`NOTARY_PROFILE`, or `APPLE_ID` plus
+`APPLE_TEAM_ID` and `APPLE_APP_PASSWORD`). Without them the script still emits
+a signed, checksummed DMG and says clearly that it skipped notarization — that
+build is for local testing only, since users would hit a Gatekeeper block.
+
+See `RELEASE_CHECKLIST.md` for the full procedure.
+
 ## Measured behaviour
 
 Measured on Apple Silicon, macOS 26.6, with 13 windows across 11 apps, using
