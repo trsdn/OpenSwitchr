@@ -1,0 +1,193 @@
+import AppKit
+import ApplicationServices
+import CoreGraphics
+import Foundation
+import Observation
+import OSLog
+
+/// The single source of truth for open windows.
+///
+/// This is the whole point of consolidating DockDoor-style previews and an
+/// AltTab-style switcher into one app: both frontends read from this index,
+/// so the expensive work of enumerating and tracking windows happens once.
+///
+/// Scope is deliberately limited to the **current Space**. Reaching windows on
+/// other Spaces requires private SkyLight calls, which are out of bounds.
+@MainActor
+@Observable
+public final class WindowIndex {
+
+    public private(set) var windows: [WindowInfo] = []
+    public private(set) var lastRebuildDuration: TimeInterval = 0
+
+    @ObservationIgnored private var mru = MRUTracker()
+    @ObservationIgnored private let logger = Logger(subsystem: "com.openswitch.app", category: "WindowIndex")
+    @ObservationIgnored private let ownPID = ProcessInfo.processInfo.processIdentifier
+
+    public init() {}
+
+    // MARK: - Queries
+
+    public func windows(forBundleID bundleID: String) -> [WindowInfo] {
+        windows.filter { $0.bundleID == bundleID }
+    }
+
+    public func windows(forPID pid: pid_t) -> [WindowInfo] {
+        windows.filter { $0.pid == pid }
+    }
+
+    public func window(id: CGWindowID) -> WindowInfo? {
+        windows.first { $0.id == id }
+    }
+
+    public func filtered(query: String) -> [WindowInfo] {
+        WindowMatcher.filter(windows, query: query)
+    }
+
+    // MARK: - Mutation
+
+    /// Marks a window as most recently used and re-sorts.
+    public func noteFocus(windowID: CGWindowID) {
+        mru.touch(windowID)
+        windows = mru.sorted(windows)
+    }
+
+    /// Marks the frontmost window of a process as most recently used. Used
+    /// when the only signal available is "this app became active".
+    public func noteFocus(pid: pid_t) {
+        guard let frontmost = windows.first(where: { $0.pid == pid && !$0.isMinimized }) else { return }
+        noteFocus(windowID: frontmost.id)
+    }
+
+    /// Rebuilds the index from scratch, blocking the caller.
+    ///
+    /// Every accessibility read is synchronous inter-process messaging, so this
+    /// costs roughly one message per window plus a one-time handshake per app.
+    /// Use ``rebuildConcurrently()`` on any path where a stall would be visible.
+    public func rebuild() {
+        let started = CFAbsoluteTimeGetCurrent()
+        let (entries, appsByPID, grouped) = gatherCoreGraphicsState()
+
+        var axByPID: [pid_t: [AXWindowLinker.AXWindow]] = [:]
+        for pid in grouped.keys {
+            axByPID[pid] = AXWindowLinker.windows(forPID: pid)
+        }
+
+        apply(entries: entries, appsByPID: appsByPID, grouped: grouped, axByPID: axByPID, started: started)
+    }
+
+    /// Rebuilds the index, querying every app's accessibility tree in parallel
+    /// and off the main thread.
+    ///
+    /// The first message to an app is far more expensive than later ones, so a
+    /// cold serial rebuild is dominated by per-app handshakes. Fanning them out
+    /// turns that sum into a maximum, and keeps the main thread free while the
+    /// slowest app runs out its timeout.
+    public func rebuildConcurrently() async {
+        let started = CFAbsoluteTimeGetCurrent()
+        let (entries, appsByPID, grouped) = gatherCoreGraphicsState()
+        let pids = Array(grouped.keys)
+
+        let axByPID = await Task.detached(priority: .userInitiated) {
+            await withTaskGroup(of: (pid_t, [AXWindowLinker.AXWindow]).self) { group in
+                for pid in pids {
+                    group.addTask { (pid, AXWindowLinker.windows(forPID: pid)) }
+                }
+
+                var collected: [pid_t: [AXWindowLinker.AXWindow]] = [:]
+                for await (pid, windows) in group {
+                    collected[pid] = windows
+                }
+                return collected
+            }
+        }.value
+
+        apply(entries: entries, appsByPID: appsByPID, grouped: grouped, axByPID: axByPID, started: started)
+    }
+
+    private func gatherCoreGraphicsState() -> (
+        entries: [CGWindowEntry],
+        appsByPID: [pid_t: NSRunningApplication],
+        grouped: [pid_t: [CGWindowEntry]]
+    ) {
+        let entries = CGWindowSnapshot.current()
+        let appsByPID = runningApplicationsByPID()
+
+        var grouped: [pid_t: [CGWindowEntry]] = [:]
+        for entry in entries where entry.pid != ownPID {
+            guard appsByPID[entry.pid] != nil else { continue }
+            grouped[entry.pid, default: []].append(entry)
+        }
+
+        return (entries, appsByPID, grouped)
+    }
+
+    private func apply(
+        entries: [CGWindowEntry],
+        appsByPID: [pid_t: NSRunningApplication],
+        grouped: [pid_t: [CGWindowEntry]],
+        axByPID: [pid_t: [AXWindowLinker.AXWindow]],
+        started: CFAbsoluteTime
+    ) {
+        var result: [WindowInfo] = []
+        result.reserveCapacity(entries.count)
+
+        for (pid, pidEntries) in grouped {
+            guard let app = appsByPID[pid] else { continue }
+            let appName = app.localizedName ?? pidEntries.first?.ownerName ?? "Unknown"
+            let links = AXWindowLinker.link(axWindows: axByPID[pid] ?? [], to: pidEntries)
+
+            for entry in pidEntries {
+                let link = links[entry.id]
+                // Without an accessibility counterpart a CoreGraphics window is
+                // either on another Space, or one of the untitled helper and
+                // overlay surfaces apps keep around. Neither belongs in a
+                // switcher: a real window has a title, an AX element, or both.
+                if link == nil, !entry.isOnScreen || (entry.title ?? "").isEmpty { continue }
+
+                result.append(
+                    WindowInfo(
+                        id: entry.id,
+                        pid: pid,
+                        bundleID: app.bundleIdentifier,
+                        appName: appName,
+                        title: link?.title.isEmpty == false ? link!.title : (entry.title ?? ""),
+                        frame: entry.frame,
+                        isMinimized: link?.isMinimized ?? false,
+                        isOnScreen: entry.isOnScreen,
+                        element: link?.element
+                    )
+                )
+            }
+        }
+
+        let zOrdered = entries
+            .filter { entry in result.contains { $0.id == entry.id } }
+            .sorted { $0.zOrder < $1.zOrder }
+            .map(\.id)
+
+        mru.seed(zOrdered: zOrdered)
+        mru.retain(only: Set(result.map(\.id)))
+
+        windows = mru.sorted(result)
+        lastRebuildDuration = CFAbsoluteTimeGetCurrent() - started
+
+        logger.debug("Rebuilt index: \(self.windows.count) windows in \(self.lastRebuildDuration * 1000, format: .fixed(precision: 1)) ms")
+    }
+
+    /// How many switchable windows an app exposes over accessibility.
+    ///
+    /// Diagnostics only: it separates "the linker failed" from "this app
+    /// exposes nothing", which call for very different fixes.
+    public static func accessibilityWindowCount(forPID pid: pid_t) -> Int {
+        AXWindowLinker.windows(forPID: pid).count
+    }
+
+    private func runningApplicationsByPID() -> [pid_t: NSRunningApplication] {
+        var map: [pid_t: NSRunningApplication] = [:]
+        for app in NSWorkspace.shared.runningApplications where app.activationPolicy == .regular {
+            map[app.processIdentifier] = app
+        }
+        return map
+    }
+}
