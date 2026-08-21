@@ -62,7 +62,7 @@ public final class HotkeyMonitor {
 
     private var tap: CFMachPort?
     private var runLoopSource: CFRunLoopSource?
-    private let logger = Logger(subsystem: "com.openswitch.app", category: "HotkeyMonitor")
+    private let logger = Logger(subsystem: "com.openswitchr.app", category: "HotkeyMonitor")
 
     public init() {}
 

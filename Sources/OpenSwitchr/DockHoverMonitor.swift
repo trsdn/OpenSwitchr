@@ -1,7 +1,7 @@
 import AppKit
 import ApplicationServices
 import Foundation
-import OpenSwitchCore
+import OpenSwitchrCore
 import OSLog
 
 /// Detects which Dock icon the pointer is over.
@@ -27,7 +27,7 @@ public final class DockHoverMonitor {
     private var dockElement: AXUIElement?
     private var listElement: AXUIElement?
     private var lastItem: DockItem?
-    private let logger = Logger(subsystem: "com.openswitch.app", category: "DockHover")
+    private let logger = Logger(subsystem: "com.openswitchr.app", category: "DockHover")
 
     public init() {}
 

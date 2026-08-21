@@ -22,10 +22,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   fallback notification path and no mouse polling.
 - Menu bar app (`LSUIElement`) with settings, permission onboarding, and
   launch-at-login via `SMAppService`.
-- `openswitch-diag` command-line harness for the behaviour that unit tests
+- `openswitchr-diag` command-line harness for the behaviour that unit tests
   cannot reach: accessibility linking rates and capture timings.
-- `scripts/rename-product.sh` to rename the product in one step, since
-  "OpenSwitch" collides with the Linux Foundation's OpenSwitch (OPX).
+- `scripts/rename-product.sh`, which renames the product across source
+  directories, entitlements, bundle identifier, code, docs, and scripts in one
+  step. Used to settle on **OpenSwitchr** — "Open Switcher" without the *e* —
+  because plain "OpenSwitch" is the Linux Foundation's OpenSwitch (OPX)
+  network operating system.
 
 ### Performance
 

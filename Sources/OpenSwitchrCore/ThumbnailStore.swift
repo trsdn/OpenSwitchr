@@ -16,7 +16,7 @@ public struct ThumbnailImage: @unchecked Sendable {
 
 /// Shared, budgeted thumbnail cache backed by ScreenCaptureKit.
 ///
-/// Both frontends draw from this one store, which is the reason OpenSwitch
+/// Both frontends draw from this one store, which is the reason OpenSwitchr
 /// captures a window once instead of twice. Captures are lazy (only what is
 /// actually on screen), coalesced (concurrent requests for the same window
 /// share one capture), and bounded (a hard byte budget with LRU eviction).
@@ -57,7 +57,7 @@ public actor ThumbnailStore {
 
     private let budgetBytes: Int
     private let maxAge: TimeInterval
-    private let logger = Logger(subsystem: "com.openswitch.app", category: "ThumbnailStore")
+    private let logger = Logger(subsystem: "com.openswitchr.app", category: "ThumbnailStore")
 
     public init(budgetBytes: Int = 96 * 1024 * 1024, maxAge: TimeInterval = ThumbnailStore.defaultMaxAge) {
         self.budgetBytes = budgetBytes

@@ -5,7 +5,7 @@ import Foundation
 
 /// Links accessibility windows to CoreGraphics window IDs.
 ///
-/// This is the single trickiest piece of OpenSwitch. The private
+/// This is the single trickiest piece of OpenSwitchr. The private
 /// `_AXUIElementGetWindow` would hand out the `CGWindowID` directly, but it is
 /// off limits (see AGENTS.md), so the link is reconstructed from observable
 /// facts: same process, same frame, same title.

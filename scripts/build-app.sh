@@ -5,15 +5,15 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
 ENV_FILE="${RELEASE_ENV_FILE:-$PROJECT_DIR/.release.env}"
 BUILD_DIR="$PROJECT_DIR/.build/release"
-APP="$BUILD_DIR/OpenSwitch.app"
-DEFAULT_BUNDLE_ID="com.openswitch.app"
-PREFERRED_IDENTITY="${OPENSWITCH_SIGNING_IDENTITY:-${CODE_SIGN_IDENTITY:-}}"
+APP="$BUILD_DIR/OpenSwitchr.app"
+DEFAULT_BUNDLE_ID="com.openswitchr.app"
+PREFERRED_IDENTITY="${OPENSWITCHR_SIGNING_IDENTITY:-${CODE_SIGN_IDENTITY:-}}"
 
 if [[ -f "$ENV_FILE" ]]; then
     set -a
     . "$ENV_FILE"
     set +a
-    PREFERRED_IDENTITY="${OPENSWITCH_SIGNING_IDENTITY:-${CODE_SIGN_IDENTITY:-$PREFERRED_IDENTITY}}"
+    PREFERRED_IDENTITY="${OPENSWITCHR_SIGNING_IDENTITY:-${CODE_SIGN_IDENTITY:-$PREFERRED_IDENTITY}}"
 fi
 
 find_signing_identity() {
@@ -44,11 +44,11 @@ SIGNING_IDENTITY="$(find_signing_identity || true)"
 
 if [[ -z "$SIGNING_IDENTITY" ]]; then
     echo "No valid macOS codesigning identity found." >&2
-    echo "Install a Developer ID Application or Apple Development certificate, or set OPENSWITCH_SIGNING_IDENTITY to a valid fingerprint." >&2
+    echo "Install a Developer ID Application or Apple Development certificate, or set OPENSWITCHR_SIGNING_IDENTITY to a valid fingerprint." >&2
     exit 1
 fi
 
-echo "Building OpenSwitch..."
+echo "Building OpenSwitchr..."
 cd "$PROJECT_DIR"
 swift build -c release
 
@@ -56,7 +56,7 @@ echo "Creating app bundle..."
 rm -rf "$APP"
 mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
 
-cp "$BUILD_DIR/OpenSwitch" "$APP/Contents/MacOS/OpenSwitch"
+cp "$BUILD_DIR/OpenSwitchr" "$APP/Contents/MacOS/OpenSwitchr"
 cp "$PROJECT_DIR/Info.plist" "$APP/Contents/Info.plist"
 
 HAS_ICON=false
@@ -70,9 +70,9 @@ import os, plistlib
 app = '$APP'
 with open(app + '/Contents/Info.plist', 'rb') as f:
     p = plistlib.load(f)
-p['CFBundleExecutable'] = 'OpenSwitch'
+p['CFBundleExecutable'] = 'OpenSwitchr'
 p['CFBundlePackageType'] = 'APPL'
-p['CFBundleDisplayName'] = 'OpenSwitch'
+p['CFBundleDisplayName'] = 'OpenSwitchr'
 p['NSHighResolutionCapable'] = True
 p['LSMinimumSystemVersion'] = '15.0'
 if os.environ['HAS_ICON'] == 'true':
@@ -86,7 +86,7 @@ codesign --force --sign "$SIGNING_IDENTITY" \
     --options runtime \
     --timestamp \
     --identifier "$DEFAULT_BUNDLE_ID" \
-    --entitlements "$PROJECT_DIR/OpenSwitch.entitlements" \
+    --entitlements "$PROJECT_DIR/OpenSwitchr.entitlements" \
     "$APP"
 
 SIGNATURE_DETAILS=$(codesign -dv "$APP" 2>&1)
@@ -101,4 +101,4 @@ echo "Signed with identity: $SIGNING_IDENTITY"
 echo "Size: $(du -sh "$APP" | cut -f1)"
 echo ""
 echo "To install:  cp -R \"$APP\" /Applications/"
-echo "To run:      open /Applications/OpenSwitch.app"
+echo "To run:      open /Applications/OpenSwitchr.app"

@@ -3,7 +3,7 @@ import CoreGraphics
 import Foundation
 import Observation
 
-/// Tracks the two TCC permissions OpenSwitch depends on.
+/// Tracks the two TCC permissions OpenSwitchr depends on.
 ///
 /// Accessibility is mandatory: without it there is no window list, no hotkey
 /// tap, and no way to raise a window. Screen recording is optional and only

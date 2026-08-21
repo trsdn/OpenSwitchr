@@ -12,7 +12,7 @@ struct AboutView: View {
                 .font(.system(size: 40))
                 .foregroundStyle(.tint)
 
-            Text("OpenSwitch")
+            Text("OpenSwitchr")
                 .font(.title2.weight(.semibold))
 
             Text("Version \(version)")
@@ -25,7 +25,7 @@ struct AboutView: View {
                 .foregroundStyle(.secondary)
                 .padding(.horizontal, 24)
 
-            Link("Source code", destination: URL(string: "https://github.com/trsdn/OpenSwitch")!)
+            Link("Source code", destination: URL(string: "https://github.com/trsdn/OpenSwitchr")!)
                 .font(.callout)
 
             Text("MIT licensed. Written from scratch — no code from GPL-licensed window switchers.")

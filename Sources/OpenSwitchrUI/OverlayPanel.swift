@@ -1,7 +1,7 @@
 import AppKit
 import SwiftUI
 
-/// Base class for OpenSwitch's floating surfaces.
+/// Base class for OpenSwitchr's floating surfaces.
 ///
 /// Both the switcher overlay and the Dock preview use this. The important part
 /// is `.nonactivatingPanel`: showing the overlay must not deactivate the app

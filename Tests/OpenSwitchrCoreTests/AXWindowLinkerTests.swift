@@ -2,9 +2,9 @@ import ApplicationServices
 import CoreGraphics
 import Testing
 
-@testable import OpenSwitchCore
+@testable import OpenSwitchrCore
 
-/// Covers the highest-risk logic in OpenSwitch: reconstructing the link between
+/// Covers the highest-risk logic in OpenSwitchr: reconstructing the link between
 /// accessibility windows and CoreGraphics window IDs without the private
 /// `_AXUIElementGetWindow`. A wrong link shows the wrong preview on a tile.
 @Suite("AXWindowLinker")

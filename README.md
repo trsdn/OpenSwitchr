@@ -1,4 +1,4 @@
-# OpenSwitch
+# OpenSwitchr
 
 **One app instead of two.** Dock hover previews and an Alt-Tab style window
 switcher, built on a single shared window index.
@@ -10,7 +10,7 @@ visual switcher — solve two halves of the same problem, and each pays the full
 cost of doing so: enumerating every window, observing every change, and
 capturing every thumbnail. Running both means paying twice.
 
-OpenSwitch pays once. The window index, the event bus, the thumbnail cache, and
+OpenSwitchr pays once. The window index, the event bus, the thumbnail cache, and
 the window actions exist exactly once; the Dock previews and the switcher
 overlay are thin readers on top.
 
@@ -47,10 +47,10 @@ yet. There is no published binary.
 ```bash
 swift build -c release          # compile
 swift test                      # pure-logic tests
-bash scripts/build-app.sh       # assemble and sign .build/release/OpenSwitch.app
+bash scripts/build-app.sh       # assemble and sign .build/release/OpenSwitchr.app
 
-cp -R .build/release/OpenSwitch.app /Applications/
-open /Applications/OpenSwitch.app
+cp -R .build/release/OpenSwitchr.app /Applications/
+open /Applications/OpenSwitchr.app
 ```
 
 There is no Xcode project; the app bundle is assembled by the build script.
@@ -58,7 +58,7 @@ There is no Xcode project; the app bundle is assembled by the build script.
 ## Measured behaviour
 
 Measured on Apple Silicon, macOS 26.6, with 13 windows across 11 apps, using
-`swift run openswitch-diag --bench --capture`:
+`swift run openswitchr-diag --bench --capture`:
 
 | Metric | Budget | Measured |
 |---|---|---|
@@ -87,8 +87,8 @@ command-line harness. Run it from a terminal that holds the Accessibility
 permission:
 
 ```bash
-swift run openswitch-diag                    # window index and AX linking
-swift run openswitch-diag --bench --capture  # plus timings
+swift run openswitchr-diag                    # window index and AX linking
+swift run openswitchr-diag --bench --capture  # plus timings
 ```
 
 It reports per-app `CG` / `AX` / `LINKED` counts, which separates "the linking
@@ -101,16 +101,16 @@ API reliably reports only the current Space; reaching the rest requires private
 SkyLight calls, which are out of bounds here. The index rebuilds on every Space
 change.
 
-## Known limitation: the name
+## The name
 
-**OpenSwitch** collides with the Linux Foundation's
+**OpenSwitchr** is "Open Switcher" without the *e*, in the same spirit as
+OpenWritr. The dropped vowel is not only decoration: plain "OpenSwitch" is
+taken by the Linux Foundation's
 [OpenSwitch (OPX)](https://github.com/open-switch) network operating system.
-Nothing has been published under this name yet, so the collision is currently
-free to fix:
 
-```bash
-bash scripts/rename-product.sh <NewName>
-```
+If the name ever needs to change again, `scripts/rename-product.sh` rewrites
+source directories, the entitlements file, the bundle identifier, and every
+reference in code, docs, and scripts in one step.
 
 ## License
 

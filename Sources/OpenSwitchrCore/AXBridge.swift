@@ -1,7 +1,7 @@
 import ApplicationServices
 import Foundation
 
-/// The only place in OpenSwitch that touches the raw AXUIElement C API.
+/// The only place in OpenSwitchr that touches the raw AXUIElement C API.
 ///
 /// Everything here is deliberately non-throwing: the accessibility API fails
 /// constantly and normally (windows disappear between two calls, apps refuse

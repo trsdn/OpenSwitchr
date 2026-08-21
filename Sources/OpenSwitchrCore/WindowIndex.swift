@@ -21,7 +21,7 @@ public final class WindowIndex {
     public private(set) var lastRebuildDuration: TimeInterval = 0
 
     @ObservationIgnored private var mru = MRUTracker()
-    @ObservationIgnored private let logger = Logger(subsystem: "com.openswitch.app", category: "WindowIndex")
+    @ObservationIgnored private let logger = Logger(subsystem: "com.openswitchr.app", category: "WindowIndex")
     @ObservationIgnored private let ownPID = ProcessInfo.processInfo.processIdentifier
 
     public init() {}

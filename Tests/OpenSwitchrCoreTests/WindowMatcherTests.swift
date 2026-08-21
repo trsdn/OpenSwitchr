@@ -1,7 +1,7 @@
 import CoreGraphics
 import Testing
 
-@testable import OpenSwitchCore
+@testable import OpenSwitchrCore
 
 @Suite("WindowMatcher")
 struct WindowMatcherTests {

@@ -1,4 +1,4 @@
-import OpenSwitchCore
+import OpenSwitchrCore
 import SwiftUI
 
 /// The full-screen switcher overlay contents.

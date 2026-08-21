@@ -4,12 +4,12 @@ Guidance for AI coding agents working in this repository.
 
 ## Hard rule: no GPL code
 
-OpenSwitch covers the same problem space as [DockDoor](https://github.com/ejbills/DockDoor)
+OpenSwitchr covers the same problem space as [DockDoor](https://github.com/ejbills/DockDoor)
 and [AltTab](https://github.com/lwouis/alt-tab-macos). Both are **GPL-licensed**.
-OpenSwitch is MIT-licensed.
+OpenSwitchr is MIT-licensed.
 
 - **Never** copy, paste, translate, or derive code from those projects.
-- **Do not** open their source files while implementing OpenSwitch.
+- **Do not** open their source files while implementing OpenSwitchr.
 - Concepts and UX ideas are fine; implementations must be written from scratch
   against Apple's public documentation.
 - Every dependency must be permissively licensed (MIT / Apache-2.0 / BSD).
@@ -21,19 +21,19 @@ OpenSwitch is MIT-licensed.
 # Compile check
 swift build -c release
 
-# Build, bundle, and sign (creates .build/release/OpenSwitch.app)
+# Build, bundle, and sign (creates .build/release/OpenSwitchr.app)
 bash scripts/build-app.sh
 
 # Install and run
-cp -R .build/release/OpenSwitch.app /Applications/
-open /Applications/OpenSwitch.app
+cp -R .build/release/OpenSwitchr.app /Applications/
+open /Applications/OpenSwitchr.app
 
 # Logic tests (pure logic only — no AX, no capture, no UI)
 swift test
 
 # Everything tests cannot reach: real AX linking rates and capture timings.
 # Run from a terminal that holds the Accessibility permission.
-swift run openswitch-diag --bench --capture
+swift run openswitchr-diag --bench --capture
 ```
 
 There is no Xcode project. Everything goes through SwiftPM; the app bundle is
@@ -41,16 +41,16 @@ assembled manually in `scripts/build-app.sh`.
 
 ## Architecture
 
-OpenSwitch is a `LSUIElement` menu bar app targeting macOS 15+. Two frontends
+OpenSwitchr is a `LSUIElement` menu bar app targeting macOS 15+. Two frontends
 sit on one shared foundation, which is the entire point of the project: the
 window index, the event bus, the thumbnail cache, and the window actions exist
 **once**.
 
 ```
 Sources/
-├── OpenSwitchCore/   Shared foundation. No UI, no frontend assumptions.
-├── OpenSwitchUI/     SwiftUI views + non-activating panel infrastructure.
-└── OpenSwitch/       App wiring: menu bar, hotkey tap, controllers, settings.
+├── OpenSwitchrCore/   Shared foundation. No UI, no frontend assumptions.
+├── OpenSwitchrUI/     SwiftUI views + non-activating panel infrastructure.
+└── OpenSwitchr/       App wiring: menu bar, hotkey tap, controllers, settings.
 ```
 
 **Core types:**
@@ -100,11 +100,12 @@ immediately and are confined to `AXBridge` / `HotkeyMonitor`.
 
 ## The name
 
-"OpenSwitch" collides with the Linux Foundation's OpenSwitch (OPX) network
-operating system. Nothing is published yet, so the collision is still free to
-fix with `bash scripts/rename-product.sh <NewName>`. Do not add the name to
-anything published (tags, releases, Homebrew, a website) without resolving it
-first.
+"OpenSwitchr" is "Open Switcher" without the *e*. The vowel is dropped
+deliberately: plain "OpenSwitch" belongs to the Linux Foundation's OpenSwitch
+(OPX) network operating system, so it must not reappear in the bundle
+identifier, the product name, or anything published. Use
+`bash scripts/rename-product.sh <NewName>` for any further rename rather than
+editing names by hand.
 
 ## Preferences
 

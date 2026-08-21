@@ -1,6 +1,6 @@
 import AppKit
-import OpenSwitchCore
-import OpenSwitchUI
+import OpenSwitchrCore
+import OpenSwitchrUI
 import SwiftUI
 
 /// Shows and positions the window preview panel for a hovered Dock icon.
@@ -174,7 +174,7 @@ public final class DockPreviewController {
 
     // MARK: - Mouse tracking
 
-    /// The only mouse monitor in OpenSwitch, and it exists only while a preview
+    /// The only mouse monitor in OpenSwitchr, and it exists only while a preview
     /// panel is already on screen. It is torn down the moment the panel hides.
     private func startMouseTracking() {
         guard mouseMonitor == nil else { return }

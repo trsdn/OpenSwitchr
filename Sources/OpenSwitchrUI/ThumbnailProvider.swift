@@ -2,7 +2,7 @@ import AppKit
 import CoreGraphics
 import Foundation
 import Observation
-import OpenSwitchCore
+import OpenSwitchrCore
 import SwiftUI
 
 /// Bridges the `ThumbnailStore` actor into SwiftUI.

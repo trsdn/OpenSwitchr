@@ -5,7 +5,7 @@ import OSLog
 
 /// Turns system notifications into a single stream of window change events.
 ///
-/// This is what keeps OpenSwitch off the CPU when nothing happens. There is no
+/// This is what keeps OpenSwitchr off the CPU when nothing happens. There is no
 /// timer and no polling anywhere in this file: everything is driven by
 /// `NSWorkspace` notifications and per-application accessibility observers
 /// attached to the main run loop.
@@ -29,7 +29,7 @@ public final class WindowEventBus {
     private var observers: [pid_t: AXObserver] = [:]
     private var workspaceTokens: [NSObjectProtocol] = []
     private var isRunning = false
-    private let logger = Logger(subsystem: "com.openswitch.app", category: "WindowEventBus")
+    private let logger = Logger(subsystem: "com.openswitchr.app", category: "WindowEventBus")
 
     private static let windowNotifications: [String] = [
         kAXWindowCreatedNotification as String,

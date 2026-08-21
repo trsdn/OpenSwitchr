@@ -2,32 +2,32 @@
 import PackageDescription
 
 let package = Package(
-    name: "OpenSwitch",
+    name: "OpenSwitchr",
     platforms: [
         .macOS(.v15)
     ],
     targets: [
         .target(
-            name: "OpenSwitchCore"
+            name: "OpenSwitchrCore"
         ),
         .target(
-            name: "OpenSwitchUI",
-            dependencies: ["OpenSwitchCore"]
+            name: "OpenSwitchrUI",
+            dependencies: ["OpenSwitchrCore"]
         ),
         .executableTarget(
-            name: "OpenSwitch",
-            dependencies: ["OpenSwitchCore", "OpenSwitchUI"]
+            name: "OpenSwitchr",
+            dependencies: ["OpenSwitchrCore", "OpenSwitchrUI"]
         ),
         // Command-line diagnostics for the parts of the core that can only be
         // judged against real windows: accessibility enumeration and the
         // AX-to-CGWindowID linking heuristic.
         .executableTarget(
-            name: "openswitch-diag",
-            dependencies: ["OpenSwitchCore"]
+            name: "openswitchr-diag",
+            dependencies: ["OpenSwitchrCore"]
         ),
         .testTarget(
-            name: "OpenSwitchCoreTests",
-            dependencies: ["OpenSwitchCore"]
+            name: "OpenSwitchrCoreTests",
+            dependencies: ["OpenSwitchrCore"]
         )
     ]
 )

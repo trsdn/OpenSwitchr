@@ -1,11 +1,11 @@
-import OpenSwitchCore
+import OpenSwitchrCore
 import SwiftUI
 
 /// Contents of the panel that appears when hovering a Dock icon.
 ///
 /// Same tiles, same thumbnail store, same actions as the switcher — only the
 /// layout and the entry point differ. That shared foundation is the reason
-/// OpenSwitch exists as one app instead of two.
+/// OpenSwitchr exists as one app instead of two.
 public struct DockPreviewView: View {
 
     private let windows: [WindowInfo]

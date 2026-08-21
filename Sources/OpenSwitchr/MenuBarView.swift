@@ -1,5 +1,5 @@
 import AppKit
-import OpenSwitchCore
+import OpenSwitchrCore
 import SwiftUI
 
 struct MenuBarView: View {
@@ -22,7 +22,7 @@ struct MenuBarView: View {
             }
             .keyboardShortcut(",", modifiers: .command)
 
-            Button("Quit OpenSwitch") {
+            Button("Quit OpenSwitchr") {
                 model.stop()
                 NSApp.terminate(nil)
             }

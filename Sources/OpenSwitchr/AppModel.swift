@@ -1,8 +1,8 @@
 import AppKit
 import Foundation
 import Observation
-import OpenSwitchCore
-import OpenSwitchUI
+import OpenSwitchrCore
+import OpenSwitchrUI
 import OSLog
 
 /// Wires the shared foundation to both frontends.
@@ -36,7 +36,7 @@ public final class AppModel {
     @ObservationIgnored private var rebuildTask: Task<Void, Never>?
     @ObservationIgnored private var memoryPressureSource: DispatchSourceMemoryPressure?
     @ObservationIgnored private var pendingRebuild = false
-    @ObservationIgnored private let logger = Logger(subsystem: "com.openswitch.app", category: "AppModel")
+    @ObservationIgnored private let logger = Logger(subsystem: "com.openswitchr.app", category: "AppModel")
 
     /// Reflects whether the engine actually came up, so the menu can say so.
     public private(set) var isRunning = false

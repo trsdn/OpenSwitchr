@@ -2,13 +2,14 @@
 #
 # Renames the product across the whole repository.
 #
-# "OpenSwitch" collides with the Linux Foundation's OpenSwitch (OPX) network
-# operating system. Nothing has been published under this name yet, so the
-# rename is cheap today and expensive later. This script keeps it a one-liner.
+# Renames the product across the whole repository: source directories, the
+# entitlements file, the bundle identifier, and every reference in code, docs,
+# and scripts. The script rewrites itself too, so OLD_NAME below always
+# reflects the current name.
 #
 # Usage:
-#   bash scripts/rename-product.sh OpenSwitchr
-#   bash scripts/rename-product.sh OpenSwitchr com.openswitchr.app
+#   bash scripts/rename-product.sh NewName
+#   bash scripts/rename-product.sh NewName com.newname.app
 #
 set -euo pipefail
 
@@ -17,8 +18,8 @@ if [[ $# -lt 1 ]]; then
     exit 1
 fi
 
-OLD_NAME="OpenSwitch"
-OLD_BUNDLE_ID="com.openswitch.app"
+OLD_NAME="OpenSwitchr"
+OLD_BUNDLE_ID="com.openswitchr.app"
 NEW_NAME="$1"
 NEW_BUNDLE_ID="${2:-com.$(echo "$NEW_NAME" | tr '[:upper:]' '[:lower:]').app}"
 
@@ -48,7 +49,7 @@ echo "Renaming $OLD_NAME -> $NEW_NAME (bundle id $NEW_BUNDLE_ID)"
 
 # All replacements happen in a single pass with one alternation, ordered
 # longest match first. Running them as separate substitutions would corrupt any
-# name that extends the old one: rewriting "openswitch" after the bundle
+# name that extends the old one: rewriting "openswitchr" after the bundle
 # identifier already became "com.openswitchr.app" would produce
 # "com.openswitchrr.app". A single /g pass never rescans what it just wrote.
 FILES=$(git ls-files -- '*.swift' '*.plist' '*.sh' '*.md' '*.yml' '*.yaml' '*.entitlements' '*.example' 'Package.swift')

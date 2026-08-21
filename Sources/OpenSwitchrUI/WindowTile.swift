@@ -1,5 +1,5 @@
 import AppKit
-import OpenSwitchCore
+import OpenSwitchrCore
 import SwiftUI
 
 /// One window in the switcher grid or a Dock preview row.

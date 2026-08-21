@@ -2,7 +2,7 @@ import AppKit
 import ApplicationServices
 import Foundation
 
-/// Everything OpenSwitch can do *to* a window.
+/// Everything OpenSwitchr can do *to* a window.
 ///
 /// Shared by both frontends: the switcher overlay and the Dock preview panel
 /// call exactly the same code, so behaviour cannot drift between them.

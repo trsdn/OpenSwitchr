@@ -1,4 +1,4 @@
-import OpenSwitchCore
+import OpenSwitchrCore
 import SwiftUI
 
 struct SettingsView: View {

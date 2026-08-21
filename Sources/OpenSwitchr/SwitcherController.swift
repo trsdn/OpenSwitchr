@@ -1,6 +1,6 @@
 import AppKit
-import OpenSwitchCore
-import OpenSwitchUI
+import OpenSwitchrCore
+import OpenSwitchrUI
 import OSLog
 import SwiftUI
 
@@ -13,7 +13,7 @@ public final class SwitcherController {
     private let thumbnails: ThumbnailProvider
     private let preferences: PreferencesStore
     private let panel = OverlayPanel()
-    private let logger = Logger(subsystem: "com.openswitch.app", category: "Switcher")
+    private let logger = Logger(subsystem: "com.openswitchr.app", category: "Switcher")
 
     private var visibleWindows: [WindowInfo] = []
     private var selectedIndex = 0

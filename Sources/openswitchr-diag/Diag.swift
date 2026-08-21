@@ -2,18 +2,18 @@ import AppKit
 import ApplicationServices
 import CoreGraphics
 import Foundation
-import OpenSwitchCore
+import OpenSwitchrCore
 
-/// A command-line harness for the parts of OpenSwitchCore that unit tests
+/// A command-line harness for the parts of OpenSwitchrCore that unit tests
 /// cannot judge: whether accessibility enumeration, the AX-to-CGWindowID
 /// linking heuristic, and ScreenCaptureKit actually agree with the windows on
 /// this Mac.
 ///
 /// Run it from a terminal that already holds the Accessibility permission:
 ///
-///     swift run openswitch-diag              # window index and linking
-///     swift run openswitch-diag --capture    # also exercise ScreenCaptureKit
-///     swift run openswitch-diag --bench      # also time repeated rebuilds
+///     swift run openswitchr-diag              # window index and linking
+///     swift run openswitchr-diag --capture    # also exercise ScreenCaptureKit
+///     swift run openswitchr-diag --bench      # also time repeated rebuilds
 @main
 @MainActor
 enum Diag {
