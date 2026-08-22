@@ -96,6 +96,14 @@ public final class DockHoverMonitor {
         lastItem = nil
     }
 
+    /// The Dock does not report that the pointer left it, so `lastItem` would
+    /// stay set and a second hover over the *same* icon would be seen as "no
+    /// change" and never open a preview again. The preview controller calls
+    /// this when it closes, which is precisely when the hover is over.
+    public func forgetLastHover() {
+        lastItem = nil
+    }
+
     // MARK: - Callback
 
     private static let callback: AXObserverCallback = { _, _, _, context in

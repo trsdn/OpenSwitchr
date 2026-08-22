@@ -21,6 +21,11 @@ public final class DockPreviewController {
 
     public private(set) var isVisible = false
 
+    /// Called whenever a hover ends, so the Dock monitor can reset its
+    /// "last hovered item" state. Without it, re-hovering the same icon is
+    /// indistinguishable from not moving at all.
+    public var onHidden: (() -> Void)?
+
     public init(index: WindowIndex, thumbnails: ThumbnailProvider, preferences: PreferencesStore) {
         self.index = index
         self.thumbnails = thumbnails
@@ -219,6 +224,9 @@ public final class DockPreviewController {
         showTask = nil
         hideTask = nil
         stopMouseTracking()
+        // Fires even when no panel was on screen: hovering an icon without
+        // windows also ends a hover, and the monitor must forget it either way.
+        onHidden?()
 
         guard isVisible else { return }
         panel.hidePanel()
