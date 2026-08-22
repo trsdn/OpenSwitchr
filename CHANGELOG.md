@@ -17,7 +17,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   from process, frame, title, and minimized state, without the private
   `_AXUIElementGetWindow`.
 - Switcher overlay on a non-activating `NSPanel`, driven by a `CGEventTap`:
-  hold `⌥`, press `Tab`, navigate by keyboard or mouse, type to filter.
+  hold `⌘`, press `Tab`, navigate by keyboard or mouse, type to filter. `⌥` and
+  `⌃` are selectable in Settings.
 - Dock hover previews driven by an accessibility observer on the Dock, with a
   fallback notification path and no mouse polling.
 - Menu bar app (`LSUIElement`) with settings, permission onboarding, and
@@ -70,6 +71,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- `⌘-Tab` is now the default hold modifier, so OpenSwitchr replaces the macOS
+  app switcher out of the box. `⌥-Tab` and `⌃-Tab` remain selectable, and an
+  existing stored preference is left untouched.
 - `⌘-Tab` is available again as a hold modifier, and it does replace the macOS
   app switcher. It had been removed on the assumption that the system switcher
   is dispatched before any session event tap; that assumption was never

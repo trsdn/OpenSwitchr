@@ -18,12 +18,15 @@ enum AppProbe {
     /// Probe the modifier the user actually configured. Hard-coding ⌥ would
     /// happily report success while the user's own ⌘-Tab does nothing.
     private static func configuredModifier() -> (name: String, key: CGKeyCode, flag: CGEventFlags) {
+        // The fallback must mirror `PreferencesStore`, which registers
+        // `command`. A divergence here would press the wrong key on a fresh
+        // install and report an app failure that does not exist.
         let stored = UserDefaults(suiteName: "com.openswitchr.app")?
-            .string(forKey: "holdModifier") ?? "option"
+            .string(forKey: "holdModifier") ?? "command"
         switch stored {
         case "control": return ("⌃", 0x3B, .maskControl)
-        case "command": return ("⌘", 0x37, .maskCommand)
-        default: return ("⌥", 0x3A, .maskAlternate)
+        case "option": return ("⌥", 0x3A, .maskAlternate)
+        default: return ("⌘", 0x37, .maskCommand)
         }
     }
 

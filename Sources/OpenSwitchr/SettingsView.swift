@@ -39,7 +39,7 @@ struct SettingsView: View {
                 }
                 .disabled(!model.preferences.switcherEnabled)
 
-                Text("Choosing ⌘-Tab replaces the macOS app switcher while OpenSwitchr is running. Quitting the app gives it back.")
+                Text("⌘-Tab is the default and replaces the macOS app switcher while OpenSwitchr is running. Quitting the app gives it back.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
 

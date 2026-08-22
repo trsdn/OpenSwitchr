@@ -22,8 +22,9 @@ overlay are thin readers on top.
 
 ## Features
 
-- **Switcher overlay** — hold `⌥` and press `Tab` for every window on the
-  current Space in most-recently-used order, with live thumbnails.
+- **Switcher overlay** — hold `⌘` and press `Tab` for every window on the
+  current Space in most-recently-used order, with live thumbnails. `⌥` and `⌃`
+  are available in Settings if you would rather keep the system switcher.
 - **Type to filter** — start typing to narrow by app name or window title.
 - **Dock hover previews** — hover a Dock icon to see that app's windows; click
   one to jump straight to it.
@@ -144,8 +145,9 @@ through exactly that gap.
 
 ## ⌘-Tab
 
-`⌘-Tab` is offered and it does replace the macOS app switcher. `⌥-Tab` is the
-default, and `⌃-Tab` is the third option.
+`⌘-Tab` is the default, and it replaces the macOS app switcher while OpenSwitchr
+runs. Quitting the app gives the system switcher back, and `⌥-Tab` and `⌃-Tab`
+are available in Settings for anyone who would rather leave `⌘-Tab` alone.
 
 This project previously claimed the opposite — that the system switcher is a
 WindowServer symbolic hotkey dispatched before any session tap, making `⌘-Tab`

@@ -65,7 +65,9 @@ public final class HotkeyMonitor {
         didSet { core.isOverlayVisible = isOverlayVisible }
     }
 
-    public var holdModifier: HoldModifier = .option {
+    /// Always overwritten from `PreferencesStore` before the tap starts; the
+    /// initial value only matters if that ever stops being true.
+    public var holdModifier: HoldModifier = .command {
         didSet { core.holdModifier = holdModifier }
     }
 
@@ -170,7 +172,7 @@ private final class TapCore: @unchecked Sendable {
 
     private let lock = NSLock()
     private var _isOverlayVisible = false
-    private var _holdModifier: HotkeyMonitor.HoldModifier = .option
+    private var _holdModifier: HotkeyMonitor.HoldModifier = .command
     /// Tracks whether the last Tab key-down was swallowed, so the matching
     /// key-up can be swallowed too and nothing else.
     private var _swallowedTabKeyDown = false

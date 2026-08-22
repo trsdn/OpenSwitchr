@@ -143,6 +143,11 @@ watches the window server:
   a pass.
 - Move the pointer onto a Dock icon (its frame comes from the Dock's own
   accessibility tree) and look for the preview panel the same way.
+- Keep every fallback in the probe identical to the app's. The probe reads
+  `holdModifier` from `UserDefaults` and has to fall back the way
+  `PreferencesStore` registers it. When the two drifted apart, the probe pressed
+  a different key than the app listened for on a fresh install, which reads as
+  an app failure that does not exist.
 - Watch behaviour with
   `log stream --predicate 'subsystem == "com.openswitchr.app"' --level debug`.
 
@@ -155,7 +160,9 @@ notifications and stays stale in a short-lived probe with no run loop, so read
 the window server's z-order instead; and `ps %cpu` is an average over process
 lifetime, so use interval samples for idle CPU. Also discard the first
 measurement after a launch — the first overlay costs ~180 ms against ~25 ms
-warm.
+warm. To check a *registered* default rather than whatever is stored, delete the
+key with `defaults delete com.openswitchr.app <key>` first; a value left over
+from earlier testing will happily mask a wrong default.
 
 ## Concurrency
 

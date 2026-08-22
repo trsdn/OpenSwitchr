@@ -57,7 +57,7 @@ public final class PreferencesStore {
     public init(defaults: UserDefaults = .standard) {
         self.defaults = defaults
         defaults.register(defaults: [
-            Key.holdModifier: HotkeyMonitor.HoldModifier.option.rawValue,
+            Key.holdModifier: HotkeyMonitor.HoldModifier.command.rawValue,
             Key.switcherEnabled: true,
             Key.dockHoverEnabled: true,
             Key.dockHoverDelay: 0.18,
@@ -70,7 +70,7 @@ public final class PreferencesStore {
         // so it falls back rather than leaving the switcher without a hotkey.
         holdModifier = HotkeyMonitor.HoldModifier(
             rawValue: defaults.string(forKey: Key.holdModifier) ?? ""
-        ) ?? .option
+        ) ?? .command
         switcherEnabled = defaults.bool(forKey: Key.switcherEnabled)
         dockHoverEnabled = defaults.bool(forKey: Key.dockHoverEnabled)
         dockHoverDelay = defaults.double(forKey: Key.dockHoverDelay)
