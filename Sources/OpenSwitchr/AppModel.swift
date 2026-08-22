@@ -209,6 +209,9 @@ public final class AppModel {
             scheduleRebuild()
         case .appActivated(let pid):
             index.noteFocus(pid: pid)
+            // Cheap place to notice a tap the system switched off behind our
+            // back, and it needs no timer of its own.
+            hotkeys.ensureEnabled()
             scheduleRebuild()
         case .focusedWindowChanged(let pid):
             index.noteFocus(pid: pid)

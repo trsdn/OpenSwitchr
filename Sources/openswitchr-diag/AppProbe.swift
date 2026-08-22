@@ -13,8 +13,19 @@ import Foundation
 @MainActor
 enum AppProbe {
 
-    private static let optionKey: CGKeyCode = 0x3A
     private static let tabKey: CGKeyCode = 0x30
+
+    /// Probe the modifier the user actually configured. Hard-coding ⌥ would
+    /// happily report success while the user's own ⌘-Tab does nothing.
+    private static func configuredModifier() -> (name: String, key: CGKeyCode, flag: CGEventFlags) {
+        let stored = UserDefaults(suiteName: "com.openswitchr.app")?
+            .string(forKey: "holdModifier") ?? "option"
+        switch stored {
+        case "control": return ("⌃", 0x3B, .maskControl)
+        case "command": return ("⌘", 0x37, .maskCommand)
+        default: return ("⌥", 0x3A, .maskAlternate)
+        }
+    }
 
     static func run() {
         guard let app = NSRunningApplication
@@ -40,11 +51,15 @@ enum AppProbe {
     private static func probeSwitcher() {
         print("Switcher overlay")
 
+        let modifier = configuredModifier()
+        print("  Using the configured hotkey: \(modifier.name)-Tab")
+
         let before = frontmostWindowDescription()
-        key(optionKey, down: true, flags: .maskAlternate)
+        let dockBefore = dockWindowIDs()
+        key(modifier.key, down: true, flags: modifier.flag)
         usleep(80_000)
-        key(tabKey, down: true, flags: .maskAlternate)
-        key(tabKey, down: false, flags: .maskAlternate)
+        key(tabKey, down: true, flags: modifier.flag)
+        key(tabKey, down: false, flags: modifier.flag)
 
         let appearance = waitForPanel(timeout: 3.0)
         if let appearance {
@@ -53,8 +68,17 @@ enum AppProbe {
             print("  FAILED: no overlay within 3 s.")
         }
 
+        // The Dock always owns windows, so presence proves nothing; only a
+        // window that appeared since the keystroke can be the system switcher.
+        let newDockWindows = dockWindowIDs().subtracting(dockBefore)
+        if modifier.name == "⌘" {
+            print(newDockWindows.isEmpty
+                ? "  System app switcher: suppressed."
+                : "  FAILED: the macOS app switcher appeared as well.")
+        }
+
         usleep(250_000)
-        key(optionKey, down: false, flags: [])
+        key(modifier.key, down: false, flags: [])
         usleep(700_000)
 
         print("  On release: \(panelSizes().isEmpty ? "closed" : "STILL OPEN")")
@@ -120,11 +144,24 @@ enum AppProbe {
     // MARK: - Window server
 
     /// Any on-screen window owned by OpenSwitchr is one of its panels.
+    private static func dockWindowIDs() -> Set<Int> {
+        let options: CGWindowListOption = [.optionOnScreenOnly, .excludeDesktopElements]
+        let list = CGWindowListCopyWindowInfo(options, kCGNullWindowID) as? [[String: Any]] ?? []
+        return Set(list.compactMap { window -> Int? in
+            guard (window[kCGWindowOwnerName as String] as? String) == "Dock" else { return nil }
+            return window[kCGWindowNumber as String] as? Int
+        })
+    }
+
     private static func panelSizes() -> [String] {
         let options: CGWindowListOption = [.optionOnScreenOnly, .excludeDesktopElements]
         let list = CGWindowListCopyWindowInfo(options, kCGNullWindowID) as? [[String: Any]] ?? []
         return list.compactMap { window in
             guard (window[kCGWindowOwnerName as String] as? String) == "OpenSwitchr" else { return nil }
+            // Both frontends float above normal windows. Without this the
+            // Settings window counts as an overlay, which turns a hotkey that
+            // does nothing into a passing measurement.
+            guard let layer = window[kCGWindowLayer as String] as? Int, layer > 0 else { return nil }
             let bounds = window[kCGWindowBounds as String] as? [String: Any] ?? [:]
             let width = bounds["Width"] as? Double ?? 0
             let height = bounds["Height"] as? Double ?? 0

@@ -142,17 +142,23 @@ hovers a Dock icon *twice* and times both previews. The core passing its tests
 says nothing about whether the app wired it up — two release-blocking bugs got
 through exactly that gap.
 
-## Why not ⌘-Tab?
+## ⌘-Tab
 
-Because it cannot be made to work without private APIs, so OpenSwitchr does not
-pretend otherwise and leaves it out of the settings entirely.
+`⌘-Tab` is offered and it does replace the macOS app switcher. `⌥-Tab` is the
+default, and `⌃-Tab` is the third option.
 
-The system app switcher is a WindowServer symbolic hotkey, dispatched before
-any session event tap sees the keystroke. Intercepting it needs either a
-HID-level tap, which is root-only, or the private symbolic-hotkey API. A
-`⌘-Tab` option would therefore be accepted in the UI and then silently never
-fire, which is worse than not offering it. `⌥-Tab` is the default; `⌃-Tab` is
-the alternative.
+This project previously claimed the opposite — that the system switcher is a
+WindowServer symbolic hotkey dispatched before any session tap, making `⌘-Tab`
+impossible without private APIs. That was an assumption, and it was wrong. A
+session-level tap both sees `⌘-Tab` and suppresses it. The measurement that
+settled it: passing the same event through makes the Dock's switcher window
+appear, swallowing it does not. Comparing against a baseline mattered, because
+the Dock always owns a window and a naive check reports the switcher as present
+either way.
+
+Choosing `⌘-Tab` replaces the system switcher only while OpenSwitchr runs.
+Quitting the app gives it back, and `openswitchr-diag --probe-app` asserts the
+suppression on every run.
 
 ## Scope: current Space only
 

@@ -70,12 +70,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- Removed `⌘-Tab` from the hold-modifier choices. macOS dispatches it to the
-  system app switcher before any session event tap, so the setting could be
-  selected but would never fire. Stored values fall back to `⌥`.
+- `⌘-Tab` is available again as a hold modifier, and it does replace the macOS
+  app switcher. It had been removed on the assumption that the system switcher
+  is dispatched before any session event tap; that assumption was never
+  measured and is wrong. A session tap sees `⌘-Tab` and suppresses it: passing
+  the same event through makes the Dock's switcher window appear, swallowing it
+  does not.
 
 ### Fixed
 
+- **The switcher hotkey stopped working after a while.** The event tap ran its
+  callback on the main run loop, where it queued behind SwiftUI rendering and
+  index work, and the system disables a tap whose callback is late. Re-enabling
+  only rescued the *next* keystroke, so the one the user pressed was swallowed
+  and nothing happened. The tap now owns a dedicated run loop thread and reads
+  a locked snapshot instead of main-actor state, so it never waits on the UI.
+  A tap disabled behind the app's back is also re-enabled on application
+  activation, which needs no timer.
 - **Hovering the same Dock icon a second time showed nothing.** The Dock never
   reports that the pointer left it, so the hover monitor kept treating the last
   icon as still hovered, and returning to it looked identical to not moving at

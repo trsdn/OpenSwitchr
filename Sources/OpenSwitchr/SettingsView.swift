@@ -39,7 +39,7 @@ struct SettingsView: View {
                 }
                 .disabled(!model.preferences.switcherEnabled)
 
-                Text("⌘-Tab cannot be reassigned. macOS dispatches it to the system app switcher before any app sees it, so it is not offered here.")
+                Text("Choosing ⌘-Tab replaces the macOS app switcher while OpenSwitchr is running. Quitting the app gives it back.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
 

@@ -110,6 +110,11 @@ Sources/
   it naively costs 5x.
 - **Never block the UI on a capture.** Tiles render immediately with icon and
   title; thumbnails stream in afterwards.
+- **The event tap owns its own run loop thread.** On the main run loop its
+  callback queues behind SwiftUI and index work, and the system disables a tap
+  whose callback is late — which killed the hotkey in the field. The callback
+  therefore reads a locked snapshot and must never touch main-actor state;
+  `MainActor.assumeIsolated` there would be a crash, not a shortcut.
 - **Keep the event tap callback trivial.** State transition only — no capture,
   no layout, no allocation-heavy work. A slow callback gets the tap disabled by
   the system.
@@ -131,8 +136,11 @@ twice worked only the first time. Verify end to end with `openswitchr-diag
 --probe-app`, which drives the installed bundle with synthetic events and
 watches the window server:
 
-- Post `⌥`+`Tab` with `CGEvent`, then poll `CGWindowListCopyWindowInfo` for a
-  window owned by `OpenSwitchr` to time how long the overlay takes to appear.
+- Post the configured modifier plus `Tab` with `CGEvent`, then poll
+  `CGWindowListCopyWindowInfo` for a window owned by `OpenSwitchr` *on a layer
+  above zero* to time how long the overlay takes to appear. Without the layer
+  filter the Settings window counts as an overlay and a dead hotkey measures as
+  a pass.
 - Move the pointer onto a Dock icon (its frame comes from the Dock's own
   accessibility tree) and look for the preview panel the same way.
 - Watch behaviour with

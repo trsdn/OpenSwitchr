@@ -16,23 +16,23 @@ import OSLog
 @MainActor
 public final class HotkeyMonitor {
 
-    /// Modifier the user holds to keep the switcher open.
     /// The modifier held down while pressing Tab.
     ///
-    /// `⌘` is deliberately absent. The system app switcher is a WindowServer
-    /// symbolic hotkey, which is dispatched before session event taps, so a
-    /// `⌘-Tab` binding here would be accepted in the UI and then silently never
-    /// fire. Taking it over needs either a HID-level tap (root only) or the
-    /// private symbolic-hotkey API, and both are out of bounds. Offering a
-    /// setting that cannot work is worse than not offering it.
+    /// `⌘` is included, and it does replace the system app switcher. That was
+    /// measured, not assumed: a session tap both sees `⌘-Tab` and suppresses
+    /// it. Passing the same event through makes the Dock's switcher window
+    /// appear, swallowing it does not, so the suppression is real rather than a
+    /// detection artefact.
     public enum HoldModifier: String, CaseIterable, Sendable {
         case option
         case control
+        case command
 
         public var flag: CGEventFlags {
             switch self {
             case .option: .maskAlternate
             case .control: .maskControl
+            case .command: .maskCommand
             }
         }
 
@@ -40,6 +40,7 @@ public final class HotkeyMonitor {
             switch self {
             case .option: "⌥"
             case .control: "⌃"
+            case .command: "⌘"
             }
         }
     }
@@ -60,17 +61,18 @@ public final class HotkeyMonitor {
 
     /// Set by the switcher controller. While true, the tap swallows keystrokes
     /// so typing filters the overlay instead of leaking into the focused app.
-    public var isOverlayVisible = false
+    public var isOverlayVisible = false {
+        didSet { core.isOverlayVisible = isOverlayVisible }
+    }
 
-    public var holdModifier: HoldModifier = .option
+    public var holdModifier: HoldModifier = .option {
+        didSet { core.holdModifier = holdModifier }
+    }
+
     public var onAction: ((Action) -> Void)?
 
-    /// Tracks whether the last Tab key-down was swallowed, so the matching
-    /// key-up can be swallowed too and nothing else.
-    private var swallowedTabKeyDown = false
-
-    private var tap: CFMachPort?
-    private var runLoopSource: CFRunLoopSource?
+    private let core = TapCore()
+    private var thread: Thread?
     private let logger = Logger(subsystem: "com.openswitchr.app", category: "HotkeyMonitor")
 
     public init() {}
@@ -79,7 +81,7 @@ public final class HotkeyMonitor {
 
     @discardableResult
     public func start() -> Bool {
-        guard tap == nil else { return true }
+        guard thread == nil else { return true }
         guard AXBridgeTrustProxy.isTrusted else {
             logger.notice("Not installing event tap: accessibility permission missing")
             return false
@@ -95,51 +97,122 @@ public final class HotkeyMonitor {
             place: .headInsertEventTap,
             options: .defaultTap,
             eventsOfInterest: mask,
-            callback: Self.tapCallback,
-            userInfo: Unmanaged.passUnretained(self).toOpaque()
+            callback: TapCore.callback,
+            userInfo: Unmanaged.passUnretained(core).toOpaque()
         ) else {
             logger.error("Could not create event tap")
             return false
         }
 
-        let source = CFMachPortCreateRunLoopSource(kCFAllocatorDefault, tap, 0)
-        CFRunLoopAddSource(CFRunLoopGetMain(), source, .commonModes)
-        CGEvent.tapEnable(tap: tap, enable: true)
+        core.isOverlayVisible = isOverlayVisible
+        core.holdModifier = holdModifier
+        core.tap = tap
+        core.emit = { [weak self] action in
+            // Ordered, and never makes the tap thread wait on the main actor.
+            DispatchQueue.main.async {
+                MainActor.assumeIsolated {
+                    self?.onAction?(action)
+                }
+            }
+        }
 
-        self.tap = tap
-        self.runLoopSource = source
+        // The tap gets its own thread. On the main run loop its callback queues
+        // behind SwiftUI rendering and index work, and the system disables a tap
+        // whose callback is late — which is exactly how the hotkey silently died
+        // after a while, since the re-enable only rescues the *next* keystroke.
+        let thread = Thread { [core] in
+            guard let tap = core.tap else { return }
+            let runLoop = CFRunLoopGetCurrent()
+            core.runLoop = runLoop
+            let source = CFMachPortCreateRunLoopSource(kCFAllocatorDefault, tap, 0)
+            CFRunLoopAddSource(runLoop, source, .commonModes)
+            CGEvent.tapEnable(tap: tap, enable: true)
+            CFRunLoopRun()
+        }
+        thread.name = "com.openswitchr.hotkey-tap"
+        thread.qualityOfService = .userInteractive
+        thread.start()
+        self.thread = thread
         return true
     }
 
     public func stop() {
-        swallowedTabKeyDown = false
-        if let tap {
+        core.reset()
+        if let tap = core.tap {
             CGEvent.tapEnable(tap: tap, enable: false)
         }
-        if let runLoopSource {
-            CFRunLoopRemoveSource(CFRunLoopGetMain(), runLoopSource, .commonModes)
+        if let runLoop = core.runLoop {
+            CFRunLoopStop(runLoop)
         }
-        tap = nil
-        runLoopSource = nil
+        core.tap = nil
+        core.runLoop = nil
+        core.emit = nil
+        thread = nil
     }
 
-    // MARK: - Tap callback
-
-    /// `CGEvent` is not `Sendable`, so it crosses the isolation boundary in a
-    /// box and the decision comes back as a plain `Bool`.
-    private struct EventBox: @unchecked Sendable {
-        let event: CGEvent
+    /// A tap can also be disabled by user input, and that arrives as an event
+    /// the tap itself may never see. Checking on application activation costs
+    /// nothing and needs no timer, since those notifications already arrive.
+    public func ensureEnabled() {
+        guard let tap = core.tap, !CGEvent.tapIsEnabled(tap: tap) else { return }
+        logger.notice("Event tap was found disabled; re-enabling")
+        CGEvent.tapEnable(tap: tap, enable: true)
     }
 
-    private static let tapCallback: CGEventTapCallBack = { _, type, event, context in
+}
+
+/// Everything the tap callback needs, deliberately free of actor isolation.
+///
+/// The callback runs on the tap's own thread, so it must not touch main-actor
+/// state. It reads a small locked snapshot, decides whether to swallow the
+/// event, and hands the resulting action to the main actor asynchronously.
+private final class TapCore: @unchecked Sendable {
+
+    private let lock = NSLock()
+    private var _isOverlayVisible = false
+    private var _holdModifier: HotkeyMonitor.HoldModifier = .option
+    /// Tracks whether the last Tab key-down was swallowed, so the matching
+    /// key-up can be swallowed too and nothing else.
+    private var _swallowedTabKeyDown = false
+    private var _tap: CFMachPort?
+    private var _runLoop: CFRunLoop?
+    private var _emit: ((HotkeyMonitor.Action) -> Void)?
+
+    var isOverlayVisible: Bool {
+        get { lock.withLock { _isOverlayVisible } }
+        set { lock.withLock { _isOverlayVisible = newValue } }
+    }
+
+    var holdModifier: HotkeyMonitor.HoldModifier {
+        get { lock.withLock { _holdModifier } }
+        set { lock.withLock { _holdModifier = newValue } }
+    }
+
+    var tap: CFMachPort? {
+        get { lock.withLock { _tap } }
+        set { lock.withLock { _tap = newValue } }
+    }
+
+    var runLoop: CFRunLoop? {
+        get { lock.withLock { _runLoop } }
+        set { lock.withLock { _runLoop = newValue } }
+    }
+
+    var emit: ((HotkeyMonitor.Action) -> Void)? {
+        get { lock.withLock { _emit } }
+        set { lock.withLock { _emit = newValue } }
+    }
+
+    func reset() {
+        lock.withLock { _swallowedTabKeyDown = false }
+    }
+
+    private let logger = Logger(subsystem: "com.openswitchr.app", category: "HotkeyMonitor")
+
+    static let callback: CGEventTapCallBack = { _, type, event, context in
         guard let context else { return Unmanaged.passUnretained(event) }
-        let monitor = Unmanaged<HotkeyMonitor>.fromOpaque(context).takeUnretainedValue()
-        let box = EventBox(event: event)
-
-        let swallow = MainActor.assumeIsolated {
-            monitor.handle(type: type, event: box.event)
-        }
-        return swallow ? nil : Unmanaged.passUnretained(event)
+        let core = Unmanaged<TapCore>.fromOpaque(context).takeUnretainedValue()
+        return core.handle(type: type, event: event) ? nil : Unmanaged.passUnretained(event)
     }
 
     /// Returns `true` when the event must not reach the app underneath.
@@ -155,63 +228,71 @@ public final class HotkeyMonitor {
             return false
         }
 
+        let (overlayVisible, modifier, swallowedTab) = lock.withLock {
+            (_isOverlayVisible, _holdModifier, _swallowedTabKeyDown)
+        }
+
         switch type {
         case .flagsChanged:
-            if isOverlayVisible && !event.flags.contains(holdModifier.flag) {
-                onAction?(.commit)
+            if overlayVisible && !event.flags.contains(modifier.flag) {
+                emit?(.commit)
             }
             return false
 
         case .keyDown:
-            return handleKeyDown(event)
+            return handleKeyDown(event, overlayVisible: overlayVisible, modifier: modifier)
 
         case .keyUp:
             // Only swallow the key-up of a Tab we actually swallowed on the
             // way down. Swallowing every Tab key-up would leak into apps that
             // never saw the hotkey, where plain Tab still moves focus.
             let keyCode = Int(event.getIntegerValueField(.keyboardEventKeycode))
-            if keyCode == kVK_Tab && swallowedTabKeyDown {
-                swallowedTabKeyDown = false
+            if keyCode == kVK_Tab && swallowedTab {
+                lock.withLock { _swallowedTabKeyDown = false }
                 return true
             }
-            return isOverlayVisible
+            return overlayVisible
 
         default:
             return false
         }
     }
 
-    private func handleKeyDown(_ event: CGEvent) -> Bool {
+    private func handleKeyDown(
+        _ event: CGEvent,
+        overlayVisible: Bool,
+        modifier: HotkeyMonitor.HoldModifier
+    ) -> Bool {
         let keyCode = Int(event.getIntegerValueField(.keyboardEventKeycode))
         let flags = event.flags
         let reverse = flags.contains(.maskShift)
 
-        if keyCode == kVK_Tab && flags.contains(holdModifier.flag) {
-            onAction?(isOverlayVisible ? .advance(reverse: reverse) : .open(reverse: reverse))
-            swallowedTabKeyDown = true
+        if keyCode == kVK_Tab && flags.contains(modifier.flag) {
+            emit?(overlayVisible ? .advance(reverse: reverse) : .open(reverse: reverse))
+            lock.withLock { _swallowedTabKeyDown = true }
             return true
         }
 
-        guard isOverlayVisible else { return false }
+        guard overlayVisible else { return false }
 
         switch keyCode {
         case kVK_Escape:
-            onAction?(.cancel)
+            emit?(.cancel)
         case kVK_Return, kVK_ANSI_KeypadEnter:
-            onAction?(.commit)
+            emit?(.commit)
         case kVK_LeftArrow:
-            onAction?(.move(.left))
+            emit?(.move(.left))
         case kVK_RightArrow:
-            onAction?(.move(.right))
+            emit?(.move(.right))
         case kVK_UpArrow:
-            onAction?(.move(.up))
+            emit?(.move(.up))
         case kVK_DownArrow:
-            onAction?(.move(.down))
+            emit?(.move(.down))
         case kVK_Delete:
-            onAction?(.deleteBackward)
+            emit?(.deleteBackward)
         default:
             if let text = Self.characters(from: event), !text.isEmpty {
-                onAction?(.append(text))
+                emit?(.append(text))
             }
         }
         return true
