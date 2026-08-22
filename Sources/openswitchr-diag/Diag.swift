@@ -14,6 +14,7 @@ import OpenSwitchrCore
 ///     swift run openswitchr-diag              # window index and linking
 ///     swift run openswitchr-diag --capture    # also exercise ScreenCaptureKit
 ///     swift run openswitchr-diag --bench      # also time repeated rebuilds
+///     swift run openswitchr-diag --probe-app  # drive the *installed* app
 @main
 @MainActor
 enum Diag {
@@ -30,6 +31,13 @@ enum Diag {
 
             """.utf8))
             exit(1)
+        }
+
+        // The core can be perfectly healthy while the app is dead, so this
+        // mode deliberately touches none of it.
+        if arguments.contains("--probe-app") {
+            AppProbe.run()
+            return
         }
 
         let index = WindowIndex()

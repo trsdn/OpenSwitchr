@@ -74,28 +74,45 @@ See `RELEASE_CHECKLIST.md` for the full procedure.
 
 ## Measured behaviour
 
-Measured on Apple Silicon, macOS 26.6, with 13 windows across 11 apps, using
-`swift run openswitchr-diag --bench --capture`:
+Measured on Apple Silicon, macOS 26.6, with 17 windows across 15 apps, using
+`swift run openswitchr-diag --bench --capture` plus synthetic-event probes
+driving the installed, signed app:
 
 | Metric | Budget | Measured |
 |---|---|---|
 | Idle CPU | < 0.1 % | 0.0 % |
-| Idle memory | < 60 MB | ~65 MB |
-| Cold window index build | — | ~240 ms, off the main thread |
-| Warm index rebuild | < 100 ms | ~51 ms mean |
-| AX-to-CGWindowID link rate | — | 13/13 windows |
+| Idle memory | < 60 MB | ~24 MB |
+| Overlay on screen after the hotkey | < 100 ms | ~21–24 ms |
+| Dock preview on screen after hover | < 100 ms | ~18 ms |
+| Cold window index build | — | ~159 ms, off the main thread |
+| Warm index rebuild | < 100 ms | ~8.6 ms mean |
+| AX-to-CGWindowID link rate | — | 17/17 windows |
 | 8 thumbnails, cold and parallel | — | ~540 ms, streamed into the UI |
 | Thumbnail cache hit | — | < 0.1 ms |
 
-Two design choices drive these numbers:
+The first overlay after launch costs ~200 ms rather than ~22 ms, because
+SwiftUI, the panel, and the first capture are all still cold. Every subsequent
+invocation is warm.
+
+Four design choices drive these numbers:
 
 - **No polling.** Every update comes from an accessibility notification, an
-  `NSWorkspace` notification, or the event tap. Nothing runs on a timer.
+  `NSWorkspace` notification, or the event tap. Nothing runs on a timer, with
+  one deliberate exception: waiting for a TCC grant, which the system reports
+  through no other means.
 - **Batched accessibility reads.** Each accessibility read is a synchronous
   message to another process, so cost tracks round trips rather than data.
   Reading role, subrole, title, position, size, and minimized state in one
   batched message per window cut rebuilds from ~350 ms to ~75 ms; querying apps
   in parallel took cold builds from ~990 ms to ~240 ms.
+- **Only windowed processes are resolved.** `NSWorkspace.runningApplications`
+  walks every process on the system and accounted for roughly 60 % of rebuild
+  time in a sampled profile, though a rebuild only needs the few processes that
+  own windows. Resolving those by pid and caching them took warm rebuilds from
+  ~51 ms to ~8.6 ms.
+- **The overlay's hosting view is built once.** Recreating `NSHostingView` on
+  every render cost ~30 ms per keystroke and made the first overlay far more
+  expensive than it needed to be.
 
 ## Diagnostics
 
@@ -106,10 +123,18 @@ permission:
 ```bash
 swift run openswitchr-diag                    # window index and AX linking
 swift run openswitchr-diag --bench --capture  # plus timings
+swift run openswitchr-diag --probe-app        # drive the *installed* app
 ```
 
 It reports per-app `CG` / `AX` / `LINKED` counts, which separates "the linking
 heuristic failed" from "this app exposes no accessibility windows at all".
+
+`--probe-app` is the only check that exercises the shipping app rather than the
+core: it posts a synthetic hotkey, measures how long the overlay takes to
+appear, confirms focus actually moved by reading the CoreGraphics z-order, then
+hovers a Dock icon *twice* and times both previews. The core passing its tests
+says nothing about whether the app wired it up — two release-blocking bugs got
+through exactly that gap.
 
 ## Why not ⌘-Tab?
 

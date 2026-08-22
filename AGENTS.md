@@ -34,6 +34,10 @@ swift test
 # Everything tests cannot reach: real AX linking rates and capture timings.
 # Run from a terminal that holds the Accessibility permission.
 swift run openswitchr-diag --bench --capture
+
+# End-to-end check against the *installed, running* app: synthetic hotkey,
+# overlay latency, real focus change, and two Dock hovers on the same icon.
+swift run openswitchr-diag --probe-app
 ```
 
 There is no Xcode project. Everything goes through SwiftPM; the app bundle is
@@ -87,7 +91,9 @@ Sources/
 - **No polling.** Idle CPU must stay near zero. Everything is driven by AX
   notifications, `NSWorkspace` notifications, or the event tap. The only mouse
   monitor allowed is the short-lived one that runs while a Dock preview panel
-  is already open.
+  is already open. The single sanctioned timer waits for a TCC grant, which the
+  system announces through no other mechanism; it runs only while a grant is
+  actually pending and stops as soon as it arrives.
 - **Current Space only.** Windows on other Spaces are deliberately out of
   scope, because reaching them requires private SkyLight APIs. Rebuild the
   index on `activeSpaceDidChangeNotification`.
@@ -102,8 +108,41 @@ Sources/
 - **Keep the event tap callback trivial.** State transition only — no capture,
   no layout, no allocation-heavy work. A slow callback gets the tap disabled by
   the system.
+- **Startup belongs to the app lifecycle, not to a view.** A `.menu`-style
+  `MenuBarExtra` builds its content lazily when the user opens the menu, so
+  anything started from that content never runs for a user who just launches
+  the app and presses the hotkey. `AppDelegate` owns `AppModel` and starts it in
+  `applicationDidFinishLaunching`. This shipped broken once and no test caught
+  it, because every test exercised the core directly.
 - **Signing identity must stay stable.** TCC permissions are tied to the code
   signature; `build-app.sh` aborts on an ad-hoc signature on purpose.
+
+## Verifying the app, not just the core
+
+The tests and `openswitchr-diag` both drive the core directly, so they cannot
+tell you whether the *app* works. Three failures hid behind green tests: the app
+never started, settings could not be changed, and hovering the same Dock icon
+twice worked only the first time. Verify end to end with `openswitchr-diag
+--probe-app`, which drives the installed bundle with synthetic events and
+watches the window server:
+
+- Post `⌥`+`Tab` with `CGEvent`, then poll `CGWindowListCopyWindowInfo` for a
+  window owned by `OpenSwitchr` to time how long the overlay takes to appear.
+- Move the pointer onto a Dock icon (its frame comes from the Dock's own
+  accessibility tree) and look for the preview panel the same way.
+- Watch behaviour with
+  `log stream --predicate 'subsystem == "com.openswitchr.app"' --level debug`.
+
+Repeat every gesture at least twice. Both hover bugs were invisible on a first
+attempt and only appeared on the second, because the failure was stale state
+left behind by the first.
+
+Two traps when measuring: `NSWorkspace.frontmostApplication` is updated by
+notifications and stays stale in a short-lived probe with no run loop, so read
+the window server's z-order instead; and `ps %cpu` is an average over process
+lifetime, so use interval samples for idle CPU. Also discard the first
+measurement after a launch — the first overlay costs ~180 ms against ~25 ms
+warm.
 
 ## Concurrency
 

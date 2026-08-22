@@ -41,6 +41,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Coalesce concurrent `SCShareableContent` queries. A cold burst of eight
   thumbnails previously fired eight redundant queries and captures did not
   overlap; parallel capture went from ~730 ms to ~540 ms.
+- Resolve only the processes that own windows, and cache them.
+  `NSWorkspace.runningApplications` walks every process on the system and
+  accounted for ~60 % of rebuild time in a sampled profile, while a rebuild
+  only needs the handful of processes with windows on screen. Warm rebuilds
+  went from ~51 ms to ~8.6 ms.
+- Build the overlay's `NSHostingView` once and replace only its root view.
+  Recreating it on every render made the overlay cost ~50 ms to appear and
+  repeated the same work on every selection change; it now appears in
+  ~21–24 ms.
 
 ### Added
 
@@ -60,6 +69,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **Hovering the same Dock icon a second time showed nothing.** The Dock never
+  reports that the pointer left it, so the hover monitor kept treating the last
+  icon as still hovered, and returning to it looked identical to not moving at
+  all. Previews now reset that state whenever a hover ends.
+- **The app did nothing until the menu bar icon was clicked.** Startup ran from
+  a `task` on the `MenuBarExtra`'s content, and a `.menu`-style menu bar extra
+  builds its content lazily when the menu is opened. A user who launched the
+  app and pressed the hotkey got an app that had never started its window
+  index, event tap, or Dock observer. Startup now happens in
+  `applicationDidFinishLaunching`, where it does not depend on any view
+  existing.
+- Granting accessibility no longer requires finding a "try again" button. The
+  app now waits for the grant and starts itself when it arrives.
 - The single-window linking fallback no longer ignores the minimized check, so
   a minimized accessibility window can no longer be linked to an on-screen
   CoreGraphics window.
