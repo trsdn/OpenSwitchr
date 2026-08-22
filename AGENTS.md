@@ -143,6 +143,11 @@ watches the window server:
   a pass.
 - Move the pointer onto a Dock icon (its frame comes from the Dock's own
   accessibility tree) and look for the preview panel the same way.
+- Measure panels against a baseline of window IDs, never "is any panel open".
+  Both frontends put a floating panel on screen, so a Dock preview left open by
+  a pointer resting on the Dock stands in for the switcher overlay and reports
+  a fast, entirely meaningless success. Park the pointer away from the Dock
+  before measuring the switcher.
 - Keep every fallback in the probe identical to the app's. The probe reads
   `holdModifier` from `UserDefaults` and has to fall back the way
   `PreferencesStore` registers it. When the two drifted apart, the probe pressed

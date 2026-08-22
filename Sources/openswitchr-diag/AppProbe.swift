@@ -57,14 +57,22 @@ enum AppProbe {
         let modifier = configuredModifier()
         print("  Using the configured hotkey: \(modifier.name)-Tab")
 
+        // A pointer left over the Dock keeps a hover preview open, and that
+        // preview is a panel like any other. Park it before measuring.
+        parkPointer()
+
         let before = frontmostWindowDescription()
         let dockBefore = dockWindowIDs()
+        let panelsBefore = Set(panels().keys)
+        if !panelsBefore.isEmpty {
+            print("  Note: \(panelsBefore.count) panel(s) already open; ignoring them.")
+        }
         key(modifier.key, down: true, flags: modifier.flag)
         usleep(80_000)
         key(tabKey, down: true, flags: modifier.flag)
         key(tabKey, down: false, flags: modifier.flag)
 
-        let appearance = waitForPanel(timeout: 3.0)
+        let appearance = waitForPanel(timeout: 3.0, ignoring: panelsBefore)
         if let appearance {
             print(String(format: "  Appeared in %.0f ms (%@)", appearance.seconds * 1000, appearance.size))
         } else {
@@ -84,7 +92,7 @@ enum AppProbe {
         key(modifier.key, down: false, flags: [])
         usleep(700_000)
 
-        print("  On release: \(panelSizes().isEmpty ? "closed" : "STILL OPEN")")
+        print("  On release: \(panels().keys.contains(where: { !panelsBefore.contains($0) }) ? "STILL OPEN" : "closed")")
 
         let after = frontmostWindowDescription()
         print("  Focus: \(before) -> \(after)")
@@ -156,27 +164,43 @@ enum AppProbe {
         })
     }
 
-    private static func panelSizes() -> [String] {
+    /// Panels keyed by window ID, so a caller can ignore whatever was already
+    /// on screen. Returning only sizes made a Dock preview that happened to be
+    /// open indistinguishable from a freshly opened switcher overlay.
+    private static func panels() -> [Int: String] {
         let options: CGWindowListOption = [.optionOnScreenOnly, .excludeDesktopElements]
         let list = CGWindowListCopyWindowInfo(options, kCGNullWindowID) as? [[String: Any]] ?? []
-        return list.compactMap { window in
-            guard (window[kCGWindowOwnerName as String] as? String) == "OpenSwitchr" else { return nil }
+        var result: [Int: String] = [:]
+        for window in list {
+            guard (window[kCGWindowOwnerName as String] as? String) == "OpenSwitchr" else { continue }
             // Both frontends float above normal windows. Without this the
             // Settings window counts as an overlay, which turns a hotkey that
             // does nothing into a passing measurement.
-            guard let layer = window[kCGWindowLayer as String] as? Int, layer > 0 else { return nil }
+            guard let layer = window[kCGWindowLayer as String] as? Int, layer > 0 else { continue }
+            guard let id = window[kCGWindowNumber as String] as? Int else { continue }
             let bounds = window[kCGWindowBounds as String] as? [String: Any] ?? [:]
             let width = bounds["Width"] as? Double ?? 0
             let height = bounds["Height"] as? Double ?? 0
-            return "\(Int(width))x\(Int(height))"
+            result[id] = "\(Int(width))x\(Int(height))"
         }
+        return result
     }
 
-    private static func waitForPanel(timeout: TimeInterval) -> (seconds: Double, size: String)? {
+    private static func panelSizes() -> [String] {
+        Array(panels().values)
+    }
+
+    /// Waits for a panel that was not already on screen. Measuring "any panel"
+    /// let a leftover Dock preview stand in for the switcher overlay, which
+    /// reported 1 ms and the wrong window size while proving nothing.
+    private static func waitForPanel(
+        timeout: TimeInterval,
+        ignoring baseline: Set<Int> = []
+    ) -> (seconds: Double, size: String)? {
         let start = Date()
         while Date().timeIntervalSince(start) < timeout {
-            if let size = panelSizes().first {
-                return (Date().timeIntervalSince(start), size)
+            if let fresh = panels().first(where: { !baseline.contains($0.key) }) {
+                return (Date().timeIntervalSince(start), fresh.value)
             }
             usleep(5_000)
         }
@@ -204,6 +228,14 @@ enum AppProbe {
         let event = CGEvent(keyboardEventSource: source, virtualKey: code, keyDown: down)
         event?.flags = flags
         event?.post(tap: .cghidEventTap)
+    }
+
+    /// Moves the pointer somewhere no Dock icon can be under it and waits for
+    /// any hover preview that was open to hide.
+    private static func parkPointer() {
+        let frame = NSScreen.main?.frame ?? NSRect(x: 0, y: 0, width: 1440, height: 900)
+        move(to: CGPoint(x: frame.midX, y: frame.midY / 2))
+        usleep(900_000)
     }
 
     private static func move(to point: CGPoint) {
