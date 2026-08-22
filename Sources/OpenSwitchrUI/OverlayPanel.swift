@@ -39,11 +39,24 @@ public final class OverlayPanel: NSPanel {
     public override var canBecomeKey: Bool { false }
     public override var canBecomeMain: Bool { false }
 
-    /// Installs a SwiftUI hierarchy as the panel's content.
+    private var hosting: NSHostingView<AnyView>?
+
+    /// Updates the panel's contents.
+    ///
+    /// The hosting view is created once and then only has its root view
+    /// replaced. Building a fresh `NSHostingView` per update is what made the
+    /// first overlay appearance cost ~220 ms, and it repeated that work on
+    /// every selection change while the overlay was open.
     public func setContent<Content: View>(_ view: Content) {
-        let hosting = NSHostingView(rootView: view)
-        hosting.autoresizingMask = [.width, .height]
-        contentView = hosting
+        if let existing = hosting {
+            existing.rootView = AnyView(view)
+            return
+        }
+
+        let created = NSHostingView(rootView: AnyView(view))
+        created.autoresizingMask = [.width, .height]
+        hosting = created
+        contentView = created
     }
 
     /// Shows the panel centred on the screen that currently has the mouse,

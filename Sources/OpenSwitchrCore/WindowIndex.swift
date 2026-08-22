@@ -24,6 +24,10 @@ public final class WindowIndex {
     @ObservationIgnored private let logger = Logger(subsystem: "com.openswitchr.app", category: "WindowIndex")
     @ObservationIgnored private let ownPID = ProcessInfo.processInfo.processIdentifier
 
+    /// Windowed processes, remembered across rebuilds. See
+    /// `runningApplications(for:)` for why this is safe to cache.
+    @ObservationIgnored private var applicationCache: [pid_t: NSRunningApplication] = [:]
+
     public init() {}
 
     // MARK: - Queries
@@ -111,7 +115,7 @@ public final class WindowIndex {
         grouped: [pid_t: [CGWindowEntry]]
     ) {
         let entries = CGWindowSnapshot.current()
-        let appsByPID = runningApplicationsByPID()
+        let appsByPID = runningApplications(for: entries)
 
         var grouped: [pid_t: [CGWindowEntry]] = [:]
         for entry in entries where entry.pid != ownPID {
@@ -183,11 +187,38 @@ public final class WindowIndex {
         AXWindowLinker.windows(forPID: pid).count
     }
 
-    private func runningApplicationsByPID() -> [pid_t: NSRunningApplication] {
+    /// Resolves only the processes that actually own a window, and remembers
+    /// them.
+    ///
+    /// `NSWorkspace.runningApplications` walks every process on the system and
+    /// dominated rebuild cost — around 60% of it in a sampled profile — even
+    /// though a rebuild only ever needs the handful of processes with windows
+    /// on screen. A direct per-pid lookup is far cheaper, and the result is
+    /// stable enough to cache: pids are not reused while the process lives, so
+    /// an entry is valid until that process terminates.
+    private func runningApplications(for entries: [CGWindowEntry]) -> [pid_t: NSRunningApplication] {
         var map: [pid_t: NSRunningApplication] = [:]
-        for app in NSWorkspace.shared.runningApplications where app.activationPolicy == .regular {
-            map[app.processIdentifier] = app
+
+        for pid in Set(entries.map(\.pid)) where pid != ownPID {
+            if let cached = applicationCache[pid] {
+                // A terminated process can leave a stale window entry behind
+                // for a moment, and its NSRunningApplication goes hollow.
+                if cached.isTerminated {
+                    applicationCache[pid] = nil
+                } else {
+                    map[pid] = cached
+                    continue
+                }
+            }
+
+            guard let app = NSRunningApplication(processIdentifier: pid),
+                  app.activationPolicy == .regular
+            else { continue }
+
+            applicationCache[pid] = app
+            map[pid] = app
         }
+
         return map
     }
 }
