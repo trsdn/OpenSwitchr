@@ -23,6 +23,11 @@ public final class PermissionsManager {
     /// Accessibility is required for the app to do anything at all.
     public var isOperational: Bool { accessibility == .granted }
 
+    /// Called when accessibility flips from denied to granted, so the app can
+    /// start itself instead of waiting for the user to find a "try again"
+    /// button they have no reason to expect.
+    public var onAccessibilityGranted: (() -> Void)?
+
     private var pollTimer: Timer?
     private var watchDeadline: Date?
 
@@ -45,14 +50,24 @@ public final class PermissionsManager {
     /// Shows the system prompt that deep-links into System Settings.
     public func requestAccessibility() {
         _ = AXBridge.checkTrust(prompt: true)
-        startWatchingForGrant()
+        startWatchingForGrant(timeout: Self.promptTimeout)
     }
 
     public func requestScreenRecording() {
         // The first call triggers the system prompt; the result only becomes
         // true after the user grants it, hence the watcher below.
         _ = CGRequestScreenCaptureAccess()
-        startWatchingForGrant()
+        startWatchingForGrant(timeout: Self.promptTimeout)
+    }
+
+    /// Waits for a grant the app did not prompt for, which is the normal case:
+    /// the user opens System Settings themselves, or the permission is granted
+    /// long after launch. There is no deadline here because an app that is
+    /// idle without the permission has nothing else to do, and the watcher
+    /// stops the moment accessibility arrives.
+    public func watchForAccessibilityGrant() {
+        guard accessibility == .denied else { return }
+        startWatchingForGrant(timeout: nil)
     }
 
     public func openAccessibilitySettings() {
@@ -70,13 +85,12 @@ public final class PermissionsManager {
 
     /// Granting a TCC permission produces no notification, so this is the one
     /// place where polling is acceptable. It only runs while a grant is
-    /// pending and stops the moment both permissions are resolved or after a
-    /// bounded window of time.
-    private func startWatchingForGrant() {
+    /// pending and stops as soon as the outcome is settled.
+    private func startWatchingForGrant(timeout: TimeInterval?) {
         pollTimer?.invalidate()
-        watchDeadline = Date().addingTimeInterval(120)
+        watchDeadline = timeout.map { Date().addingTimeInterval($0) }
 
-        pollTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { _ in
+        pollTimer = Timer.scheduledTimer(withTimeInterval: Self.pollInterval, repeats: true) { _ in
             Task { @MainActor [weak self] in
                 self?.checkPendingGrant()
             }
@@ -84,10 +98,34 @@ public final class PermissionsManager {
     }
 
     private func checkPendingGrant() {
+        let wasDenied = accessibility == .denied
         refresh()
-        let expired = watchDeadline.map { Date() > $0 } ?? true
-        if (accessibility == .granted && screenRecording == .granted) || expired {
+
+        if wasDenied && accessibility == .granted {
+            onAccessibilityGranted?()
+        }
+
+        let expired = watchDeadline.map { Date() > $0 } ?? false
+        if Self.shouldStopWatching(
+            accessibility: accessibility,
+            screenRecording: screenRecording,
+            expired: expired
+        ) {
             stopWatching()
         }
     }
+
+    /// Split out from the timer so the stop condition can be tested without
+    /// TCC, which no test can influence. Pure, hence `nonisolated`.
+    nonisolated static func shouldStopWatching(
+        accessibility: Status,
+        screenRecording: Status,
+        expired: Bool
+    ) -> Bool {
+        if expired { return true }
+        return accessibility == .granted && screenRecording == .granted
+    }
+
+    private static let pollInterval: TimeInterval = 1.0
+    private static let promptTimeout: TimeInterval = 120
 }

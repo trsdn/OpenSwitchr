@@ -62,12 +62,20 @@ public final class AppModel {
     // MARK: - Lifecycle
 
     public func start() {
+        guard !isRunning else { return }
         permissions.refresh()
         guard permissions.isOperational else {
             logger.notice("Accessibility permission missing; staying idle")
             isRunning = false
+            // Nothing here is usable without the permission, so wait for it
+            // rather than making the user re-trigger startup by hand.
+            permissions.onAccessibilityGranted = { [weak self] in
+                self?.start()
+            }
+            permissions.watchForAccessibilityGrant()
             return
         }
+        permissions.stopWatching()
 
         // The first accessibility message to each app is expensive, so the
         // initial index is built off the main thread. Everything else starts
@@ -80,6 +88,9 @@ public final class AppModel {
         startDockHover()
         startMemoryPressureWatch()
         isRunning = true
+        logger.notice(
+            "Started. Switcher hotkey: \(self.switcherHotkeyActive), Dock hover: \(self.dockHoverActive)"
+        )
     }
 
     public func stop() {
@@ -155,6 +166,9 @@ public final class AppModel {
         dockHover.onHover = { [weak self] item in
             self?.dockPreview.hoverChanged(to: item)
         }
+        dockPreview.onHidden = { [weak self] in
+            self?.dockHover.forgetLastHover()
+        }
         dockHoverActive = dockHover.start()
     }
 
@@ -172,6 +186,10 @@ public final class AppModel {
     // MARK: - Event handling
 
     private func handle(_ event: WindowEventBus.Event) {
+        // Idle CPU is a hard goal, and it is decided entirely by how often
+        // these arrive, so the rate has to be observable in the field.
+        logger.debug("Event: \(String(describing: event))")
+
         switch event {
         case .windowsChanged:
             scheduleRebuild()

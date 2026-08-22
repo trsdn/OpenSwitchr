@@ -179,17 +179,24 @@ public final class WindowEventBus {
     /// the bus is passed through as an opaque context pointer. The observer is
     /// attached to the main run loop, which is why hopping back onto the main
     /// actor here is sound rather than merely convenient.
-    private static let axCallback: AXObserverCallback = { _, _, notification, context in
+    private static let axCallback: AXObserverCallback = { _, element, notification, context in
         guard let context else { return }
         let bus = Unmanaged<WindowEventBus>.fromOpaque(context).takeUnretainedValue()
         let name = notification as String
 
+        var pid: pid_t = 0
+        AXUIElementGetPid(element, &pid)
+
         MainActor.assumeIsolated {
-            bus.handleAXNotification(name)
+            bus.handleAXNotification(name, pid: pid)
         }
     }
 
-    private func handleAXNotification(_ name: String) {
+    private func handleAXNotification(_ name: String, pid: pid_t) {
+        // Which app is chattering decides whether idle CPU is acceptable, and
+        // that cannot be guessed from outside.
+        logger.debug("AX \(name) from pid \(pid)")
+
         switch name {
         case kAXFocusedWindowChangedNotification:
             emit(.focusedWindowChanged(NSWorkspace.shared.frontmostApplication?.processIdentifier ?? 0))

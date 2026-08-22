@@ -5,7 +5,6 @@ import SwiftUI
 struct MenuBarView: View {
 
     @Bindable var model: AppModel
-    @State private var didStart = false
 
     var body: some View {
         Group {
@@ -28,11 +27,10 @@ struct MenuBarView: View {
             }
             .keyboardShortcut("q", modifiers: .command)
         }
-        .task {
-            guard !didStart else { return }
-            didStart = true
-            model.start()
-        }
+        // Startup deliberately does not live here. This menu is built lazily
+        // when it is opened, so a user who never clicks the menu bar icon
+        // would get an app that does nothing. See AppDelegate.
+        .onAppear { model.permissions.refresh() }
     }
 
     private var statusSection: some View {
