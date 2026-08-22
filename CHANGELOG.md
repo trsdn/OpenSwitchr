@@ -32,6 +32,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Performance
 
+- Rebuild the window index only when a frontend is about to be shown. A single
+  application retitling one window fifteen times a second was enough to keep
+  the index rebuilding continuously, costing 3–7 % CPU on an otherwise idle
+  machine. Events now mark the index stale and the rebuild happens on the path
+  that opens the overlay or a Dock preview, where ~9 ms disappears behind the
+  window that is already being drawn. Idle CPU is back to 0.0 %.
+
 - Read window attributes with `AXUIElementCopyMultipleAttributeValues` instead
   of one message per attribute: warm index rebuilds went from ~350 ms to
   ~75 ms.

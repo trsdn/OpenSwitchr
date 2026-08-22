@@ -81,9 +81,9 @@ driving the installed, signed app:
 | Metric | Budget | Measured |
 |---|---|---|
 | Idle CPU | < 0.1 % | 0.0 % |
-| Idle memory | < 60 MB | ~24 MB |
-| Overlay on screen after the hotkey | < 100 ms | ~21–24 ms |
-| Dock preview on screen after hover | < 100 ms | ~18 ms |
+| Idle memory | < 60 MB | ~17–24 MB |
+| Overlay on screen after the hotkey | < 100 ms | ~16–24 ms |
+| Dock preview on screen after hover | < 100 ms | ~2–8 ms |
 | Cold window index build | — | ~159 ms, off the main thread |
 | Warm index rebuild | < 100 ms | ~8.6 ms mean |
 | AX-to-CGWindowID link rate | — | 17/17 windows |
@@ -113,6 +113,12 @@ Four design choices drive these numbers:
 - **The overlay's hosting view is built once.** Recreating `NSHostingView` on
   every render cost ~30 ms per keystroke and made the first overlay far more
   expensive than it needed to be.
+- **The index is only rebuilt when something is on screen.** One window that
+  retitles itself fifteen times a second — a VPN client counting down is
+  enough — otherwise keeps rebuilding a list nobody is reading, which measured
+  3–7 % CPU on an idle machine. Events now mark the index stale, and the
+  rebuild is paid on the path that opens the overlay or a Dock preview, where
+  it costs ~9 ms and is hidden behind the window that is already appearing.
 
 ## Diagnostics
 

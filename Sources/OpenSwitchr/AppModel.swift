@@ -36,6 +36,7 @@ public final class AppModel {
     @ObservationIgnored private var rebuildTask: Task<Void, Never>?
     @ObservationIgnored private var memoryPressureSource: DispatchSourceMemoryPressure?
     @ObservationIgnored private var pendingRebuild = false
+    @ObservationIgnored private var indexIsStale = false
     @ObservationIgnored private let logger = Logger(subsystem: "com.openswitchr.app", category: "AppModel")
 
     /// Reflects whether the engine actually came up, so the menu can say so.
@@ -146,7 +147,11 @@ public final class AppModel {
         guard preferences.switcherEnabled else { return }
         hotkeys.holdModifier = preferences.holdModifier
         hotkeys.onAction = { [weak self] action in
-            self?.switcher.handle(action)
+            guard let self else { return }
+            if !self.switcher.isVisible {
+                self.refreshIfStale()
+            }
+            self.switcher.handle(action)
         }
         switcher.onVisibilityChanged = { [weak self] visible in
             guard let self else { return }
@@ -164,7 +169,11 @@ public final class AppModel {
     private func startDockHover() {
         guard preferences.dockHoverEnabled, !dockHoverActive else { return }
         dockHover.onHover = { [weak self] item in
-            self?.dockPreview.hoverChanged(to: item)
+            guard let self else { return }
+            if item != nil {
+                self.refreshIfStale()
+            }
+            self.dockPreview.hoverChanged(to: item)
         }
         dockPreview.onHidden = { [weak self] in
             self?.dockHover.forgetLastHover()
@@ -214,12 +223,41 @@ public final class AppModel {
             return
         }
 
+        // Nobody reads the index unless a frontend is on screen. A single
+        // chatty app — one window retitling itself fifteen times a second is
+        // enough — otherwise keeps rebuilding a list no one is looking at, and
+        // that alone costs several percent CPU while "idle". Mark it stale and
+        // pay for the rebuild when it is next shown.
+        guard dockPreview.isVisible else {
+            indexIsStale = true
+            return
+        }
+
         rebuildTask?.cancel()
         rebuildTask = Task { [weak self] in
             try? await Task.sleep(for: .milliseconds(80))
             guard !Task.isCancelled, let self else { return }
             await self.index.rebuildConcurrently()
             guard !Task.isCancelled else { return }
+            self.thumbnails.retain(only: Set(self.index.windows.map(\.id)))
+        }
+    }
+
+    /// Called on the paths that put a frontend on screen. The rebuild is not
+    /// awaited: the overlay renders from the previous index within ~25 ms and
+    /// the refreshed one arrives ~10 ms later through observation, which is
+    /// invisible and keeps the open path off the critical path.
+    private func refreshIfStale() {
+        guard indexIsStale else { return }
+        indexIsStale = false
+
+        rebuildTask?.cancel()
+        rebuildTask = Task { [weak self] in
+            guard let self else { return }
+            let before = self.index.windows.count
+            await self.index.rebuildConcurrently()
+            guard !Task.isCancelled else { return }
+            self.logger.debug("Stale rebuild on show: \(before) -> \(self.index.windows.count) windows")
             self.thumbnails.retain(only: Set(self.index.windows.map(\.id)))
         }
     }

@@ -94,6 +94,11 @@ Sources/
   is already open. The single sanctioned timer waits for a TCC grant, which the
   system announces through no other mechanism; it runs only while a grant is
   actually pending and stops as soon as it arrives.
+- **Do no work nobody can see.** Being event-driven is not enough: other
+  applications decide the event rate, and one window retitling itself fifteen
+  times a second cost 3–7 % idle CPU by rebuilding an index no one was reading.
+  Events mark the index stale; the rebuild happens on the path that puts a
+  frontend on screen, where it hides behind the window being drawn.
 - **Current Space only.** Windows on other Spaces are deliberately out of
   scope, because reaching them requires private SkyLight APIs. Rebuild the
   index on `activeSpaceDidChangeNotification`.
