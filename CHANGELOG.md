@@ -44,11 +44,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Release tooling: `scripts/release_macos.sh`, `make_dmg.sh`, `notarize_app.sh`
-  and `notarize_dmg.sh`, plus `RELEASE_CHECKLIST.md`. The unnotarized path is
-  exercised locally and produces a signed, checksummed DMG.
-- GitHub Actions: `ci.yml` builds with warnings-as-errors and runs the tests;
-  `release.yml` builds, notarizes and attaches assets on a `v*` tag.
+- Release process via `trsdn/macos-notarization-broker`, documented in
+  `RELEASE_CHECKLIST.md`. Apple credentials never enter this repository; the
+  broker builds from a pinned commit and signs with its own code.
+- `scripts/make_dmg.sh` for local, explicitly unnotarized test packaging.
+- GitHub Actions: `ci.yml` builds with warnings-as-errors and runs the tests,
+  and `secret-scan.yml` guards against committed credentials. Neither uses a
+  secret, an environment, or write permissions.
 
 ### Changed
 

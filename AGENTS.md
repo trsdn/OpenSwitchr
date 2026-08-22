@@ -39,6 +39,20 @@ swift run openswitchr-diag --bench --capture
 There is no Xcode project. Everything goes through SwiftPM; the app bundle is
 assembled manually in `scripts/build-app.sh`.
 
+## Releases go through the broker
+
+Distributable builds come from `trsdn/macos-notarization-broker`. Apple
+credentials must never be added to this repository, and no workflow here may
+use a secret, an environment, or write permissions.
+
+The broker assembles the app bundle itself with its `openswitchr-swiftpm`
+adapter, so `scripts/build-app.sh` is **not** the definition of the release
+bundle — it is a local convenience that has to stay consistent with the
+broker profile. Changing the bundle identifier, executable name, layout,
+architecture, entitlements, or minimum macOS version requires a reviewed pull
+request against the broker's `profiles/apps.json` first; otherwise preflight
+rejects the release. See `RELEASE_CHECKLIST.md`.
+
 ## Architecture
 
 OpenSwitchr is a `LSUIElement` menu bar app targeting macOS 15+. Two frontends

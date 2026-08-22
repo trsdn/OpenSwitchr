@@ -57,14 +57,18 @@ There is no Xcode project; the app bundle is assembled by the build script.
 
 ## Release
 
+Distributable builds come from
+[`trsdn/macos-notarization-broker`](https://github.com/trsdn/macos-notarization-broker),
+which builds, signs and notarizes from a pinned commit without any Apple
+credential ever reaching this repository:
+
 ```bash
-bash scripts/release_macos.sh v0.1.0   # build, notarize, sign a DMG into dist/
+scripts/request.sh openswitchr v0.1.0   # run from a broker checkout
 ```
 
-Notarization needs Apple credentials (`NOTARY_PROFILE`, or `APPLE_ID` plus
-`APPLE_TEAM_ID` and `APPLE_APP_PASSWORD`). Without them the script still emits
-a signed, checksummed DMG and says clearly that it skipped notarization — that
-build is for local testing only, since users would hit a Gatekeeper block.
+`scripts/build-app.sh` and `scripts/make_dmg.sh` here are for local testing
+only. They produce a signed but **unnotarized** DMG, which would trip Gatekeeper
+on someone else's machine.
 
 See `RELEASE_CHECKLIST.md` for the full procedure.
 

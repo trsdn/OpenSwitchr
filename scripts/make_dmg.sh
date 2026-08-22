@@ -11,12 +11,13 @@ if [[ -f "$ENV_FILE" ]]; then
   set +a
 fi
 
+# Local test packaging only. Distributable DMGs come from the notarization
+# broker, which builds and packages with its own code; see RELEASE_CHECKLIST.md.
 APP_NAME="OpenSwitchr"
 APP_PATH="${APP_PATH:-$PROJECT_DIR/.build/release/$APP_NAME.app}"
 DIST_DIR="$PROJECT_DIR/dist"
 DMG_PATH="${DMG_PATH:-$DIST_DIR/OpenSwitchr-macos.dmg}"
 STAGING_DIR="$PROJECT_DIR/.build/dmg-staging-$$-${RANDOM}"
-REQUIRE_NOTARIZED_APP="${REQUIRE_NOTARIZED_APP:-false}"
 
 cleanup() {
   rm -rf -- "$STAGING_DIR"
@@ -33,13 +34,6 @@ if [[ ! -d "$APP_PATH" ]]; then
 fi
 
 codesign --verify --deep --strict --verbose=2 "$APP_PATH"
-if [[ "$REQUIRE_NOTARIZED_APP" == true ]]; then
-  xcrun stapler validate "$APP_PATH"
-  spctl --assess --type execute --verbose=2 "$APP_PATH"
-elif [[ "$REQUIRE_NOTARIZED_APP" != false ]]; then
-  echo "REQUIRE_NOTARIZED_APP must be true or false." >&2
-  exit 1
-fi
 
 rm -f -- "$DMG_PATH" "$DMG_PATH.sha256"
 mkdir -p "$(dirname "$DMG_PATH")"
@@ -69,4 +63,12 @@ codesign --force --sign "$identity" --timestamp "$DMG_PATH"
 codesign --verify --strict --verbose=2 "$DMG_PATH"
 hdiutil verify "$DMG_PATH"
 
+(
+  cd "$(dirname "$DMG_PATH")"
+  dmg_name="$(basename "$DMG_PATH")"
+  shasum -a 256 "$dmg_name" > "$dmg_name.sha256"
+  shasum -a 256 -c "$dmg_name.sha256"
+)
+
 echo "DMG created: $DMG_PATH"
+echo "This is a local test artifact and is not notarized. Do not publish it." 
