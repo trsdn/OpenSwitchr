@@ -56,6 +56,15 @@ public final class WindowIndex {
         windows = mru.sorted(windows)
     }
 
+    /// Drops a window the app itself just closed.
+    ///
+    /// The accessibility notification for a destroyed window arrives later, and
+    /// only marks the index stale rather than rebuilding it, so a tile would
+    /// otherwise keep showing a window that no longer exists.
+    public func remove(windowID: CGWindowID) {
+        windows.removeAll { $0.id == windowID }
+    }
+
     /// Marks the frontmost window of a process as most recently used. Used
     /// when the only signal available is "this app became active".
     public func noteFocus(pid: pid_t) {

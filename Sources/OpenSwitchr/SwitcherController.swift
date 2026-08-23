@@ -103,9 +103,13 @@ public final class SwitcherController {
                 query: query,
                 thumbnails: thumbnails,
                 tileSize: tileSize(),
+                showsCloseButtons: preferences.showCloseButton,
                 onActivate: { [weak self] index in
                     self?.selectedIndex = index
                     self?.commit()
+                },
+                onClose: { [weak self] index in
+                    self?.close(at: index)
                 },
                 onHover: { [weak self] index in
                     guard let self, self.selectedIndex != index else { return }
@@ -114,6 +118,25 @@ public final class SwitcherController {
                 }
             )
         )
+    }
+
+    /// Closes the window behind a tile and drops it from the overlay at once,
+    /// rather than waiting for the accessibility notification.
+    private func close(at index: Int) {
+        guard visibleWindows.indices.contains(index) else { return }
+        let window = visibleWindows[index]
+        guard WindowActions.close(window) else { return }
+
+        self.index.remove(windowID: window.id)
+        thumbnails.invalidate(window.id)
+        visibleWindows.remove(at: index)
+
+        guard !visibleWindows.isEmpty else {
+            close()
+            return
+        }
+        selectedIndex = min(selectedIndex, visibleWindows.count - 1)
+        render()
     }
 
     private func tileSize() -> CGSize {

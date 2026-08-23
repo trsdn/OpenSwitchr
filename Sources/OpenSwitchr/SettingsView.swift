@@ -89,11 +89,11 @@ struct SettingsView: View {
     private var appearance: some View {
         Form {
             Section("Previews") {
-                LabeledContent("Tile width") {
+                LabeledContent("Preview size") {
                     Slider(
                         value: Binding(
                             get: { model.preferences.tileWidth },
-                            set: { model.preferences.tileWidth = $0 }
+                            set: { model.preferences.tileWidth = $0; model.applyPreferences() }
                         ),
                         in: 140...320,
                         step: 10
@@ -101,6 +101,28 @@ struct SettingsView: View {
                         Text("\(Int(model.preferences.tileWidth)) pt")
                     }
                 }
+
+                Picker("Refresh thumbnails", selection: Binding(
+                    get: { model.preferences.thumbnailRefreshRate },
+                    set: { model.preferences.thumbnailRefreshRate = $0; model.applyPreferences() }
+                )) {
+                    ForEach(ThumbnailRefreshRate.allCases, id: \.self) { rate in
+                        Text(rate.title).tag(rate)
+                    }
+                }
+
+                Text("Refreshing less often trades a slightly stale preview for less CPU. Nothing is captured while no preview is on screen.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+
+                Toggle("Show a close button on previews", isOn: Binding(
+                    get: { model.preferences.showCloseButton },
+                    set: { model.preferences.showCloseButton = $0 }
+                ))
+
+                Text("The button appears only while the pointer is on a preview, and closes that window.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
 
                 LabeledContent("Thumbnail memory budget") {
                     Stepper(
@@ -113,10 +135,6 @@ struct SettingsView: View {
                         step: 16
                     )
                 }
-
-                Text("The budget applies on next launch.")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
             }
         }
         .formStyle(.grouped)

@@ -104,12 +104,16 @@ public final class DockPreviewController {
                 hoveredIndex: hoveredIndex,
                 thumbnails: thumbnails,
                 tileSize: tileSize(),
+                showsCloseButtons: preferences.showCloseButton,
                 onActivate: { [weak self] index in
                     guard let self, self.windows.indices.contains(index) else { return }
                     let window = self.windows[index]
                     WindowActions.focus(window)
                     self.index.noteFocus(windowID: window.id)
                     self.hide()
+                },
+                onClose: { [weak self] index in
+                    self?.close(at: index)
                 },
                 onHover: { [weak self] index in
                     guard let self, self.hoveredIndex != index else { return }
@@ -118,6 +122,37 @@ public final class DockPreviewController {
                 }
             )
         )
+    }
+
+    /// Closes a previewed window and updates the panel in place.
+    ///
+    /// The index is corrected immediately rather than waiting for the
+    /// accessibility notification, which only marks the index stale and would
+    /// leave a tile for a window that is already gone.
+    private func close(at index: Int) {
+        guard windows.indices.contains(index) else { return }
+        let window = windows[index]
+        guard WindowActions.close(window) else { return }
+
+        self.index.remove(windowID: window.id)
+        thumbnails.invalidate(window.id)
+        windows.remove(at: index)
+        hoveredIndex = nil
+
+        // An empty panel is worse than no panel: nothing left to preview.
+        guard !windows.isEmpty, let item = currentItem else {
+            hide()
+            return
+        }
+
+        let tile = tileSize()
+        let size = DockPreviewView.panelSize(windowCount: windows.count, tileSize: tile)
+        let clamped = NSSize(
+            width: min(size.width, (NSScreen.main?.visibleFrame.width ?? 1200) * 0.9),
+            height: size.height
+        )
+        render()
+        panel.setFrame(NSRect(origin: panelOrigin(for: item, size: clamped), size: clamped), display: true)
     }
 
     private func tileSize() -> CGSize {

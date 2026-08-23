@@ -19,6 +19,13 @@ public final class ThumbnailProvider {
     private var images: [CGWindowID: CGImage] = [:]
     @ObservationIgnored private var requested: Set<CGWindowID> = []
 
+    /// The pixel size each loaded image was captured at.
+    ///
+    /// Without this a thumbnail captured for a small tile is reused when the
+    /// preview size grows, and SwiftUI scales it up: the setting appears to
+    /// work while every preview quietly turns soft.
+    @ObservationIgnored private var capturedSizes: [CGWindowID: CGFloat] = [:]
+
     public init(store: ThumbnailStore = ThumbnailStore()) {
         self.store = store
     }
@@ -28,9 +35,18 @@ public final class ThumbnailProvider {
         images[windowID]
     }
 
-    /// Requests a capture unless one is already loaded or in flight.
+    /// Requests a capture unless one is already loaded at a sufficient size or
+    /// is already in flight.
     public func request(_ windowID: CGWindowID, maxPixelSize: CGFloat = 640) {
-        guard images[windowID] == nil, !requested.contains(windowID) else { return }
+        guard !requested.contains(windowID) else { return }
+
+        if images[windowID] != nil {
+            // Shrinking reuses the existing capture; only growing needs a new
+            // one, and only by enough to be visible.
+            let captured = capturedSizes[windowID] ?? maxPixelSize
+            guard maxPixelSize > captured * 1.15 else { return }
+        }
+
         requested.insert(windowID)
 
         Task { [weak self] in
@@ -39,12 +55,22 @@ public final class ThumbnailProvider {
             self.requested.remove(windowID)
             guard let thumbnail else { return }
             self.images[windowID] = thumbnail.cgImage
+            self.capturedSizes[windowID] = maxPixelSize
         }
+    }
+
+    /// Drops cached captures so the next request re-captures at the current
+    /// size. Called when the preview size changes.
+    public func invalidateForResize() {
+        images.removeAll()
+        capturedSizes.removeAll()
+        Task { [store] in await store.clear() }
     }
 
     /// Forgets a window entirely, for example after it closed.
     public func invalidate(_ windowID: CGWindowID) {
         images.removeValue(forKey: windowID)
+        capturedSizes.removeValue(forKey: windowID)
         Task { [store] in await store.invalidate(windowID) }
     }
 
@@ -52,11 +78,13 @@ public final class ThumbnailProvider {
     /// the live window index.
     public func retain(only ids: Set<CGWindowID>) {
         images = images.filter { ids.contains($0.key) }
+        capturedSizes = capturedSizes.filter { ids.contains($0.key) }
         Task { [store] in await store.retain(only: ids) }
     }
 
     public func clear() {
         images.removeAll()
+        capturedSizes.removeAll()
         requested.removeAll()
         Task { [store] in await store.clear() }
     }

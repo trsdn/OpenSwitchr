@@ -12,7 +12,9 @@ public struct DockPreviewView: View {
     private let hoveredIndex: Int?
     private let thumbnails: ThumbnailProvider
     private let tileSize: CGSize
+    private let showsCloseButtons: Bool
     private let onActivate: (Int) -> Void
+    private let onClose: (Int) -> Void
     private let onHover: (Int?) -> Void
 
     public init(
@@ -20,14 +22,18 @@ public struct DockPreviewView: View {
         hoveredIndex: Int?,
         thumbnails: ThumbnailProvider,
         tileSize: CGSize,
+        showsCloseButtons: Bool = false,
         onActivate: @escaping (Int) -> Void,
+        onClose: @escaping (Int) -> Void = { _ in },
         onHover: @escaping (Int?) -> Void
     ) {
         self.windows = windows
         self.hoveredIndex = hoveredIndex
         self.thumbnails = thumbnails
         self.tileSize = tileSize
+        self.showsCloseButtons = showsCloseButtons
         self.onActivate = onActivate
+        self.onClose = onClose
         self.onHover = onHover
     }
 
@@ -39,7 +45,9 @@ public struct DockPreviewView: View {
                     isSelected: index == hoveredIndex,
                     thumbnailSize: tileSize,
                     thumbnails: thumbnails,
+                    showsCloseButton: showsCloseButtons,
                     onActivate: { onActivate(index) },
+                    onClose: { onClose(index) },
                     onHover: { isHovering in
                         onHover(isHovering ? index : nil)
                     }

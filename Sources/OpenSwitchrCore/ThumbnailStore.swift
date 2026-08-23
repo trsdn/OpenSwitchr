@@ -34,7 +34,10 @@ public actor ThumbnailStore {
     /// How long a cached thumbnail may be reused before it is refreshed on the
     /// next request. Window content changes without any observable event, so a
     /// short age limit is the only sane invalidation for "content changed".
-    public static let defaultMaxAge: TimeInterval = 8
+    ///
+    /// This is a *threshold checked on request*, never a timer. Nothing here
+    /// may run while no frontend is on screen.
+    public static let defaultMaxAge: TimeInterval = ThumbnailRefreshRate.default.maxAge
 
     /// How long the shareable-content listing may be reused. Fetching it is
     /// the expensive part of a capture, so a burst of tile requests shares one
@@ -56,7 +59,7 @@ public actor ThumbnailStore {
     }
 
     private var budgetBytes: Int
-    private let maxAge: TimeInterval
+    private var maxAge: TimeInterval
     private let logger = Logger(subsystem: "com.openswitchr.app", category: "ThumbnailStore")
 
     /// Changing the budget takes effect immediately, so lowering it in the
@@ -64,6 +67,16 @@ public actor ThumbnailStore {
     public func setBudget(bytes: Int) {
         budgetBytes = max(1, bytes)
         evictIfNeeded()
+    }
+
+    /// Bounds how often a visible thumbnail re-captures. `0` always captures,
+    /// `.infinity` reuses the cache until something explicitly invalidates it.
+    ///
+    /// Lowering the value does not refresh anything by itself; it only makes
+    /// the *next* request consider the cache stale. That keeps this free of
+    /// timers, which is what keeps idle CPU at zero.
+    public func setMaxAge(_ seconds: TimeInterval) {
+        maxAge = max(0, seconds)
     }
 
     public init(budgetBytes: Int = 96 * 1024 * 1024, maxAge: TimeInterval = ThumbnailStore.defaultMaxAge) {

@@ -37,6 +37,10 @@ public final class AppModel {
     @ObservationIgnored private var memoryPressureSource: DispatchSourceMemoryPressure?
     @ObservationIgnored private var pendingRebuild = false
     @ObservationIgnored private var indexIsStale = false
+
+    /// Last tile width the thumbnail cache was populated for, so a resize can
+    /// be detected without re-capturing on every unrelated settings change.
+    @ObservationIgnored private var lastAppliedTileWidth: Double?
     @ObservationIgnored private let logger = Logger(subsystem: "com.openswitchr.app", category: "AppModel")
 
     /// Reflects whether the engine actually came up, so the menu can say so.
@@ -115,7 +119,19 @@ public final class AppModel {
         hotkeys.holdModifier = preferences.holdModifier
 
         let budget = Self.budgetBytes(preferences.thumbnailBudgetMB)
-        Task { [store = thumbnails.store] in await store.setBudget(bytes: budget) }
+        let maxAge = preferences.thumbnailRefreshRate.maxAge
+        Task { [store = thumbnails.store] in
+            await store.setBudget(bytes: budget)
+            await store.setMaxAge(maxAge)
+        }
+
+        // Cached captures were taken for the previous tile size. Reusing them
+        // scales a small bitmap up, so the size setting would look like it
+        // worked while every preview turned soft.
+        if preferences.tileWidth != lastAppliedTileWidth {
+            lastAppliedTileWidth = preferences.tileWidth
+            thumbnails.invalidateForResize()
+        }
 
         if preferences.switcherEnabled {
             switcherHotkeyActive = hotkeys.start()

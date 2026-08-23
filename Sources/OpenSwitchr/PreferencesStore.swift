@@ -1,5 +1,6 @@
 import Foundation
 import Observation
+import OpenSwitchrCore
 import ServiceManagement
 
 /// User preferences, stored in `UserDefaults` — no separate plist.
@@ -14,7 +15,9 @@ public final class PreferencesStore {
         static let dockHoverDelay = "dockHoverDelay"
         static let dockHideDelay = "dockHideDelay"
         static let thumbnailBudgetMB = "thumbnailBudgetMB"
+        static let thumbnailRefreshRate = "thumbnailRefreshRate"
         static let tileWidth = "tileWidth"
+        static let showCloseButton = "showCloseButton"
         static let launchAtLogin = "launchAtLogin"
     }
 
@@ -54,6 +57,17 @@ public final class PreferencesStore {
         didSet { defaults.set(tileWidth, forKey: Key.tileWidth) }
     }
 
+    public var thumbnailRefreshRate: ThumbnailRefreshRate {
+        didSet { defaults.set(thumbnailRefreshRate.rawValue, forKey: Key.thumbnailRefreshRate) }
+    }
+
+    /// Off by default. A close control sits one pixel from a click target that
+    /// focuses a window, and losing unsaved work to a misclick is a far worse
+    /// first impression than having to enable a setting.
+    public var showCloseButton: Bool {
+        didSet { defaults.set(showCloseButton, forKey: Key.showCloseButton) }
+    }
+
     public init(defaults: UserDefaults = .standard) {
         self.defaults = defaults
         defaults.register(defaults: [
@@ -63,7 +77,9 @@ public final class PreferencesStore {
             Key.dockHoverDelay: 0.18,
             Key.dockHideDelay: 0.25,
             Key.thumbnailBudgetMB: 96,
-            Key.tileWidth: 200.0
+            Key.thumbnailRefreshRate: ThumbnailRefreshRate.default.rawValue,
+            Key.tileWidth: 200.0,
+            Key.showCloseButton: false
         ])
 
         // An unknown stored modifier means the value was removed from the app,
@@ -76,7 +92,11 @@ public final class PreferencesStore {
         dockHoverDelay = defaults.double(forKey: Key.dockHoverDelay)
         dockHideDelay = defaults.double(forKey: Key.dockHideDelay)
         thumbnailBudgetMB = defaults.integer(forKey: Key.thumbnailBudgetMB)
+        thumbnailRefreshRate = ThumbnailRefreshRate(
+            rawValue: defaults.string(forKey: Key.thumbnailRefreshRate) ?? ""
+        ) ?? .default
         tileWidth = defaults.double(forKey: Key.tileWidth)
+        showCloseButton = defaults.bool(forKey: Key.showCloseButton)
         launchAtLogin = SMAppService.mainApp.status == .enabled
     }
 

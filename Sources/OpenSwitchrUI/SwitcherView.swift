@@ -9,7 +9,9 @@ public struct SwitcherView: View {
     private let query: String
     private let thumbnails: ThumbnailProvider
     private let tileSize: CGSize
+    private let showsCloseButtons: Bool
     private let onActivate: (Int) -> Void
+    private let onClose: (Int) -> Void
     private let onHover: (Int) -> Void
 
     public init(
@@ -18,7 +20,9 @@ public struct SwitcherView: View {
         query: String,
         thumbnails: ThumbnailProvider,
         tileSize: CGSize,
+        showsCloseButtons: Bool = false,
         onActivate: @escaping (Int) -> Void,
+        onClose: @escaping (Int) -> Void = { _ in },
         onHover: @escaping (Int) -> Void
     ) {
         self.windows = windows
@@ -26,7 +30,9 @@ public struct SwitcherView: View {
         self.query = query
         self.thumbnails = thumbnails
         self.tileSize = tileSize
+        self.showsCloseButtons = showsCloseButtons
         self.onActivate = onActivate
+        self.onClose = onClose
         self.onHover = onHover
     }
 
@@ -102,7 +108,9 @@ public struct SwitcherView: View {
                             isSelected: index == selectedIndex,
                             thumbnailSize: tileSize,
                             thumbnails: thumbnails,
+                            showsCloseButton: showsCloseButtons,
                             onActivate: { onActivate(index) },
+                            onClose: { onClose(index) },
                             onHover: { isHovering in
                                 if isHovering { onHover(index) }
                             }

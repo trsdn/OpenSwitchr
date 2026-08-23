@@ -31,6 +31,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   because plain "OpenSwitch" is the Linux Foundation's OpenSwitch (OPX)
   network operating system.
 
+- Preview size, thumbnail refresh rate, and an optional close button on every
+  preview tile. Refresh rate trades thumbnail freshness for capture cost and is
+  expressed purely as an age limit — nothing runs on a timer, so the idle cost
+  of "Always fresh" is still 0.0 %. The close button is off by default, because
+  it puts a destructive target a few pixels from the one that focuses a window.
+
 ### Performance
 
 - Rebuild the window index only when a frontend is about to be shown. A single
@@ -83,6 +89,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Preview size had no visible effect beyond the first capture. Thumbnails were
+  cached without their captured size and never re-captured when the setting
+  grew, so enlarging previews only scaled a small bitmap up and every preview
+  turned soft. Captures are now tracked by size and re-taken when the requested
+  size grows meaningfully.
 - **The switcher hotkey stopped working after a while.** The event tap ran its
   callback on the main run loop, where it queued behind SwiftUI rendering and
   index work, and the system disables a tap whose callback is late. Re-enabling
