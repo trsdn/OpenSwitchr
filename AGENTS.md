@@ -124,6 +124,27 @@ Sources/
   the app and presses the hotkey. `AppDelegate` owns `AppModel` and starts it in
   `applicationDidFinishLaunching`. This shipped broken once and no test caught
   it, because every test exercised the core directly.
+- **No AppKit controls inside the panels.** Both frontends render into an
+  `OverlayPanel`, whose `canBecomeKey` is `false` by design — showing a preview
+  must never deactivate the app the user is in. A control in a window that can
+  never become key may swallow the click that would otherwise activate it, so a
+  SwiftUI `Button` there is a coin flip. Every interactive element in a tile
+  goes through `.onTapGesture`, which is the mechanism these panels are known to
+  deliver. Nested tap gestures resolve innermost-first, so a control inside a
+  tile does not also trigger the tile.
+- **Interactive tiles need a real click to be believed.** Unit tests do not
+  render, `openswitchr-diag` does not click controls, and the panels expose no
+  content window to `computer-use`. A new control in a tile is unverified until
+  a human clicks it. Say so rather than implying it was tested.
+- **Settings must take effect without a relaunch.** A control that only writes a
+  preference looks finished while doing nothing: `tileWidth` reached both
+  frontends for weeks yet changed nothing visible, because the thumbnail cache
+  never re-captured at the new size. Anything that changes capture size or
+  staleness has to invalidate the cache from `applyPreferences()`.
+- **A default belongs in exactly one place.** Three separate `.option` literals
+  and two independent thumbnail age limits (8 s against 5 s) have each been
+  found drifting apart here. Derive the second one from the first instead of
+  writing a comment claiming they match.
 - **Signing identity must stay stable.** TCC permissions are tied to the code
   signature; `build-app.sh` aborts on an ad-hoc signature on purpose.
 
