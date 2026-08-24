@@ -127,4 +127,149 @@ struct AXWindowLinkerTests {
             to: [entry(id: 1, title: "x", frame: .zero)]
         ).isEmpty)
     }
+
+    // MARK: - Windows nothing but depth can tell apart
+
+    /// Distinct stand-ins, so a test can assert *which* accessibility window a
+    /// link points at. `dummyElement()` returns the same system-wide element
+    /// every time, which is fine when the assertion is only "linked at all".
+    private func distinctElement(_ seed: pid_t) -> AXUIElement {
+        AXUIElementCreateApplication(seed)
+    }
+
+    private func axWindow(
+        element: AXUIElement,
+        title: String,
+        frame: CGRect,
+        minimized: Bool = false
+    ) -> AXWindowLinker.AXWindow {
+        AXWindowLinker.AXWindow(element: element, title: title, frame: frame, isMinimized: minimized)
+    }
+
+    private func entry(
+        id: CGWindowID,
+        title: String?,
+        frame: CGRect,
+        zOrder: Int,
+        onScreen: Bool = true
+    ) -> CGWindowEntry {
+        CGWindowEntry(
+            id: id,
+            pid: 42,
+            title: title,
+            ownerName: "App",
+            frame: frame,
+            isOnScreen: onScreen,
+            zOrder: zOrder
+        )
+    }
+
+    /// The bug that prompted all of this: four Microsoft Edge windows shared a
+    /// frame *and* a title, every pairing scored the same, and the winner was
+    /// decided by an unstable sort. Clicking a Dock preview raised whichever
+    /// window that lottery had picked.
+    @Test("Windows identical in frame and title link front-to-front")
+    func identicalWindowsLinkByDepth() {
+        let frame = CGRect(x: 2060, y: 420, width: 1000, height: 665)
+        let front = distinctElement(1)
+        let back = distinctElement(2)
+
+        let links = AXWindowLinker.link(
+            axWindows: [
+                axWindow(element: front, title: "Connect Form", frame: frame),
+                axWindow(element: back, title: "Connect Form", frame: frame)
+            ],
+            to: [
+                entry(id: 10, title: "Connect Form", frame: frame, zOrder: 0),
+                entry(id: 20, title: "Connect Form", frame: frame, zOrder: 1)
+            ]
+        )
+
+        #expect(links[10]?.element == front)
+        #expect(links[20]?.element == back)
+    }
+
+    @Test("Reversing the depth order reverses the links")
+    func identicalWindowsFollowDepth() {
+        let frame = CGRect(x: 2060, y: 420, width: 1000, height: 665)
+        let first = distinctElement(1)
+        let second = distinctElement(2)
+
+        let links = AXWindowLinker.link(
+            axWindows: [
+                axWindow(element: first, title: "Connect Form", frame: frame),
+                axWindow(element: second, title: "Connect Form", frame: frame)
+            ],
+            to: [
+                entry(id: 10, title: "Connect Form", frame: frame, zOrder: 5),
+                entry(id: 20, title: "Connect Form", frame: frame, zOrder: 4)
+            ]
+        )
+
+        #expect(links[20]?.element == first)
+        #expect(links[10]?.element == second)
+    }
+
+    /// Edge reports "Connect Form" to CoreGraphics and "Connect Form –
+    /// Standbymodus - Microsoft Edge – Geschäftlich" to accessibility, so
+    /// demanding equality scored every one of its windows zero on title.
+    @Test("A decorated accessibility title still matches its bare counterpart")
+    func decoratedTitlesMatch() {
+        let frame = CGRect(x: 0, y: 0, width: 800, height: 600)
+        let alpha = distinctElement(1)
+        let beta = distinctElement(2)
+
+        // Depth deliberately contradicts the titles: without title matching,
+        // depth alone would pair them the other way round.
+        let links = AXWindowLinker.link(
+            axWindows: [
+                axWindow(element: alpha, title: "Alpha - Microsoft Edge", frame: frame),
+                axWindow(element: beta, title: "Beta - Microsoft Edge", frame: frame)
+            ],
+            to: [
+                entry(id: 10, title: "Beta", frame: frame, zOrder: 0),
+                entry(id: 20, title: "Alpha", frame: frame, zOrder: 1)
+            ]
+        )
+
+        #expect(links[20]?.element == alpha)
+        #expect(links[10]?.element == beta)
+    }
+
+    @Test("A short shared prefix is a coincidence, not a match")
+    func shortPrefixIsNotAMatch() {
+        let frame = CGRect(x: 0, y: 0, width: 800, height: 600)
+        let links = AXWindowLinker.link(
+            axWindows: [axWindow(title: "Ab", frame: frame)],
+            to: [
+                entry(id: 10, title: "Abendessen", frame: frame, zOrder: 0),
+                entry(id: 20, title: "Ab", frame: frame, zOrder: 1)
+            ]
+        )
+
+        // The exact match must win over the longer string that merely starts
+        // with the same two characters.
+        #expect(links[20] != nil)
+        #expect(links[10] == nil)
+    }
+
+    @Test("Linking is deterministic across repeated calls")
+    func linkingIsDeterministic() {
+        let frame = CGRect(x: 100, y: 100, width: 500, height: 400)
+        let elements = (1...4).map { distinctElement(pid_t($0)) }
+        let axWindows = elements.map { axWindow(element: $0, title: "Same", frame: frame) }
+        let entries = (0..<4).map {
+            entry(id: CGWindowID(10 + $0), title: "Same", frame: frame, zOrder: $0)
+        }
+
+        let first = AXWindowLinker.link(axWindows: axWindows, to: entries)
+        for _ in 0..<20 {
+            let again = AXWindowLinker.link(axWindows: axWindows, to: entries)
+            for id in entries.map(\.id) {
+                #expect(first[id]?.element == again[id]?.element)
+            }
+        }
+        #expect(first[10]?.element == elements[0])
+        #expect(first[13]?.element == elements[3])
+    }
 }

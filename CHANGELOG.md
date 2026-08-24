@@ -91,6 +91,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **Clicking a Dock preview raised the wrong window.** Two independent faults
+  produced one symptom. The window snapshot derived z-order from the position
+  of each window in a `CGWindowListCopyWindowInfo(.optionAll)` listing, but
+  front-to-back order is only documented for `.optionOnScreenOnly`; two
+  TextEdit windows 29 pixels apart were reported at positions 15 and 603 of 704
+  while the on-screen listing had them correctly adjacent at 145 and 146. That
+  bogus order also seeded the switcher's MRU list. On top of it, the linker
+  broke score ties with Swift's `sort`, which is not guaranteed stable: four
+  Microsoft Edge windows sharing a frame *and* a title produced four equally
+  good pairings and the winner was effectively drawn at random. The thumbnail
+  was never wrong — it comes from the `CGWindowID` — so the tile showed the
+  window the user wanted while the click went to a different one. Z-order now
+  comes from the on-screen listing, and the linker breaks ties by matching
+  accessibility depth against z-order depth, with every remaining comparison
+  fully determined. Raising a specific window went from 50 % to 100 % correct
+  across every Edge and TextEdit window on the test machine.
+- Accessibility titles decorated by the application no longer score as a
+  mismatch. Microsoft Edge reports `Connect Form` to CoreGraphics and `Connect
+  Form – Standbymodus - Microsoft Edge – Geschäftlich` to accessibility, so
+  demanding equality scored every one of its windows zero on title and left the
+  frame to decide alone. A substantial shared prefix now counts as a moderate
+  signal.
+
 - Preview size had no visible effect beyond the first capture. Thumbnails were
   cached without their captured size and never re-captured when the setting
   grew, so enlarging previews only scaled a small bitmap up and every preview

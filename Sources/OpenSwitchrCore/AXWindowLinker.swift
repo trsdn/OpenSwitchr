@@ -81,8 +81,10 @@ enum AXWindowLinker {
 
     /// Greedily links AX windows to CoreGraphics entries of the same process.
     ///
-    /// Pairs are scored, sorted best-first, and assigned one-to-one. Anything
-    /// that only ties on a weak signal stays unlinked.
+    /// Pairs are scored, sorted best-first, and assigned one-to-one. Ties are
+    /// broken by depth — see `link` — because leaving them to `sort`, which is
+    /// not stable in Swift, is how a Dock preview ends up raising a window the
+    /// user did not click.
     static func link(axWindows: [AXWindow], to entries: [CGWindowEntry]) -> [CGWindowID: AXWindow] {
         guard !axWindows.isEmpty, !entries.isEmpty else { return [:] }
 
@@ -90,6 +92,27 @@ enum AXWindowLinker {
             let axIndex: Int
             let entryIndex: Int
             let score: Int
+            let depthDistance: Int
+        }
+
+        // Depth is the only thing telling apart windows that share a frame and
+        // a title, which browsers produce in quantity. Both lists are
+        // front-to-back for the windows that are actually on screen, so the
+        // n-th live accessibility window is the n-th live CoreGraphics one.
+        // Minimized windows have no depth on either side and are excluded.
+        var axDepth: [Int: Int] = [:]
+        var liveAX = 0
+        for (index, ax) in axWindows.enumerated() where !ax.isMinimized {
+            axDepth[index] = liveAX
+            liveAX += 1
+        }
+
+        var entryDepth: [Int: Int] = [:]
+        let liveEntries = entries.enumerated()
+            .filter { $0.element.isOnScreen }
+            .sorted { $0.element.zOrder < $1.element.zOrder }
+        for (depth, pair) in liveEntries.enumerated() {
+            entryDepth[pair.offset] = depth
         }
 
         var candidates: [Candidate] = []
@@ -97,12 +120,27 @@ enum AXWindowLinker {
             for (entryIndex, entry) in entries.enumerated() {
                 let score = score(ax: ax, entry: entry)
                 if score > 0 {
-                    candidates.append(Candidate(axIndex: axIndex, entryIndex: entryIndex, score: score))
+                    let distance: Int
+                    if let a = axDepth[axIndex], let b = entryDepth[entryIndex] {
+                        distance = abs(a - b)
+                    } else {
+                        distance = Int.max
+                    }
+                    candidates.append(
+                        Candidate(axIndex: axIndex, entryIndex: entryIndex, score: score, depthDistance: distance)
+                    )
                 }
             }
         }
 
-        candidates.sort { $0.score > $1.score }
+        // Every component is compared, so the outcome never depends on the
+        // order `sort` happens to leave equal elements in.
+        candidates.sort { lhs, rhs in
+            if lhs.score != rhs.score { return lhs.score > rhs.score }
+            if lhs.depthDistance != rhs.depthDistance { return lhs.depthDistance < rhs.depthDistance }
+            if lhs.axIndex != rhs.axIndex { return lhs.axIndex < rhs.axIndex }
+            return lhs.entryIndex < rhs.entryIndex
+        }
 
         var usedAX = Set<Int>()
         var usedEntry = Set<Int>()
@@ -139,18 +177,36 @@ enum AXWindowLinker {
         var score = 0
 
         if framesMatch(ax.frame, entry.frame) {
-            score += 3
+            score += 4
         } else if ax.frame.size.equalTo(entry.frame.size) {
             score += 1
         }
 
-        if let entryTitle = entry.title, !entryTitle.isEmpty, entryTitle == ax.title {
-            score += 3
-        } else if ax.title.isEmpty && (entry.title ?? "").isEmpty {
-            score += 1
-        }
+        score += titleScore(ax: ax.title, entry: entry.title ?? "")
 
         return score
+    }
+
+    /// Scores how well two titles for the same window agree.
+    ///
+    /// Exact equality is the strong case, but several browsers decorate the
+    /// accessibility title and leave the CoreGraphics one bare — every Microsoft
+    /// Edge window on the machine this was written on reported "Connect Form"
+    /// to CoreGraphics and "Connect Form – Standbymodus - Microsoft Edge –
+    /// Geschäftlich" to accessibility. Demanding equality scored all of them
+    /// zero on title, which threw away the one signal that could tell them
+    /// apart and left the frame to decide alone.
+    private static func titleScore(ax: String, entry: String) -> Int {
+        if !ax.isEmpty, ax == entry { return 4 }
+        if ax.isEmpty && entry.isEmpty { return 1 }
+        guard !ax.isEmpty, !entry.isEmpty else { return 0 }
+
+        // A shared prefix of one or two characters is a coincidence, not a
+        // signal, so only a substantial one counts.
+        let shorter = ax.count <= entry.count ? ax : entry
+        let longer = ax.count <= entry.count ? entry : ax
+        guard shorter.count >= 4, longer.hasPrefix(shorter) else { return 0 }
+        return 2
     }
 
     private static func framesMatch(_ lhs: CGRect, _ rhs: CGRect) -> Bool {

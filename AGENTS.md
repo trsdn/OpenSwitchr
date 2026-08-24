@@ -190,6 +190,32 @@ warm. To check a *registered* default rather than whatever is stored, delete the
 key with `defaults delete com.openswitchr.app <key>` first; a value left over
 from earlier testing will happily mask a wrong default.
 
+**Suspect the measurement before the code.** Two of the longest detours in this
+project were caused by a broken instrument, not a broken feature. The hypothesis
+that accessibility window order tracks z-order measured "0 agree, 2 disagree"
+and was nearly discarded — after the z-order itself was fixed the same test read
+"4 agree, 0 disagree", and it was the only signal capable of telling four
+identical windows apart. In the same investigation all four candidate orderings
+inside `WindowActions.focus()` measured exactly 50 %, which looks like a race and
+was in fact the same corrupt z-order being used to decide who was in front;
+`focus()` was correct all along. A suspiciously round number, or an outcome that
+does not change no matter what you vary, is evidence about the ruler.
+
+## Two window-server facts that are easy to get wrong
+
+`CGWindowListCopyWindowInfo` documents front-to-back ordering **only** for
+`.optionOnScreenOnly`. The `.optionAll` listing appends off-screen and
+other-Space windows in an order of its own, so an index into it is not a z-order.
+This was measured: two adjacent TextEdit windows landed at 15 and 603 of 704 in
+`.optionAll` and at 145 and 146 on screen. Take ranks from the on-screen listing
+and sort off-screen windows behind them.
+
+Swift's `sort` is **not stable**. Anywhere a tie is possible — and windows of one
+application routinely share a frame and a title — the comparison has to be total,
+or the result changes between runs for no visible reason. `AXWindowLinker` sorts
+by score, then depth correspondence, then both input indices, so nothing is left
+to chance.
+
 ## Concurrency
 
 Swift 6 strict concurrency is on. `WindowIndex`, controllers, and all UI are
