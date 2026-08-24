@@ -40,6 +40,21 @@ enum Diag {
             return
         }
 
+        if arguments.contains("--probe-focus") {
+            let all = CommandLine.arguments
+            let filter = all.firstIndex(of: "--probe-focus")
+                .flatMap { $0 + 1 < all.count ? all[$0 + 1] : nil }
+                .flatMap { $0.hasPrefix("--") ? nil : $0 }
+            await MainActor.run {
+                FocusProbe.run(
+                    appFilter: filter,
+                    rounds: 2,
+                    allOrders: arguments.contains("--all-orders")
+                )
+            }
+            return
+        }
+
         let index = WindowIndex()
         await index.rebuildConcurrently()
         let windows = index.windows
@@ -66,6 +81,157 @@ enum Diag {
         if arguments.contains("--capture") {
             await benchmarkCaptures(windows)
         }
+        if arguments.contains("--audit-links") {
+            auditLinks(windows)
+        }
+    }
+
+    /// Checks every accessibility link against CoreGraphics without touching a
+    /// single window.
+    ///
+    /// A mis-link is invisible in the tile — the thumbnail comes from the
+    /// `CGWindowID` and is therefore always right — but every *action* goes
+    /// through the accessibility element, so the wrong window gets raised. The
+    /// only observable cross-checks are the title and the frame the two sides
+    /// report for the same window, so that is what this compares.
+    private static func auditLinks(_ windows: [WindowInfo]) {
+        let entries = CGWindowSnapshot.current()
+        var byID: [CGWindowID: CGWindowEntry] = [:]
+        for entry in entries { byID[entry.id] = entry }
+
+        print("")
+        print("Link audit")
+        print(pad("ID", 8) + pad("APP", 16) + pad("CG FRAME", 22) + pad("AX FRAME", 22)
+              + pad("TITLES", 10) + "AX TITLE")
+
+        var titleMismatches = 0
+        var frameMismatches = 0
+
+        for window in windows.sorted(by: { ($0.appName, $0.id) < ($1.appName, $1.id) }) {
+            guard let element = window.element, let entry = byID[window.id] else { continue }
+
+            let axFrame = CGRect(
+                origin: AXBridge.point(element, kAXPositionAttribute as String) ?? .zero,
+                size: AXBridge.size(element, kAXSizeAttribute as String) ?? .zero
+            )
+            let axTitle = AXBridge.string(element, kAXTitleAttribute as String) ?? ""
+            let cgTitle = entry.title ?? ""
+
+            let titlesComparable = !axTitle.isEmpty && !cgTitle.isEmpty
+            let titleVerdict: String
+            if !titlesComparable {
+                titleVerdict = "n/a"
+            } else if axTitle == cgTitle {
+                titleVerdict = "equal"
+            } else if axTitle.hasPrefix(cgTitle) || cgTitle.hasPrefix(axTitle) {
+                titleVerdict = "prefix"
+                titleMismatches += 1
+            } else {
+                titleVerdict = "DIFFER"
+                titleMismatches += 1
+            }
+
+            let framesEqual = abs(axFrame.origin.x - entry.frame.origin.x) <= 2
+                && abs(axFrame.origin.y - entry.frame.origin.y) <= 2
+                && abs(axFrame.width - entry.frame.width) <= 2
+                && abs(axFrame.height - entry.frame.height) <= 2
+            if !framesEqual { frameMismatches += 1 }
+
+            print(
+                pad(String(window.id), 8)
+                    + pad(short(window.appName, 14), 16)
+                    + pad(rect(entry.frame), 22)
+                    + pad(framesEqual ? "=" : rect(axFrame), 22)
+                    + pad(titleVerdict, 10)
+                    + short(axTitle, 30)
+            )
+        }
+
+        print("")
+        print("Titles that are not exactly equal: \(titleMismatches)")
+        print("Frames that disagree: \(frameMismatches)")
+        reportAmbiguity(windows, byID: byID)
+        reportOrdinalHypothesis(windows, byID: byID)
+    }
+
+    /// Tests whether accessibility window order tracks CoreGraphics z-order.
+    ///
+    /// When two windows share a frame *and* a title — four Edge windows did on
+    /// the machine this was written on — nothing else observable tells them
+    /// apart, and order is the only public signal left. Before relying on it,
+    /// this checks it against the cases where titles *do* decide: if the
+    /// title-matched pairing and the order-matched pairing agree everywhere the
+    /// title is conclusive, order is trustworthy where it is not.
+    private static func reportOrdinalHypothesis(_ windows: [WindowInfo], byID: [CGWindowID: CGWindowEntry]) {
+        var byPID: [pid_t: [WindowInfo]] = [:]
+        for window in windows { byPID[window.pid, default: []].append(window) }
+
+        var agree = 0
+        var disagree = 0
+
+        for (pid, group) in byPID where group.count > 1 {
+            // Minimized windows have no meaningful z-order, so they cannot take
+            // part in an ordering argument either way.
+            let live = group.filter { !$0.isMinimized && byID[$0.id]?.isOnScreen == true }
+            guard live.count > 1 else { continue }
+
+            let axElements = AXBridge.elements(AXBridge.application(pid: pid), kAXWindowsAttribute as String)
+            // Keyed by title, which is all this read-only audit has: it never
+            // links, so it cannot tell two windows with the same title apart.
+            // Such a group collapses onto one index and reads as "agrees"
+            // without having been tested. The real evidence for those windows
+            // comes from --probe-focus, which raises them and looks.
+            var axOrder: [String: Int] = [:]
+            for (position, element) in axElements.enumerated() {
+                guard let title = AXBridge.string(element, kAXTitleAttribute as String), !title.isEmpty else { continue }
+                if axOrder[title] == nil { axOrder[title] = position }
+            }
+
+            let byZOrder = live.sorted { (byID[$0.id]?.zOrder ?? 0) < (byID[$1.id]?.zOrder ?? 0) }
+            print("  \(byZOrder[0].appName): z-order vs accessibility index")
+            for window in byZOrder {
+                let position = axOrder[window.title].map(String.init) ?? "?"
+                print("    z=\(byID[window.id]?.zOrder ?? -1)  ax=\(position)  \(short(window.title, 44))")
+            }
+            var previous = -1
+            var conclusive = true
+            for window in byZOrder {
+                guard let position = axOrder[window.title] else { conclusive = false; break }
+                if position < previous { conclusive = false }
+                previous = position
+            }
+            if conclusive { agree += 1 } else { disagree += 1 }
+        }
+
+        print("Apps where accessibility order tracks z-order: \(agree) agree, \(disagree) disagree")
+    }
+
+    /// Counts windows the linker cannot tell apart.
+    ///
+    /// Two windows of one app that share a frame, with titles the linker scores
+    /// as unequal, are indistinguishable to it — and it still picks one. That is
+    /// the difference between "no preview" and "raises the wrong window".
+    private static func reportAmbiguity(_ windows: [WindowInfo], byID: [CGWindowID: CGWindowEntry]) {
+        var byPID: [pid_t: [WindowInfo]] = [:]
+        for window in windows { byPID[window.pid, default: []].append(window) }
+
+        var ambiguous = 0
+        for (_, group) in byPID where group.count > 1 {
+            for a in group {
+                let clashes = group.contains { b in
+                    guard b.id != a.id,
+                          let fa = byID[a.id]?.frame, let fb = byID[b.id]?.frame else { return false }
+                    return abs(fa.origin.x - fb.origin.x) <= 2 && abs(fa.origin.y - fb.origin.y) <= 2
+                        && abs(fa.width - fb.width) <= 2 && abs(fa.height - fb.height) <= 2
+                }
+                if clashes { ambiguous += 1 }
+            }
+        }
+        print("Windows sharing a frame with a sibling: \(ambiguous)")
+    }
+
+    private static func rect(_ frame: CGRect) -> String {
+        "\(Int(frame.origin.x)),\(Int(frame.origin.y)) \(Int(frame.width))x\(Int(frame.height))"
     }
 
     // MARK: - Reports
