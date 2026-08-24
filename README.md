@@ -170,11 +170,14 @@ Three settings control what the preview tiles cost you:
 |---|---|---|
 | Preview size | 200 pt | Tile width in both frontends. Growing it re-captures thumbnails, so previews stay sharp instead of being scaled up. |
 | Refresh rate | 5 s | How old a cached thumbnail may be before the next request re-captures it. Nothing runs on a timer: this is an age limit checked when a preview is actually about to be shown, so even "Always fresh" leaves idle CPU at 0.0 %. |
-| Close button | off | A close target on each tile while the pointer is over it. Off by default, because it puts a destructive action a few pixels from the target that focuses a window. |
+| Close button | off | Two targets on each tile while the pointer is over it: close this window (top left) and quit the whole app (top right, red). Off by default, because they put destructive actions a few pixels from the target that focuses a window. |
 
 Closing a window from a tile removes it from the index immediately rather than
 waiting for the accessibility notification, which only marks the index stale —
-otherwise the tile of an already-closed window would stay on screen.
+otherwise the tile of an already-closed window would stay on screen. Quitting
+deliberately does *not* prune tiles: `terminate()` is a request, and an app with
+unsaved work may put up a dialog and stay. The panel dismisses instead, which
+also stops it covering that dialog.
 
 ## Scope: current Space only
 

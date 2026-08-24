@@ -31,11 +31,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   because plain "OpenSwitch" is the Linux Foundation's OpenSwitch (OPX)
   network operating system.
 
-- Preview size, thumbnail refresh rate, and an optional close button on every
-  preview tile. Refresh rate trades thumbnail freshness for capture cost and is
-  expressed purely as an age limit — nothing runs on a timer, so the idle cost
-  of "Always fresh" is still 0.0 %. The close button is off by default, because
-  it puts a destructive target a few pixels from the one that focuses a window.
+- Preview size, thumbnail refresh rate, and optional close and quit buttons on
+  every preview tile. Refresh rate trades thumbnail freshness for capture cost
+  and is expressed purely as an age limit — nothing runs on a timer, so the idle
+  cost of "Always fresh" is still 0.0 %. The buttons are off by default, because
+  they put destructive targets a few pixels from the one that focuses a window;
+  close sits top left and quit top right, in opposite corners rather than side
+  by side, because only one of the two can be undone.
 
 ### Performance
 

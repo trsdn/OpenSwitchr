@@ -115,6 +115,9 @@ public final class DockPreviewController {
                 onClose: { [weak self] index in
                     self?.close(at: index)
                 },
+                onQuitApp: { [weak self] index in
+                    self?.quitApp(at: index)
+                },
                 onHover: { [weak self] index in
                     guard let self, self.hoveredIndex != index else { return }
                     self.hoveredIndex = index
@@ -153,6 +156,21 @@ public final class DockPreviewController {
         )
         render()
         panel.setFrame(NSRect(origin: panelOrigin(for: item, size: clamped), size: clamped), display: true)
+    }
+
+    /// Asks a previewed window's app to quit, then dismisses the panel.
+    ///
+    /// Unlike closing a window, this cannot be reflected in the index right
+    /// away: `terminate()` is a request, not an outcome. An app with unsaved
+    /// work puts up its own dialog and may never quit at all, so pretending its
+    /// windows are gone would be a lie the next rebuild has to undo. The panel
+    /// gets out of the way instead — every window it shows belongs to the app
+    /// being asked to quit, and a save dialog needs the screen more than a
+    /// preview does.
+    private func quitApp(at index: Int) {
+        guard windows.indices.contains(index) else { return }
+        WindowActions.quitApp(windows[index])
+        hide()
     }
 
     private func tileSize() -> CGSize {

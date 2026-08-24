@@ -111,6 +111,9 @@ public final class SwitcherController {
                 onClose: { [weak self] index in
                     self?.close(at: index)
                 },
+                onQuitApp: { [weak self] index in
+                    self?.quitApp(at: index)
+                },
                 onHover: { [weak self] index in
                     guard let self, self.selectedIndex != index else { return }
                     self.selectedIndex = index
@@ -137,6 +140,19 @@ public final class SwitcherController {
         }
         selectedIndex = min(selectedIndex, visibleWindows.count - 1)
         render()
+    }
+
+    /// Asks the app behind a tile to quit, then dismisses the overlay.
+    ///
+    /// Deliberately does not prune the app's other tiles the way `close(at:)`
+    /// prunes one: `terminate()` is a request, not an outcome, and an app with
+    /// unsaved work may put up a dialog and stay. Removing its windows would
+    /// state something we do not know. Dismissing also puts that dialog in
+    /// front of the user, which an overlay would otherwise cover.
+    private func quitApp(at index: Int) {
+        guard visibleWindows.indices.contains(index) else { return }
+        WindowActions.quitApp(visibleWindows[index])
+        close()
     }
 
     private func tileSize() -> CGSize {

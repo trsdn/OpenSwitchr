@@ -15,6 +15,7 @@ public struct WindowTile: View {
     private let showsCloseButton: Bool
     private let onActivate: () -> Void
     private let onClose: (() -> Void)?
+    private let onQuitApp: (() -> Void)?
     private let onHover: (Bool) -> Void
 
     @State private var isPointerInside = false
@@ -27,6 +28,7 @@ public struct WindowTile: View {
         showsCloseButton: Bool = false,
         onActivate: @escaping () -> Void,
         onClose: (() -> Void)? = nil,
+        onQuitApp: (() -> Void)? = nil,
         onHover: @escaping (Bool) -> Void = { _ in }
     ) {
         self.window = window
@@ -36,6 +38,7 @@ public struct WindowTile: View {
         self.showsCloseButton = showsCloseButton
         self.onActivate = onActivate
         self.onClose = onClose
+        self.onQuitApp = onQuitApp
         self.onHover = onHover
     }
 
@@ -54,6 +57,7 @@ public struct WindowTile: View {
                                       lineWidth: isSelected ? 3 : 1)
                 )
                 .overlay(alignment: .topLeading) { closeButton }
+                .overlay(alignment: .topTrailing) { quitButton }
 
             label
         }
@@ -75,26 +79,62 @@ public struct WindowTile: View {
     /// Only drawn while the pointer is on this tile. A permanent control would
     /// turn a row of previews into a row of buttons, and it puts a destructive
     /// action next to every click target.
-    ///
+    @ViewBuilder
+    private var closeButton: some View {
+        if showsCloseButton, let onClose {
+            tileControl(
+                systemName: "xmark.circle.fill",
+                tint: Color.black.opacity(0.55),
+                help: "Close window",
+                label: "Close \(window.displayTitle)",
+                action: onClose
+            )
+        }
+    }
+
+    /// Quitting ends every window of the app, not just this one, so it sits in
+    /// the opposite corner from close rather than beside it — the two are one
+    /// slip apart otherwise, and only one of them is undoable. It is red for the
+    /// same reason. `NSRunningApplication.terminate()` is the polite request, so
+    /// an app with unsaved work still gets to put its own dialog up.
+    @ViewBuilder
+    private var quitButton: some View {
+        if showsCloseButton, let onQuitApp {
+            tileControl(
+                systemName: "power.circle.fill",
+                tint: Color.red.opacity(0.85),
+                help: "Quit \(window.appName)",
+                label: "Quit \(window.appName)",
+                action: onQuitApp
+            )
+        }
+    }
+
     /// Deliberately a tap gesture and not a `Button`: both frontends live in a
     /// panel whose `canBecomeKey` is `false`, and AppKit controls in a window
     /// that can never become key can swallow the click that would otherwise
     /// activate them. The tile's own activation already goes through
-    /// `onTapGesture` for that reason, so the close target uses the one
-    /// mechanism these panels are known to deliver. The inner gesture wins over
-    /// the tile's, so closing never also raises the window.
+    /// `onTapGesture` for that reason, so these use the one mechanism these
+    /// panels are known to deliver. The inner gesture wins over the tile's, so
+    /// neither control also raises the window.
     @ViewBuilder
-    private var closeButton: some View {
-        if showsCloseButton, let onClose, isPointerInside {
-            Image(systemName: "xmark.circle.fill")
+    private func tileControl(
+        systemName: String,
+        tint: Color,
+        help: String,
+        label: String,
+        action: @escaping () -> Void
+    ) -> some View {
+        if isPointerInside {
+            Image(systemName: systemName)
                 .font(.system(size: 15))
                 .symbolRenderingMode(.palette)
-                .foregroundStyle(Color.white, Color.black.opacity(0.55))
+                .foregroundStyle(Color.white, tint)
                 .padding(5)
                 .contentShape(Rectangle())
-                .onTapGesture(perform: onClose)
-                .help("Close window")
-                .accessibilityLabel(Text("Close \(window.displayTitle)"))
+                .onTapGesture(perform: action)
+                .help(help)
+                .accessibilityLabel(Text(label))
         }
     }
 

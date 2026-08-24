@@ -15,6 +15,7 @@ public struct DockPreviewView: View {
     private let showsCloseButtons: Bool
     private let onActivate: (Int) -> Void
     private let onClose: (Int) -> Void
+    private let onQuitApp: (Int) -> Void
     private let onHover: (Int?) -> Void
 
     public init(
@@ -25,6 +26,7 @@ public struct DockPreviewView: View {
         showsCloseButtons: Bool = false,
         onActivate: @escaping (Int) -> Void,
         onClose: @escaping (Int) -> Void = { _ in },
+        onQuitApp: @escaping (Int) -> Void = { _ in },
         onHover: @escaping (Int?) -> Void
     ) {
         self.windows = windows
@@ -34,6 +36,7 @@ public struct DockPreviewView: View {
         self.showsCloseButtons = showsCloseButtons
         self.onActivate = onActivate
         self.onClose = onClose
+        self.onQuitApp = onQuitApp
         self.onHover = onHover
     }
 
@@ -48,6 +51,7 @@ public struct DockPreviewView: View {
                     showsCloseButton: showsCloseButtons,
                     onActivate: { onActivate(index) },
                     onClose: { onClose(index) },
+                    onQuitApp: { onQuitApp(index) },
                     onHover: { isHovering in
                         onHover(isHovering ? index : nil)
                     }

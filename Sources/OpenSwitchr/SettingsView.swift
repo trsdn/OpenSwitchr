@@ -115,12 +115,12 @@ struct SettingsView: View {
                     .font(.caption)
                     .foregroundStyle(.secondary)
 
-                Toggle("Show a close button on previews", isOn: Binding(
+                Toggle("Show close and quit buttons on previews", isOn: Binding(
                     get: { model.preferences.showCloseButton },
                     set: { model.preferences.showCloseButton = $0 }
                 ))
 
-                Text("The button appears only while the pointer is on a preview, and closes that window.")
+                Text("Both appear only while the pointer is on a preview. Top left closes that window; top right quits the whole app, and is red because it is the one you cannot undo.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
 
