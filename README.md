@@ -14,10 +14,6 @@ OpenSwitchr pays once. The window index, the event bus, the thumbnail cache, and
 the window actions exist exactly once; the Dock previews and the switcher
 overlay are thin readers on top.
 
-> **Written from scratch.** DockDoor and AltTab are GPL-licensed. No code from
-> either project was copied, translated, or derived. Concepts are shared;
-> implementation is not. See [AGENTS.md](AGENTS.md).
-
 ---
 
 ## Features

@@ -2,19 +2,6 @@
 
 Guidance for AI coding agents working in this repository.
 
-## Hard rule: no GPL code
-
-OpenSwitchr covers the same problem space as [DockDoor](https://github.com/ejbills/DockDoor)
-and [AltTab](https://github.com/lwouis/alt-tab-macos). Both are **GPL-licensed**.
-OpenSwitchr is MIT-licensed.
-
-- **Never** copy, paste, translate, or derive code from those projects.
-- **Do not** open their source files while implementing OpenSwitchr.
-- Concepts and UX ideas are fine; implementations must be written from scratch
-  against Apple's public documentation.
-- Every dependency must be permissively licensed (MIT / Apache-2.0 / BSD).
-  GPL dependencies are not acceptable.
-
 ## Build & install
 
 ```bash

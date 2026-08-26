@@ -28,12 +28,6 @@ struct AboutView: View {
 
             Link("Source code", destination: URL(string: "https://github.com/trsdn/OpenSwitchr")!)
                 .font(.callout)
-
-            Text("MIT licensed. Written from scratch — no code from GPL-licensed window switchers.")
-                .font(.caption2)
-                .multilineTextAlignment(.center)
-                .foregroundStyle(.tertiary)
-                .padding(.horizontal, 24)
         }
         .padding(20)
     }
