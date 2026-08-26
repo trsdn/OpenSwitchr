@@ -55,7 +55,12 @@ enum AXWindowLinker {
 
         return AXBridge.elements(app, kAXWindowsAttribute as String).compactMap { element in
             let values = AXBridge.values(element, attributes)
-            guard isSwitchable(role: AXBridge.string(values[0]), subrole: AXBridge.string(values[1])) else {
+            let isMinimized = AXBridge.bool(values[5]) ?? false
+            guard isSwitchable(
+                role: AXBridge.string(values[0]),
+                subrole: AXBridge.string(values[1]),
+                isMinimized: isMinimized
+            ) else {
                 return nil
             }
 
@@ -66,17 +71,27 @@ enum AXWindowLinker {
                 element: element,
                 title: AXBridge.string(values[2]) ?? "",
                 frame: CGRect(origin: origin, size: size),
-                isMinimized: AXBridge.bool(values[5]) ?? false
+                isMinimized: isMinimized
             )
         }
     }
 
     /// Excludes sheets, drawers, popovers, and other non-switchable surfaces.
-    private static func isSwitchable(role: String?, subrole: String?) -> Bool {
+    ///
+    /// The subrole stops being trustworthy the moment a window is minimized:
+    /// macOS 26.6 reports a minimized window as `AXDialog`, measured on both
+    /// Activity Monitor and Preview, even though the same window reported
+    /// `AXStandardWindow` a second earlier. Filtering on subrole alone therefore
+    /// dropped every window as it went to the Dock — the accessibility side went
+    /// to zero, nothing linked, and `WindowIndex` discarded the CoreGraphics
+    /// entry because it was no longer on screen. A window in the Dock is exactly
+    /// what a switcher is for, so minimized wins over the subrole rather than
+    /// the other way round.
+    static func isSwitchable(role: String?, subrole: String?, isMinimized: Bool) -> Bool {
         guard role == kAXWindowRole as String else { return false }
         // Some apps omit the subrole entirely; treat those as normal windows.
         guard let subrole else { return true }
-        return subrole == kAXStandardWindowSubrole as String
+        return subrole == kAXStandardWindowSubrole as String || isMinimized
     }
 
     /// Greedily links AX windows to CoreGraphics entries of the same process.

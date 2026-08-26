@@ -171,6 +171,13 @@ Sources/
   mark's whole bounding box opaque, turning two overlapping windows into one
   filled rectangle, while `colorAt` proved the bitmap itself was correct. Wrap
   the rep in an `NSImage` and draw that.
+- **A minimized window reports the subrole `AXDialog`.** Not
+  `AXStandardWindow`, which is what the same window reported a second earlier;
+  role, title, position, and size are all unchanged. Filtering on subrole alone
+  hid every window the moment it reached the Dock. Anything that narrows the
+  window set has to ask what it does to a minimized window, and the answer is
+  only ever found by minimizing a real one — no unit test sees this, because the
+  value comes from another process.
 
 ## Verifying the app, not just the core
 

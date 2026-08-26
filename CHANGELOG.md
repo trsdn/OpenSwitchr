@@ -97,6 +97,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **Minimized windows vanished from the switcher.** macOS relabels a window's
+  accessibility subrole from `AXStandardWindow` to `AXDialog` the moment it goes
+  to the Dock — measured on both Activity Monitor and Preview, macOS 26.6 —
+  while its role, title, position, and size stay exactly as they were. The
+  subrole filter therefore reported *zero* accessibility windows for the app,
+  nothing linked, and `WindowIndex` dropped the CoreGraphics entry for no longer
+  being on screen. Minimized now outranks the subrole, so a window in the Dock
+  stays listed, keeps its accessibility element, and is restored by activating
+  its tile.
 - **The Settings window opened behind other windows.** `LSUIElement` keeps
   OpenSwitchr out of the Dock, which also means opening a window never activates
   the app, and `SettingsLink` offers no action to hook. The menu item now calls

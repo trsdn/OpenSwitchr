@@ -272,4 +272,56 @@ struct AXWindowLinkerTests {
         #expect(first[10]?.element == elements[0])
         #expect(first[13]?.element == elements[3])
     }
+
+    // MARK: - Which windows count as switchable
+
+    @Test("A standard window is switchable")
+    func standardWindowIsSwitchable() {
+        #expect(AXWindowLinker.isSwitchable(
+            role: kAXWindowRole as String,
+            subrole: kAXStandardWindowSubrole as String,
+            isMinimized: false
+        ))
+    }
+
+    @Test("A window that omits its subrole is treated as a normal window")
+    func missingSubroleIsSwitchable() {
+        #expect(AXWindowLinker.isSwitchable(
+            role: kAXWindowRole as String,
+            subrole: nil,
+            isMinimized: false
+        ))
+    }
+
+    @Test("A dialog on screen is not a switch target")
+    func onScreenDialogIsNotSwitchable() {
+        #expect(!AXWindowLinker.isSwitchable(
+            role: kAXWindowRole as String,
+            subrole: kAXDialogSubrole as String,
+            isMinimized: false
+        ))
+    }
+
+    /// macOS relabels a minimized window's subrole from `AXStandardWindow` to
+    /// `AXDialog`, so filtering on subrole alone hid every window the moment it
+    /// went to the Dock — which is precisely when a switcher is worth having.
+    @Test("A minimized window survives being relabelled a dialog")
+    func minimizedDialogIsSwitchable() {
+        #expect(AXWindowLinker.isSwitchable(
+            role: kAXWindowRole as String,
+            subrole: kAXDialogSubrole as String,
+            isMinimized: true
+        ))
+    }
+
+    @Test("Anything that is not a window is never switchable")
+    func nonWindowRoleIsNotSwitchable() {
+        for minimized in [true, false] {
+            #expect(!AXWindowLinker.isSwitchable(
+                role: kAXSheetRole as String,
+                subrole: kAXStandardWindowSubrole as String,
+                isMinimized: minimized
+            ))
+        }
+    }
 }

@@ -29,6 +29,8 @@ overlay are thin readers on top.
 - **Dock hover previews** — hover a Dock icon to see that app's windows; click
   one to jump straight to it.
 - **Window actions** — focus, minimize, restore, and close from either frontend.
+- **Minimized windows included** — a window in the Dock is still listed, dimmed
+  and marked, and activating its tile restores it.
 - **Menu bar app** — no Dock icon, no window of its own.
 
 ## Status
