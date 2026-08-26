@@ -76,6 +76,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - GitHub Actions: `ci.yml` builds with warnings-as-errors and runs the tests,
   and `secret-scan.yml` guards against committed credentials. Neither uses a
   secret, an environment, or write permissions.
+- An app icon, and a menu bar glyph drawn from the same geometry. `WindowMark`
+  in `OpenSwitchrUI` owns the two overlapping windows; `openswitchr-icon`
+  renders `Resources/AppIcon.icns` from it and `build-app.sh` re-runs on every
+  build, so the icon cannot fall behind the glyph. The icon takes the filled
+  weight and the menu bar the outlined one, because solid art that carries a
+  1024 pt icon collapses into a blob at 15 pt.
 
 ### Changed
 
@@ -90,6 +96,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   does not.
 
 ### Fixed
+
+- **The Settings window opened behind other windows.** `LSUIElement` keeps
+  OpenSwitchr out of the Dock, which also means opening a window never activates
+  the app, and `SettingsLink` offers no action to hook. The menu item now calls
+  `openSettings()` itself so `NSApp.activate()` can run alongside it. Measured
+  by z-order rather than by eye: the window now opens at index 0 of the on-screen
+  normal windows, with OpenSwitchr frontmost.
+- **`build-app.sh` could not find a signing identity when two were installed.**
+  awk's `exit` still runs the `END` block, so a keychain holding both an Apple
+  Development and a Developer ID Application certificate printed two
+  fingerprints. `codesign` read them as one newline-joined identity and failed
+  with "no identity found", leaving an assembled but unsigned bundle.
 
 - **Clicking a Dock preview raised the wrong window.** Two independent faults
   produced one symptom. The window snapshot derived z-order from the position

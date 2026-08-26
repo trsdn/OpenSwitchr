@@ -6,6 +6,12 @@ struct MenuBarView: View {
 
     @Bindable var model: AppModel
 
+    /// `SettingsLink` opens the window but offers no hook to run alongside it,
+    /// and `LSUIElement` means opening a window never activates the app — the
+    /// Settings window would appear behind whatever the user was looking at.
+    /// Driving the open explicitly is what makes room for the activation.
+    @Environment(\.openSettings) private var openSettings
+
     var body: some View {
         Group {
             if model.permissions.isOperational {
@@ -16,8 +22,9 @@ struct MenuBarView: View {
 
             Divider()
 
-            SettingsLink {
-                Text("Settings…")
+            Button("Settings…") {
+                NSApp.activate()
+                openSettings()
             }
             .keyboardShortcut(",", modifiers: .command)
 

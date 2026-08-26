@@ -68,7 +68,9 @@ window index, the event bus, the thumbnail cache, and the window actions exist
 Sources/
 ├── OpenSwitchrCore/   Shared foundation. No UI, no frontend assumptions.
 ├── OpenSwitchrUI/     SwiftUI views + non-activating panel infrastructure.
-└── OpenSwitchr/       App wiring: menu bar, hotkey tap, controllers, settings.
+├── OpenSwitchr/       App wiring: menu bar, hotkey tap, controllers, settings.
+├── openswitchr-diag/  Command-line harness for the parts only real windows can judge.
+└── openswitchr-icon/  Renders Resources/AppIcon.icns from OpenSwitchrUI's WindowMark.
 ```
 
 **Core types:**
@@ -146,7 +148,29 @@ Sources/
   found drifting apart here. Derive the second one from the first instead of
   writing a comment claiming they match.
 - **Signing identity must stay stable.** TCC permissions are tied to the code
-  signature; `build-app.sh` aborts on an ad-hoc signature on purpose.
+  signature; `build-app.sh` aborts on an ad-hoc signature on purpose. Its
+  identity lookup must also return exactly one fingerprint: awk's `exit` runs
+  the `END` block, and a keychain holding both an Apple Development and a
+  Developer ID certificate once produced two, which `codesign` read as a single
+  unknown identity.
+- **Opening a window does not activate an `LSUIElement` app.** `SettingsLink`
+  put the Settings window on screen *behind* whatever the user was looking at,
+  because nothing brought OpenSwitchr forward. The menu item drives
+  `openSettings()` explicitly so `NSApp.activate()` can run alongside it. Verify
+  by z-order, not by eye: a window that is on screen is not necessarily in
+  front.
+- **The mark is drawn once, in two weights.** `WindowMark` owns the geometry for
+  both the app icon and the menu bar glyph, because two drawings of the same
+  logo drift. Solid art carries a 1024 pt icon and collapses into a blob at
+  15 pt, so the menu bar takes the outlined style — the same split Apple ships
+  as `macwindow` against `macwindow.fill`. Interior detail is punched out with
+  `destinationOut` rather than painted lighter, because the mark is white on a
+  blue plate in one place and a tinted template in the other, and "lighter"
+  points opposite ways on those two while "less opaque" points the same way.
+- **`NSBitmapImageRep.draw(in:)` discards the alpha channel.** It painted the
+  mark's whole bounding box opaque, turning two overlapping windows into one
+  filled rectangle, while `colorAt` proved the bitmap itself was correct. Wrap
+  the rep in an `NSImage` and draw that.
 
 ## Verifying the app, not just the core
 

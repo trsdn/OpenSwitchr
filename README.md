@@ -55,6 +55,10 @@ open /Applications/OpenSwitchr.app
 ```
 
 There is no Xcode project; the app bundle is assembled by the build script.
+The app icon is generated rather than checked in as an opaque binary —
+`swift run openswitchr-icon` renders `Resources/AppIcon.icns` from the same
+`WindowMark` the menu bar glyph is drawn from, and `build-app.sh` re-runs it on
+every build so the two cannot drift apart.
 
 ## Release
 

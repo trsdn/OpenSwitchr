@@ -1,3 +1,4 @@
+import OpenSwitchrUI
 import SwiftUI
 
 struct AboutView: View {
@@ -8,8 +9,8 @@ struct AboutView: View {
 
     var body: some View {
         VStack(spacing: 10) {
-            Image(systemName: "rectangle.stack")
-                .font(.system(size: 40))
+            Image(nsImage: WindowMark.templateImage(width: 52))
+                .renderingMode(.template)
                 .foregroundStyle(.tint)
 
             Text("OpenSwitchr")

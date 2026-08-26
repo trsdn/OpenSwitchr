@@ -54,6 +54,11 @@ echo "Building OpenSwitchr..."
 cd "$PROJECT_DIR"
 swift build -c release
 
+# Regenerated on every build so the icon can never fall behind the mark the
+# menu bar draws from the same source.
+echo "Rendering app icon..."
+swift run -c release openswitchr-icon "$PROJECT_DIR"
+
 echo "Creating app bundle..."
 rm -rf "$APP"
 mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"

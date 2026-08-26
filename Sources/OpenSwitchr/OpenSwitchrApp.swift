@@ -1,4 +1,5 @@
 import AppKit
+import OpenSwitchrUI
 import SwiftUI
 
 @main
@@ -7,8 +8,13 @@ struct OpenSwitchrApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) private var delegate
 
     var body: some Scene {
-        MenuBarExtra("OpenSwitchr", systemImage: "rectangle.stack") {
+        MenuBarExtra {
             MenuBarView(model: delegate.model)
+        } label: {
+            // The same mark as the app icon, as a template image the menu bar
+            // tints for light, dark, and the highlighted state.
+            Image(nsImage: WindowMark.menuBarImage())
+                .accessibilityLabel("OpenSwitchr")
         }
         .menuBarExtraStyle(.menu)
 

@@ -25,6 +25,12 @@ let package = Package(
             name: "openswitchr-diag",
             dependencies: ["OpenSwitchrCore"]
         ),
+        // Draws Resources/AppIcon.icns from the same `WindowMark` the menu bar
+        // uses, so the app icon and the menu bar glyph cannot drift apart.
+        .executableTarget(
+            name: "openswitchr-icon",
+            dependencies: ["OpenSwitchrUI"]
+        ),
         .testTarget(
             name: "OpenSwitchrCoreTests",
             dependencies: ["OpenSwitchrCore"]
