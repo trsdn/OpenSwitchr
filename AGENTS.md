@@ -253,3 +253,117 @@ editing names by hand.
 ## Preferences
 
 `UserDefaults` via `PreferencesStore`. No separate plist.
+
+## Repository quality standard
+
+Assessed against the [`trsdn/.github`](https://github.com/trsdn/.github)
+Repository Quality Standard, version 1.3.3, on 2026-08-26. State: **Needs
+work** — high-priority gaps exist, but the repository is usable.
+
+The standard keeps its result in `.github/conformance.yml` and its narrative in
+`docs/self-assessment.md`. This repository has neither, which is `B11` failing;
+until they exist, this section is the record. Every line below is evidence from
+the GitHub API, a workflow run, or a file in the tree — nothing is assumed.
+
+### The finding that outranks the rest
+
+`main` holds two files: `README.md` and `.gitignore`. Everything this document
+describes — the sources, the tests, the CI workflows, `LICENSE`, this file —
+lives in an unmerged branch.
+
+Most of the standard reads the default branch or the repository settings, so a
+stub default branch fails criteria the work already satisfies. GitHub reports
+`license: null` for a public repository, which is the "ambiguous public
+licensing" case the standard names as high-priority, and it is why `B03` and
+`P01` fail despite `LICENSE` existing three commits away. Merging is the single
+change that moves the most criteria.
+
+### Profiles
+
+| Profile | Applies | Why |
+| --- | --- | --- |
+| Baseline | Yes | Always |
+| Public | Yes | Public visibility |
+| Software | Yes | Ships a Swift package and an app bundle |
+| Product Identity | Yes | Builds a signed `.app` a user installs |
+| Package And Release | Yes | Releases are intended, via the notarization broker |
+| Agent Readiness | Yes | This file exists and agents work here |
+| Language, Accessibility, Privacy | Yes | A shipping user interface |
+| Deployable | No | Nothing is deployed to any environment |
+| Documentation | No | The product is software; docs support it |
+| Archived | No | Actively developed |
+
+### Gaps
+
+| ID | Result | Observed |
+| --- | --- | --- |
+| `B03`, `P01` | fail | No licence on the default branch. `LICENSE` is only in the unmerged branch, so GitHub detects none. |
+| `B06`, `S09` | fail | `main` is unprotected: the API answers `Branch not protected`, there are no rulesets, and CI is not a required check. |
+| `B11` | fail | No `.github/conformance.yml`. |
+| `B12`, `P07` | fail | No topics at all, so the `trsdn-standard` set does not include this repository. No homepage. |
+| `P03` | partial | `SECURITY.md` is inherited from `trsdn/.github`, but private vulnerability reporting is disabled (`{"enabled": false}`). |
+| `P04` | partial | The pull-request template is inherited; the community profile reports `issue_template: null`, so the issue forms are not applied. |
+| `P08`, `P09` | fail | No status badges and no repository activity card in the README. |
+| `S03` | partial | Warnings are errors in CI, which is real static analysis, but no formatter or linter is configured. |
+| `S04` | partial | One job on `macos-latest`. The label is unpinned, so the macOS version under test moves without a commit while the README promises macOS 15+. |
+| `S05` | partial | `secret-scan.yml` runs on every pull request and passes, but GitHub secret scanning and push protection are both disabled. |
+| `S08` | fail | No `dependabot.yml` and Dependabot security updates disabled. The Swift package has no dependencies, but the workflows pin `actions/checkout@v4`, which does age. |
+| `I02`, `I03` | fail | The bundle carries no repository URL, no issue tracker URL, no licence identifier, and no copyright holder. `LICENSE` is not copied into the app. |
+| `I04` | partial | The About tab shows the version and links to the repository; it does not link an issue tracker. |
+| `I06` | fail | `CFBundleVersion` and `CFBundleShortVersionString` are typed into `Info.plist` by hand. Nothing derives them from a tag. |
+| `G03` | fail | Nothing here names forbidden or high-risk operations: history rewriting, force pushes, secret handling, releases, tag moves, repository settings. |
+| `G05` | partial | Validation is several commands. The standard asks for one that an agent can run before proposing a change. |
+| `G06` | fail | No path is marked as generated. `Resources/AppIcon.icns` is produced by `openswitchr-icon` and rewritten by `build-app.sh` on every build, and nothing says so. There is no `.gitattributes`. |
+| `G07` | partial | Agent commits carry `Co-authored-by` trailers, but no review expectation is written down. |
+| `G08` | fail | No `.github/github-app.yml`. |
+| `L01`, `L03` | partial / fail | Every surface is English; nothing declares English as the primary language, and localization support is never stated as English-only. |
+| `X01` | partial | The switcher is fully keyboard-driven. Dock hover previews are reachable only by pointer, which is inherent to hovering a Dock icon but is not written down anywhere. |
+| `X03` | partial | Meaning never rests on colour alone — the quit control is red *and* a distinct glyph in the opposite corner — but behaviour under platform text-size settings is unverified. |
+| `X05` | fail | Known accessibility limits are not stated. |
+| `Y01`, `Y04` | fail | The README never says the app collects nothing and transmits nothing, and never says preferences live in `UserDefaults` under `com.openswitchr.app`. The explicit "none" case still has to be written. |
+| `Y02` | partial | The app opens no outbound connection. Nothing documents that. |
+| `R03`, `R05` | fail | No release workflow, no release, no smoke test of a built artifact in a clean environment. |
+| `B04` | partial | `.gitignore` covers build output, `dist/`, and `.release.env`; the generated `AppIcon.icns` is tracked without being marked. |
+| `B09`, `B10` | partial | Visibility and archive state are intentional; there is no `CODEOWNERS`, and the README states "Early" without naming an owner or a maintenance commitment. |
+| `P05`, `P06` | partial | The README covers install, build, and compatibility, but not configuration, security, or support. The community profile sits at 85 %. |
+| `S02` | partial | 42 tests, all pure logic. Everything touching accessibility or the window server is covered only by `openswitchr-diag`, which is manual and absent from CI — as the section above already admits. |
+| `T02` | partial | Nothing validates the markdown. Against the standard's own `.markdownlint.jsonc` this repository reports 26 issues: 24 table-separator spacings, one fenced block without a language, and one duplicate `### Added` heading in `CHANGELOG.md`. All trivial, none currently visible to anyone. |
+
+### Notable passes
+
+- `B05`, `S01`, `S10` — a clean checkout builds and tests with documented
+  commands, no external dependencies, and CI proves it on every push.
+- `S07` — verified by reading every logging call: no window title, no personal
+  data, only counts, pids, and error descriptions.
+- `X02` — tiles and the menu bar item carry accessibility labels.
+- `X04` — `openswitchr-diag` emits plain text with no colour and no Unicode
+  decoration, so its output survives any pipe or log.
+- `I01`, `I05` — the bundle carries its name and version, and embeds an icon
+  generated from the same `WindowMark` the menu bar draws.
+- `G01`, `G02` — this file exists, and its build, run, and validation commands
+  were each executed rather than trusted.
+- `B08`, `R02` — `CHANGELOG.md` follows Keep a Changelog and states the
+  versioning policy.
+
+### Not applicable
+
+- **Deployable `D01`-`D06`.** Nothing is deployed. There is no environment.
+- **Documentation `T01`-`T05`.** The product is an app.
+- **`L04`-`L06`.** English only; no string catalogs exist to be validated.
+- **`S06`.** No runtime configuration beyond user preferences.
+- **`Y05`, `Y06`.** No third-party service receives anything, and thumbnails are
+  held in memory under a byte budget, so nothing outlives a session.
+- **Archived `A01`-`A04`.** Actively developed.
+
+### Order of remediation
+
+1. Merge, so the default branch stops contradicting the repository.
+2. Enable secret scanning, push protection, and private vulnerability
+   reporting; protect `main` and require CI. These are settings, not code.
+3. Add `.github/conformance.yml` and the `trsdn-standard` topic, so the result
+   is recorded and discoverable.
+4. Add the `G03` and `G06` sections to this file — forbidden operations, and
+   the generated paths — since both describe rules an agent is expected to
+   follow and currently cannot read.
+5. State the "none" cases: no data collected, no outbound connections, English
+   only, and the known accessibility limits.
