@@ -158,6 +158,15 @@ Sources/
   mark's whole bounding box opaque, turning two overlapping windows into one
   filled rectangle, while `colorAt` proved the bitmap itself was correct. Wrap
   the rep in an `NSImage` and draw that.
+- **A pid does not say which window was focused.** `windows` is sorted
+  most-recently-used first, so "the first window of this pid" is always the
+  window that was *already* on top: promoting it is a no-op that freezes the
+  order. `kAXFocusedWindowChangedNotification` carries the newly focused window
+  as its own element — verified against Safari with three windows — so match on
+  that and keep the pid only as a fallback for apps that expose nothing usable.
+  The same callback must take the pid from the element rather than from
+  `NSWorkspace.frontmostApplication`, or a focus change in a background app is
+  charged to whichever app happens to be in front.
 - **A minimized window reports the subrole `AXDialog`.** Not
   `AXStandardWindow`, which is what the same window reported a second earlier;
   role, title, position, and size are all unchanged. Filtering on subrole alone

@@ -229,8 +229,8 @@ public final class AppModel {
             // back, and it needs no timer of its own.
             hotkeys.ensureEnabled()
             scheduleRebuild()
-        case .focusedWindowChanged(let pid):
-            index.noteFocus(pid: pid)
+        case .focusedWindowChanged(let focused):
+            index.noteFocus(pid: focused.pid, element: focused.element)
         }
     }
 

@@ -97,6 +97,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **The switcher's order ignored every window switch inside an app.** A focus
+  event carries a pid, and the window was resolved by taking the first entry of
+  that pid out of `windows` — a list that is sorted most-recently-used first, so
+  the answer was by construction the window that was *already* on top. Focusing
+  a second Finder window re-promoted the first one and the order never moved,
+  which made `⌘-Tab` feel arbitrary for anyone running more than one window per
+  app. `kAXFocusedWindowChangedNotification` carries the newly focused window as
+  its own element, measured against Safari with three windows, so that element
+  now decides and the pid is only a fallback. Verified against a real app:
+  focusing each of three windows in turn now puts each one at the top, where
+  before only the incumbent was ever promoted.
+- **Focus changes in a background app were credited to the foreground one.** The
+  same callback read `NSWorkspace.frontmostApplication` instead of the pid of
+  the element that had actually changed.
 - **Minimized windows vanished from the switcher.** macOS relabels a window's
   accessibility subrole from `AXStandardWindow` to `AXDialog` the moment it goes
   to the Dock — measured on both Activity Monitor and Preview, macOS 26.6 —

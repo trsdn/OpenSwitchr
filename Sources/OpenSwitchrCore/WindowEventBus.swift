@@ -17,11 +17,33 @@ public final class WindowEventBus {
         case windowsChanged
         /// An app came to the front; used to advance MRU order.
         case appActivated(pid_t)
-        /// A specific app moved focus to another of its windows.
-        case focusedWindowChanged(pid_t)
+        /// An app moved focus to another of its windows, and said which one.
+        case focusedWindowChanged(FocusedWindow)
         /// The user switched Spaces; the index is only valid for the current
         /// Space, so it must be rebuilt from scratch.
         case spaceChanged
+    }
+
+    /// The window an app just focused.
+    ///
+    /// `kAXFocusedWindowChangedNotification` delivers the newly focused window
+    /// as the notification's own element — measured against Safari with three
+    /// windows, where it arrived as an `AXWindow` carrying the title of the
+    /// window that had just been raised. Passing it on costs nothing and is the
+    /// only thing that identifies *which* window of a multi-window app was
+    /// focused.
+    public struct FocusedWindow: @unchecked Sendable, Equatable {
+        public let pid: pid_t
+        public let element: AXUIElement
+
+        public init(pid: pid_t, element: AXUIElement) {
+            self.pid = pid
+            self.element = element
+        }
+
+        public static func == (lhs: FocusedWindow, rhs: FocusedWindow) -> Bool {
+            lhs.pid == rhs.pid && CFEqual(lhs.element, rhs.element)
+        }
     }
 
     public var onEvent: ((Event) -> Void)?
@@ -187,22 +209,26 @@ public final class WindowEventBus {
         var pid: pid_t = 0
         AXUIElementGetPid(element, &pid)
 
+        // The event is built here rather than on the other side of the hop: a
+        // bare `AXUIElement` is not `Sendable` and cannot cross onto the main
+        // actor, while `Event` — through `FocusedWindow` — can.
+        let event: Event = name == kAXFocusedWindowChangedNotification as String
+            // The pid comes from the element that actually changed. Reading the
+            // frontmost application instead, as this once did, misattributes
+            // every focus change made by an app that is not in front.
+            ? .focusedWindowChanged(FocusedWindow(pid: pid, element: element))
+            : .windowsChanged
+
         MainActor.assumeIsolated {
-            bus.handleAXNotification(name, pid: pid)
+            bus.deliver(event, name: name, pid: pid)
         }
     }
 
-    private func handleAXNotification(_ name: String, pid: pid_t) {
+    private func deliver(_ event: Event, name: String, pid: pid_t) {
         // Which app is chattering decides whether idle CPU is acceptable, and
         // that cannot be guessed from outside.
         logger.debug("AX \(name) from pid \(pid)")
-
-        switch name {
-        case kAXFocusedWindowChangedNotification:
-            emit(.focusedWindowChanged(NSWorkspace.shared.frontmostApplication?.processIdentifier ?? 0))
-        default:
-            emit(.windowsChanged)
-        }
+        emit(event)
     }
 
     private func emit(_ event: Event) {

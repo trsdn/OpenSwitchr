@@ -65,11 +65,41 @@ public final class WindowIndex {
         windows.removeAll { $0.id == windowID }
     }
 
-    /// Marks the frontmost window of a process as most recently used. Used
-    /// when the only signal available is "this app became active".
-    public func noteFocus(pid: pid_t) {
-        guard let frontmost = windows.first(where: { $0.pid == pid && !$0.isMinimized }) else { return }
-        noteFocus(windowID: frontmost.id)
+    /// Marks the window an app just moved focus to as most recently used.
+    ///
+    /// The accessibility element is the only signal that says *which* window of
+    /// a multi-window app was focused, and
+    /// `kAXFocusedWindowChangedNotification` hands it over for free. When the
+    /// caller has none — an app merely became active — the app is asked which
+    /// window it considers focused, which costs one synchronous message on an
+    /// event that happens at human speed.
+    public func noteFocus(pid: pid_t, element: AXUIElement? = nil) {
+        let focused = element
+            ?? AXBridge.element(AXBridge.application(pid: pid), kAXFocusedWindowAttribute as String)
+
+        guard let target = Self.focusTarget(pid: pid, element: focused, in: windows) else { return }
+        noteFocus(windowID: target.id)
+    }
+
+    /// Picks the window a focus event refers to.
+    ///
+    /// Pure and separately testable, because the interesting case cannot be
+    /// reached from a pid: `windows` is sorted most-recently-used first, so
+    /// "the first window of this pid" is by construction the window that was
+    /// *already* most recent. Falling back to it re-promotes the incumbent and
+    /// the order never moves — focusing a second Finder window used to leave
+    /// the first one at the top forever. The fallback is kept only for apps
+    /// that expose no usable element, where re-promoting the app's last known
+    /// window still beats ignoring the event.
+    static func focusTarget(pid: pid_t, element: AXUIElement?, in windows: [WindowInfo]) -> WindowInfo? {
+        if let element,
+           let match = windows.first(where: { window in
+               window.element.map { CFEqual($0, element) } ?? false
+           }) {
+            return match
+        }
+
+        return windows.first { $0.pid == pid && !$0.isMinimized }
     }
 
     /// Rebuilds the index from scratch, blocking the caller.
