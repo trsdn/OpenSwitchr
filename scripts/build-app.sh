@@ -28,10 +28,12 @@ find_signing_identity() {
 
     security find-identity -v -p codesigning 2>/dev/null \
         | awk '
-            /Developer ID Application:/ { print $2; exit }
+            /Developer ID Application:/ { print $2; found = 1; exit }
             /Apple Development:/ && !apple_dev { apple_dev = $2 }
             END {
-                if (apple_dev) {
+                if (found) {
+                    exit 0
+                } else if (apple_dev) {
                     print apple_dev
                 } else {
                     exit 1
