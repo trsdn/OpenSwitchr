@@ -6,6 +6,12 @@ import SwiftUI
 ///
 /// Renders instantly from the app icon and only upgrades to a live thumbnail
 /// once the capture arrives, so no tile ever blocks the overlay.
+///
+/// The tile does not request its own capture. Whoever shows a set of tiles
+/// calls `ThumbnailProvider.prefetch` first: the panels are only ordered out
+/// and their SwiftUI tree survives, so a tile's `onAppear` fires once per
+/// window for the lifetime of the app and cannot be relied on to recover an
+/// image that was dropped in between.
 public struct WindowTile: View {
 
     private let window: WindowInfo
@@ -72,7 +78,6 @@ public struct WindowTile: View {
             isPointerInside = hovering
             onHover(hovering)
         }
-        .onAppear { thumbnails.request(window.id, maxPixelSize: thumbnailSize.width * 2) }
         .accessibilityLabel(Text("\(window.appName): \(window.displayTitle)"))
     }
 

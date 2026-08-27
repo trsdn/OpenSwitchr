@@ -84,6 +84,9 @@ public final class DockPreviewController {
         hoveredIndex = nil
 
         let tile = tileSize()
+        // Once per shown row, not from `render()`, which also runs on hover.
+        thumbnails.prefetch(matches.map(\.id), maxPixelSize: tile.width * 2)
+
         let size = DockPreviewView.panelSize(windowCount: matches.count, tileSize: tile)
         let clamped = NSSize(
             width: min(size.width, (NSScreen.main?.visibleFrame.width ?? 1200) * 0.9),

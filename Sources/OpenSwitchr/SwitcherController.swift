@@ -90,9 +90,18 @@ public final class SwitcherController {
             height: min(visible.height * 0.8, contentHeight + 70)
         )
 
+        prefetchThumbnails()
         render()
         panel.showCentered(size: size)
         setVisible(true)
+    }
+
+    /// Asks for the captures the tiles are about to want.
+    ///
+    /// Deliberately not in `render()`, which also runs on every hover: one pass
+    /// per shown list is enough, and per mouse move is not free.
+    private func prefetchThumbnails() {
+        thumbnails.prefetch(visibleWindows.map(\.id), maxPixelSize: tileSize().width * 2)
     }
 
     private func render() {
@@ -185,6 +194,7 @@ public final class SwitcherController {
         } else {
             selectedIndex = min(selectedIndex, max(0, visibleWindows.count - 1))
         }
+        prefetchThumbnails()
         render()
     }
 

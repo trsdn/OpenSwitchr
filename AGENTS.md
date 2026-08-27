@@ -158,6 +158,20 @@ Sources/
   mark's whole bounding box opaque, turning two overlapping windows into one
   filled rectangle, while `colorAt` proved the bitmap itself was correct. Wrap
   the rep in an `NSImage` and draw that.
+- **Nothing that shows tiles may rely on `onAppear` to fetch them.** Both
+  panels are only ordered out, never torn down, so their SwiftUI tree survives
+  and a tile keeps its identity: `onAppear` fires once per window for the
+  lifetime of the app. While that was the only thing requesting a capture,
+  every path that dropped an image was permanent — `clear()` on a Space change
+  dropped all of them — and previews thinned out over a session until only icon
+  tiles were left. Whoever shows a set of tiles calls
+  `ThumbnailProvider.prefetch` on the path that shows them, and not from a
+  `render()` that also runs on hover.
+- **The provider must not answer cache questions the store owns.** Skipping the
+  store because an image was already loaded made every loaded preview immortal
+  and turned the refresh-rate setting into a no-op — the age limit lives in
+  `ThumbnailStore`, so the request has to reach it. This is the same trap as
+  the tile-size one below, in the other direction.
 - **A pid does not say which window was focused.** `windows` is sorted
   most-recently-used first, so "the first window of this pid" is always the
   window that was *already* on top: promoting it is a no-op that freezes the

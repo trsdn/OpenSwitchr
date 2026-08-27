@@ -97,6 +97,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **Thumbnails disappeared over a session and never came back.** A tile's
+  `onAppear` was the only thing that ever requested a capture, and both panels
+  are merely ordered out rather than torn down, so their SwiftUI tree survives
+  and that fires exactly once per window per launch. Everything else only
+  removed: `retain(only:)` after each index rebuild, and `clear()` on every
+  Space change, which drops all of them at once. Any image lost that way was
+  lost until relaunch, so previews decayed into icon tiles. The controllers now
+  request captures for the set they are about to show, on the path that shows
+  it rather than from a `render()` that also runs on hover.
+- **The thumbnail refresh-rate setting did nothing once a preview had loaded.**
+  The provider returned early whenever an image was already present, so the age
+  limit in `ThumbnailStore` — which is what the setting configures — was never
+  consulted again for that window.
 - **The switcher's order ignored every window switch inside an app.** A focus
   event carries a pid, and the window was resolved by taking the first entry of
   that pid out of `windows` — a list that is sorted most-recently-used first, so

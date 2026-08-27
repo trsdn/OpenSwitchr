@@ -35,27 +35,43 @@ public final class ThumbnailProvider {
         images[windowID]
     }
 
-    /// Requests a capture unless one is already loaded at a sufficient size or
-    /// is already in flight.
+    /// Requests a capture unless one for this window is already in flight.
+    ///
+    /// This always reaches the store, which is what makes the refresh-rate
+    /// setting mean anything: the age limit lives there, and short-circuiting
+    /// here on "an image is already loaded" made every loaded preview immortal
+    /// and the setting a no-op. A cache hit inside the store costs an actor
+    /// hop, which is nothing next to a capture.
     public func request(_ windowID: CGWindowID, maxPixelSize: CGFloat = 640) {
         guard !requested.contains(windowID) else { return }
 
-        if images[windowID] != nil {
-            // Shrinking reuses the existing capture; only growing needs a new
-            // one, and only by enough to be visible.
-            let captured = capturedSizes[windowID] ?? maxPixelSize
-            guard maxPixelSize > captured * 1.15 else { return }
-        }
+        // Shrinking a tile reuses the larger capture; only growing needs a new
+        // one, so the size asked for never goes down.
+        let target = max(maxPixelSize, capturedSizes[windowID] ?? 0)
 
         requested.insert(windowID)
 
         Task { [weak self] in
             guard let self else { return }
-            let thumbnail = await self.store.thumbnail(for: windowID, maxPixelSize: maxPixelSize)
+            let thumbnail = await self.store.thumbnail(for: windowID, maxPixelSize: target)
             self.requested.remove(windowID)
             guard let thumbnail else { return }
             self.images[windowID] = thumbnail.cgImage
-            self.capturedSizes[windowID] = maxPixelSize
+            self.capturedSizes[windowID] = target
+        }
+    }
+
+    /// Requests captures for a whole set of windows that is about to be shown.
+    ///
+    /// A tile's `onAppear` cannot own this. Both panels are only ordered out,
+    /// never torn down, so their SwiftUI tree survives and a tile that has been
+    /// shown once keeps its identity and never appears again. Every path that
+    /// drops an image — `clear()` on a Space change drops all of them — was
+    /// therefore permanent: previews thinned out over a session until only
+    /// icon tiles were left, and only relaunching brought them back.
+    public func prefetch(_ windowIDs: some Sequence<CGWindowID>, maxPixelSize: CGFloat) {
+        for id in windowIDs {
+            request(id, maxPixelSize: maxPixelSize)
         }
     }
 
