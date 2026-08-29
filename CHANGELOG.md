@@ -9,6 +9,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `WindowFilter`: one pure value type describing which windows a surface wants
+  and in what order, applied by both frontends. Four axes — application scope,
+  minimized handling, display scope, and order — with the switcher's
+  configurable in Settings and the Dock preview's fixed and permissive, because
+  the pointer already chose the application. Defaults reproduce the previous
+  behaviour exactly.
+- `openswitchr-diag --filters`, which applies the profiles to the windows
+  actually open and checks the one axis unit tests cannot judge: that scoping
+  by display leaves no window claimed by no display.
+- Dock previews can switch instantly while one is already open, so the open
+  delay applies to the first preview only and moving along the Dock does not
+  wait again. On by default.
+
 - Shared window foundation used by both frontends: `WindowIndex` (single source
   of truth), `WindowEventBus` (accessibility and `NSWorkspace` notifications,
   no polling), `ThumbnailStore` (ScreenCaptureKit behind an LRU cache with a

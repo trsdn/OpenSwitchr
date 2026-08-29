@@ -48,7 +48,20 @@ public final class DockPreviewController {
 
         guard item != currentItem || !isVisible else { return }
 
-        let delay = preferences.dockHoverDelay
+        // Once a preview is on screen the user has already declared intent, so
+        // moving along the Dock switches without waiting again. `isVisible` is
+        // still true while a hide has merely been scheduled, which is
+        // deliberate: that is exactly the moment a fast pointer is crossing the
+        // gap between two icons.
+        let delay = preferences.dockHoverInstantSwitch && isVisible ? 0 : preferences.dockHoverDelay
+
+        // Showing straight away rather than sleeping for zero: the point of
+        // this path is that nothing is scheduled at all.
+        guard delay > 0 else {
+            show(for: item)
+            return
+        }
+
         showTask = Task { [weak self] in
             try? await Task.sleep(for: .seconds(delay))
             guard !Task.isCancelled, let self else { return }
@@ -225,12 +238,16 @@ public final class DockPreviewController {
     }
 
     private func resolveWindows(for item: DockHoverMonitor.DockItem) -> [WindowInfo] {
-        if let bundleID = item.bundleID {
-            let matches = index.windows(forBundleID: bundleID)
-            if !matches.isEmpty { return matches }
+        var matches = item.bundleID.map { index.windows(forBundleID: $0) } ?? []
+        if matches.isEmpty, !item.title.isEmpty {
+            matches = index.windows.filter { $0.appName == item.title }
         }
-        guard !item.title.isEmpty else { return [] }
-        return index.windows.filter { $0.appName == item.title }
+        guard !matches.isEmpty else { return [] }
+
+        // This surface has a profile too, even though it is the permissive one.
+        // Going through it keeps the claim that both frontends are filtered the
+        // same way true in code rather than only in the README.
+        return WindowFilter.dockPreview.apply(to: matches)
     }
 
     // MARK: - Mouse tracking

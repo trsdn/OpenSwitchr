@@ -1,14 +1,14 @@
 # OpenSwitchr
 
-**One app instead of two.** Dock hover previews and an Alt-Tab style window
+**One app instead of two.** Dock hover previews and a hold-and-Tab window
 switcher, built on a single shared window index.
 
-macOS ships with `⌘-Tab`, which switches *applications*, not *windows*. The two
-best answers to that gap — [DockDoor](https://github.com/ejbills/DockDoor) for
-Dock hover previews and [AltTab](https://github.com/lwouis/alt-tab-macos) for a
-visual switcher — solve two halves of the same problem, and each pays the full
-cost of doing so: enumerating every window, observing every change, and
-capturing every thumbnail. Running both means paying twice.
+macOS ships with `⌘-Tab`, which switches *applications*, not *windows*. The
+usual way to close that gap is to run two separate utilities: one that previews
+an application's windows when you hover its Dock icon, and one that puts a
+visual switcher on screen. They solve two halves of the same problem, and each
+pays the full cost of doing so on its own — enumerating every window, observing
+every change, capturing every thumbnail. Running both means paying twice.
 
 OpenSwitchr pays once. The window index, the event bus, the thumbnail cache, and
 the window actions exist exactly once; the Dock previews and the switcher
@@ -22,8 +22,11 @@ overlay are thin readers on top.
   current Space in most-recently-used order, with live thumbnails. `⌥` and `⌃`
   are available in Settings if you would rather keep the system switcher.
 - **Type to filter** — start typing to narrow by app name or window title.
+- **Choose what the switcher lists** — by application, by display, how
+  minimized windows are treated, and in what order.
 - **Dock hover previews** — hover a Dock icon to see that app's windows; click
-  one to jump straight to it.
+  one to jump straight to it. The open delay applies to the first preview only,
+  so moving along the Dock does not wait again.
 - **Window actions** — focus, minimize, restore, and close from either frontend.
 - **Minimized windows included** — a window in the Dock is still listed, dimmed
   and marked, and activating its tile restores it.
@@ -132,11 +135,19 @@ permission:
 ```bash
 swift run openswitchr-diag                    # window index and AX linking
 swift run openswitchr-diag --bench --capture  # plus timings
+swift run openswitchr-diag --filters          # filter profiles against real windows
 swift run openswitchr-diag --probe-app        # drive the *installed* app
 ```
 
 It reports per-app `CG` / `AX` / `LINKED` counts, which separates "the linking
 heuristic failed" from "this app exposes no accessibility windows at all".
+
+`--filters` exists for the one filter axis unit tests cannot judge. Restricting
+the switcher to one display compares a window frame from CoreGraphics against a
+screen frame AppKit measures in the opposite vertical direction, and a wrong
+flip still looks correct on a single display because the two spaces coincide
+there. The mode applies the scope to every attached display and then asserts
+the thing that actually matters: no window may end up claimed by none of them.
 
 `--probe-app` is the only check that exercises the shipping app rather than the
 core: it posts a synthetic hotkey, measures how long the overlay takes to
@@ -180,6 +191,34 @@ otherwise the tile of an already-closed window would stay on screen. Quitting
 deliberately does *not* prune tiles: `terminate()` is a request, and an app with
 unsaved work may put up a dialog and stay. The panel dismisses instead, which
 also stops it covering that dialog.
+
+## What the switcher shows
+
+Both frontends read the same index, but they do not want the same set, so each
+carries a filter profile. The Dock preview's is fixed and permissive — the
+pointer already picked the application, so any further restriction could only
+hide something you pointed at. The switcher's is yours:
+
+| Axis | Default | Options |
+|---|---|---|
+| Show | All applications | All, only the current application, or everything but the current application |
+| Minimized windows | Show | Show, hide, or show after the rest |
+| Displays | All displays | All, or only the display the switcher appears on |
+| Order | Most recently used | Most recently used, most recently opened, or application then title |
+
+The defaults are exactly what the app did before the setting existed, so
+changing nothing changes nothing.
+
+Two details that are easy to get wrong and are therefore pinned by tests. A
+minimized window is on no display at all, so restricting to one display never
+removes it — otherwise a display setting would quietly delete every window in
+the Dock. And "show after the rest" is a partition applied after ordering, not
+a tie-breaker inside the comparator, because the latter is not a strict weak
+ordering and `sort` is free to misbehave with one.
+
+"Most recently opened" is honest about its limits: windows that were already
+open when the app launched are ordered back-to-front from z-order, because
+nothing records when a window that predates the process was opened.
 
 ## Scope: current Space only
 

@@ -14,6 +14,7 @@ import OpenSwitchrCore
 ///     swift run openswitchr-diag              # window index and linking
 ///     swift run openswitchr-diag --capture    # also exercise ScreenCaptureKit
 ///     swift run openswitchr-diag --bench      # also time repeated rebuilds
+///     swift run openswitchr-diag --filters    # apply the filter profiles to real windows
 ///     swift run openswitchr-diag --probe-app  # drive the *installed* app
 @main
 @MainActor
@@ -83,6 +84,72 @@ enum Diag {
         }
         if arguments.contains("--audit-links") {
             auditLinks(windows)
+        }
+        if arguments.contains("--filters") {
+            reportFilters(windows)
+        }
+    }
+
+    /// Applies each surface's filter profile to the windows actually open.
+    ///
+    /// Everything here is covered by unit tests except the one axis that cannot
+    /// be: the display scope compares a window frame reported by CoreGraphics
+    /// against a screen frame AppKit reports in the opposite vertical
+    /// direction. A wrong flip still looks correct on a single display, because
+    /// the two coordinate spaces coincide there, so the only way to judge it is
+    /// against the displays attached to this Mac.
+    private static func reportFilters(_ windows: [WindowInfo]) {
+        let frontmost = windows.first?.pid
+        let context = WindowFilter.Context(frontmostPID: frontmost)
+
+        print("")
+        print("Filter profiles")
+        if let frontmost, let name = windows.first?.appName {
+            print("Current application: \(name) (pid \(frontmost))")
+        }
+
+        func report(_ label: String, _ filter: WindowFilter, _ context: WindowFilter.Context) {
+            let kept = filter.apply(to: windows, context: context)
+            print("  " + pad(label, 36) + "\(kept.count)/\(windows.count)")
+        }
+
+        report("Dock preview profile", .dockPreview, WindowFilter.Context())
+        report("Switcher, defaults", WindowFilter(), context)
+        report("Only the current application", WindowFilter(applications: .frontmostOnly), context)
+        report("Everything but the current one", WindowFilter(applications: .excludingFrontmost), context)
+        report("Minimized hidden", WindowFilter(minimized: .hide), context)
+        report("Minimized last", WindowFilter(minimized: .showAfterOthers), context)
+
+        print("")
+        print("Display scope, against the attached displays")
+        let scoped = WindowFilter(screens: .surfaceScreenOnly)
+        var reachable = Set<CGWindowID>()
+
+        for (offset, screen) in NSScreen.screens.enumerated() {
+            let frame = WindowFilter.coreGraphicsFrame(of: screen)
+            let kept = scoped.apply(to: windows, context: .init(screenFrame: frame))
+            reachable.formUnion(kept.map(\.id))
+
+            let geometry = "\(Int(frame.width))×\(Int(frame.height)) at \(Int(frame.minX)),\(Int(frame.minY))"
+            print("  " + pad("Display \(offset + 1)  \(geometry)", 36) + "\(kept.count)/\(windows.count)")
+        }
+
+        // The check that matters: scoping by display must never make a window
+        // unreachable from every display. One that no display claims is either
+        // a coordinate flip that is wrong, or a window somewhere nobody can
+        // see it.
+        let unreachable = windows.filter { !reachable.contains($0.id) }
+        print("")
+        if unreachable.isEmpty {
+            print("Every window is claimed by at least one display.")
+        } else {
+            print("Claimed by no display: \(unreachable.count)")
+            for window in unreachable {
+                let frame = window.frame
+                print("  " + pad(short(window.appName, 20), 22)
+                      + pad(window.isMinimized ? "minimized" : "on screen", 12)
+                      + "\(Int(frame.width))×\(Int(frame.height)) at \(Int(frame.minX)),\(Int(frame.minY))")
+            }
         }
     }
 
