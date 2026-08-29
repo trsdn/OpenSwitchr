@@ -12,6 +12,10 @@ public struct MRUTracker {
     private var sequence: Int = 0
     private var ranks: [CGWindowID: Int] = [:]
 
+    /// The rank a window had when it was first seen, kept separately because
+    /// `ranks` moves on every focus and would otherwise lose it.
+    private var discovery: [CGWindowID: Int] = [:]
+
     public init() {}
 
     /// Seeds ordering for windows never seen before, using the front-to-back
@@ -21,6 +25,7 @@ public struct MRUTracker {
         for id in ids.reversed() where ranks[id] == nil {
             sequence += 1
             ranks[id] = sequence
+            discovery[id] = sequence
         }
     }
 
@@ -32,16 +37,26 @@ public struct MRUTracker {
 
     public mutating func forget(_ id: CGWindowID) {
         ranks.removeValue(forKey: id)
+        discovery.removeValue(forKey: id)
     }
 
     /// Drops bookkeeping for windows that no longer exist, so the map cannot
     /// grow without bound over a long uptime.
     public mutating func retain(only ids: Set<CGWindowID>) {
         ranks = ranks.filter { ids.contains($0.key) }
+        discovery = discovery.filter { ids.contains($0.key) }
     }
 
     public func rank(of id: CGWindowID) -> Int {
         ranks[id] ?? 0
+    }
+
+    /// When this window first entered the index. Higher means more recently.
+    ///
+    /// Only meaningful relative to other windows: for anything that was already
+    /// open at launch it is a seeded z-order position, not an opening time.
+    public func openedRank(of id: CGWindowID) -> Int {
+        discovery[id] ?? 0
     }
 
     /// Sorts windows most-recently-used first.

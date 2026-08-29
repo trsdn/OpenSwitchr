@@ -38,6 +38,11 @@ swift test
 # Run from a terminal that holds the Accessibility permission.
 swift run openswitchr-diag --bench --capture
 
+# The filter profiles, applied to the windows actually open. The display scope
+# is the one axis a unit test cannot judge, because a wrong CoreGraphics/AppKit
+# coordinate flip still looks correct on a single display.
+swift run openswitchr-diag --filters
+
 # End-to-end check against the *installed, running* app: synthetic hotkey,
 # overlay latency, real focus change, and two Dock hovers on the same icon.
 swift run openswitchr-diag --probe-app

@@ -53,6 +53,49 @@ struct SettingsView: View {
                 }
             }
 
+            Section("Window list") {
+                Picker("Show", selection: Binding(
+                    get: { model.preferences.switcherApplicationScope },
+                    set: { model.preferences.switcherApplicationScope = $0 }
+                )) {
+                    ForEach(WindowFilter.ApplicationScope.allCases, id: \.self) { scope in
+                        Text(scope.title).tag(scope)
+                    }
+                }
+
+                Picker("Minimized windows", selection: Binding(
+                    get: { model.preferences.switcherMinimizedPolicy },
+                    set: { model.preferences.switcherMinimizedPolicy = $0 }
+                )) {
+                    ForEach(WindowFilter.MinimizedPolicy.allCases, id: \.self) { policy in
+                        Text(policy.title).tag(policy)
+                    }
+                }
+
+                Picker("Displays", selection: Binding(
+                    get: { model.preferences.switcherScreenScope },
+                    set: { model.preferences.switcherScreenScope = $0 }
+                )) {
+                    ForEach(WindowFilter.ScreenScope.allCases, id: \.self) { scope in
+                        Text(scope.title).tag(scope)
+                    }
+                }
+
+                Picker("Order", selection: Binding(
+                    get: { model.preferences.switcherOrder },
+                    set: { model.preferences.switcherOrder = $0 }
+                )) {
+                    ForEach(WindowFilter.Order.allCases, id: \.self) { order in
+                        Text(order.title).tag(order)
+                    }
+                }
+
+                Text("Applies to the switcher only. Dock previews always show every window of the application under the pointer, because that is the one you pointed at.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+            .disabled(!model.preferences.switcherEnabled)
+
             Section("Dock previews") {
                 Toggle("Show window previews on Dock hover", isOn: Binding(
                     get: { model.preferences.dockHoverEnabled },
@@ -72,6 +115,16 @@ struct SettingsView: View {
                     }
                 }
                 .disabled(!model.preferences.dockHoverEnabled)
+
+                Toggle("Switch instantly while a preview is open", isOn: Binding(
+                    get: { model.preferences.dockHoverInstantSwitch },
+                    set: { model.preferences.dockHoverInstantSwitch = $0 }
+                ))
+                .disabled(!model.preferences.dockHoverEnabled)
+
+                Text("The delay keeps a preview from appearing when you sweep across the Dock on the way somewhere else. Once one is open you have already asked for it, so moving to the next icon need not wait again.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
             }
 
             Section("Startup") {

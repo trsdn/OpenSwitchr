@@ -21,6 +21,16 @@ public struct WindowInfo: Identifiable, Equatable {
     public var isOnScreen: Bool
     public var element: AXUIElement?
 
+    /// Discovery order, higher meaning seen more recently.
+    ///
+    /// Filled in by ``WindowIndex`` from its own bookkeeping so that a pure
+    /// filter can order by "most recently opened" without reaching back into
+    /// the index. Windows that were already open when the app launched are
+    /// seeded back-to-front from z-order, because nothing records when a window
+    /// that predates this process was opened — the order among them is stable
+    /// and plausible rather than true.
+    public var openedRank: Int
+
     public init(
         id: CGWindowID,
         pid: pid_t,
@@ -30,7 +40,8 @@ public struct WindowInfo: Identifiable, Equatable {
         frame: CGRect,
         isMinimized: Bool,
         isOnScreen: Bool,
-        element: AXUIElement?
+        element: AXUIElement?,
+        openedRank: Int = 0
     ) {
         self.id = id
         self.pid = pid
@@ -41,6 +52,7 @@ public struct WindowInfo: Identifiable, Equatable {
         self.isMinimized = isMinimized
         self.isOnScreen = isOnScreen
         self.element = element
+        self.openedRank = openedRank
     }
 
     /// What the switcher shows as the primary label.

@@ -20,6 +20,13 @@ public final class SwitcherController {
     private var query = ""
     private var columnCount = 1
 
+    /// The screen this overlay is appearing on, decided once when it opens.
+    ///
+    /// It is both a layout input and a filter input, and the two have to agree:
+    /// deciding it twice is how a list scoped to "this display" ends up being
+    /// drawn on a different one.
+    private var surfaceScreen: NSScreen?
+
     public private(set) var isVisible = false
 
     /// Called whenever the overlay opens or closes, so the hotkey monitor knows
@@ -61,7 +68,8 @@ public final class SwitcherController {
     private func open(reverse: Bool) {
         guard !isVisible else { return }
         query = ""
-        visibleWindows = index.windows
+        surfaceScreen = OverlayPanel.screenWithMouse() ?? NSScreen.main
+        visibleWindows = baseWindows()
 
         guard !visibleWindows.isEmpty else { return }
 
@@ -74,9 +82,33 @@ public final class SwitcherController {
         present()
     }
 
+    /// The index, reduced to what the user configured this surface to show.
+    ///
+    /// A filter and a sort over a list that is already in memory, on the path
+    /// that puts the overlay on screen. It issues no accessibility read.
+    private func baseWindows() -> [WindowInfo] {
+        preferences.switcherFilter.apply(to: index.windows, context: filterContext())
+    }
+
+    private func filterContext() -> WindowFilter.Context {
+        WindowFilter.Context(frontmostPID: frontmostPID(), screen: surfaceScreen)
+    }
+
+    /// Which application the user is currently in.
+    ///
+    /// Read from the index rather than from `NSWorkspace.frontmostApplication`,
+    /// which is driven by notifications and is the value that has already
+    /// caused trouble here when read on a short path. The index is sorted
+    /// most-recently-used first, so its head is the window the user was last
+    /// in — which is the better answer anyway. The workspace is kept only as a
+    /// fallback for an empty index.
+    private func frontmostPID() -> pid_t? {
+        index.windows.first?.pid ?? NSWorkspace.shared.frontmostApplication?.processIdentifier
+    }
+
     private func present() {
         let tileSize = tileSize()
-        let screen = OverlayPanel.screenWithMouse() ?? NSScreen.main
+        let screen = surfaceScreen ?? NSScreen.main
         let visible = screen?.visibleFrame ?? NSRect(x: 0, y: 0, width: 1440, height: 900)
 
         let maxWidth = min(visible.width * 0.86, 1400)
@@ -188,7 +220,7 @@ public final class SwitcherController {
     }
 
     private func refreshList(resetSelection: Bool) {
-        visibleWindows = WindowMatcher.filter(index.windows, query: query)
+        visibleWindows = WindowMatcher.filter(baseWindows(), query: query)
         if resetSelection {
             selectedIndex = 0
         } else {
