@@ -11,6 +11,7 @@ Resources/AppIcon.icns binary linguist-generated=true
 # Statistics and badge artifacts are rendered from an authoritative source and
 # committed. Same rule: regenerate, never edit.
 .github/stats/** linguist-generated=true
+.github/badges/** linguist-generated=true
 
 # Keep shell scripts and Swift sources on LF regardless of platform.
 *.sh text eol=lf

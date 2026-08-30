@@ -11,9 +11,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Repository conformance record at `.github/conformance.yml`, assessed against
   version 1.5.1 of the trsdn Repository Quality Standard, with the reasoning
-  behind every result in `docs/self-assessment.md`. A scheduled workflow
-  re-validates it, so an assessment that ages past the review cadence turns the
-  check red on its own.
+  behind every result in `docs/self-assessment.md` and the badge rendered from
+  the record into `.github/badges/conformance.svg`. A scheduled workflow
+  re-validates both, so a record that drifts from its badge, or an assessment
+  that ages past the review cadence, turns the check red on its own.
 - `scripts/check.sh`, the single command that validates a change before it is
   proposed: build with warnings as errors, tests, markdown lint, and the bundle
   metadata checks below. It needs no signing identity, no permissions, and no

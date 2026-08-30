@@ -4,7 +4,7 @@
 [![macOS 15+](https://img.shields.io/badge/macOS-15%2B-blue)](#requirements)
 [![CI](https://github.com/trsdn/OpenSwitchr/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/trsdn/OpenSwitchr/actions/workflows/ci.yml)
 [![Latest tag](https://img.shields.io/github/v/tag/trsdn/OpenSwitchr?label=release)](https://github.com/trsdn/OpenSwitchr/releases)
-[![Conformance](https://img.shields.io/badge/dynamic/yaml?url=https%3A%2F%2Fraw.githubusercontent.com%2Ftrsdn%2FOpenSwitchr%2Fmain%2F.github%2Fconformance.yml&query=%24.state&label=conformance)](.github/conformance.yml)
+[![Conformance](.github/badges/conformance.svg)](.github/conformance.yml)
 
 **One app instead of two.** Dock hover previews and an Alt-Tab style window
 switcher, built on a single shared window index.

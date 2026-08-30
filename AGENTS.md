@@ -106,12 +106,24 @@ Do not hand-edit these. They are marked `linguist-generated` in
 | Path | Produced by | Source of truth |
 | --- | --- | --- |
 | `Resources/AppIcon.icns` | `swift run openswitchr-icon`, re-run by `scripts/build-app.sh` on every build | `WindowMark` in `Sources/OpenSwitchrUI/WindowMark.swift` |
+| `.github/badges/conformance.svg` | `scripts/conformance.py` in `trsdn/.github` | `.github/conformance.yml` |
 | `.build/` | SwiftPM | — (git-ignored) |
 | `dist/` | `scripts/make_dmg.sh` | — (git-ignored) |
 
 `AppIcon.icns` is tracked rather than ignored so a release can be built without
 a rendering step. That makes it look editable, which it is not: change
 `WindowMark` and rebuild.
+
+The conformance badge is committed for the same reason the standard requires it
+to be: an image fetched from a rendering service at read time observes every
+reader, and cannot be held to the record. It is regenerated with
+
+```bash
+python3 scripts/conformance.py --repository /path/to/OpenSwitchr
+```
+
+run from a checkout of `trsdn/.github`. The `Conformance` workflow fails when
+the committed badge does not match the record, so it cannot quietly drift.
 
 Two paths are hand-maintained but are *derived* facts, and a check fails when
 they drift — treat them as generated even though they are not. The version in

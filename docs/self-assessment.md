@@ -98,13 +98,15 @@ what it reports. Values are not hand-maintained:
 | macOS 15+ | Hardcoded, but `scripts/check.sh` fails when it disagrees with `Package.swift` or `scripts/build-app.sh` |
 | CI | GitHub's first-party workflow badge for `main` |
 | Latest tag | The repository's tags |
-| Conformance | Read live from `.github/conformance.yml` |
+| Conformance | Rendered from `.github/conformance.yml` and committed as `.github/badges/conformance.svg`; the Conformance workflow fails when the two drift apart |
 
-What keeps this at `partial` is the image host. Four of the five are rendered by
-`img.shields.io`, and the standard asks for images served from the repository or
-a first-party source *where practical*, because a third-party image host
-observes every reader. Serving them from here would mean generating and
-committing SVGs, which runs into the same write-permission conflict as `P09`.
+What keeps this at `partial` is the image host. The conformance badge is served
+from this repository and the CI badge is first-party, but the licence, platform,
+and tag badges are rendered by `img.shields.io`, and the standard asks for
+images served from the repository or a first-party source *where practical*,
+because a third-party image host observes every reader. Serving those three
+from here would mean generating and committing more SVGs on a schedule, which
+runs into the same write-permission conflict as `P09`.
 
 The consequence is disclosed rather than hidden: the Privacy section of the
 README names `img.shields.io` as the one host that viewing the README contacts,
