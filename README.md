@@ -151,10 +151,16 @@ the thing that actually matters: no window may end up claimed by none of them.
 
 `--probe-app` is the only check that exercises the shipping app rather than the
 core: it posts a synthetic hotkey, measures how long the overlay takes to
-appear, confirms focus actually moved by reading the CoreGraphics z-order, then
-hovers a Dock icon *twice* and times both previews. The core passing its tests
-says nothing about whether the app wired it up — two release-blocking bugs got
-through exactly that gap.
+appear, **holds the modifier for four seconds to prove the overlay stays**,
+moves the pointer onto the Dock mid-hold to prove a preview appearing beside it
+does not take it away, confirms focus actually moved by reading the
+CoreGraphics z-order, then hovers a Dock icon *twice* and times both previews.
+The core passing its tests says nothing about whether the app wired it up —
+two release-blocking bugs got through exactly that gap.
+
+The two hold checks exist because the probe used to press and release within
+250 ms, so an overlay that appears and then gives up on its own passed every
+check it had.
 
 ## ⌘-Tab
 

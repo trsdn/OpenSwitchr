@@ -56,6 +56,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- The Dock preview's hover region now includes the corridor between the Dock
+  icon and the panel. The icon was generous by 4 points and the panel by 6
+  against a gap of 8, so the two overlapped by two points — Dock magnification,
+  a diagonal approach, or simply pausing on the way dropped the pointer into
+  neither and closed the preview while the user was still travelling towards
+  it. The tolerance around both is now 8 points, and the gap between them
+  counts as part of the preview.
 - The switcher opens even when its filter matches nothing, and says so. The
   event tap swallows the hotkey either way, so returning early left `⌘-Tab`
   inert with the system switcher still suppressed — reachable on purpose once a
