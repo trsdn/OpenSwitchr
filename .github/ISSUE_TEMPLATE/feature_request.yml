@@ -1,0 +1,68 @@
+name: Feature or change
+description: Propose something OpenSwitchr should do, or do differently.
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Two constraints decide most proposals here before anything else does, so
+        it is worth checking them first:
+
+        - **Current Space only.** Windows on other Spaces are deliberately out of
+          scope, because reaching them requires private SkyLight APIs.
+        - **No polling, and no work nobody can see.** Idle CPU must stay near
+          zero. Anything that needs a timer needs a reason the event-driven path
+          cannot serve.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: The problem
+      description: What is awkward or missing today. Describe the situation, not the solution.
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed change
+      description: What should happen instead, and on which surface.
+    validations:
+      required: true
+
+  - type: dropdown
+    id: surface
+    attributes:
+      label: Which surface
+      options:
+        - Switcher overlay
+        - Dock hover preview
+        - Both frontends
+        - Shared core (index, event bus, thumbnails, actions)
+        - Settings
+        - Build, release, or diagnostics
+    validations:
+      required: true
+
+  - type: textarea
+    id: cost
+    attributes:
+      label: Cost
+      description: |
+        What this would cost at idle and on the path that puts a frontend on
+        screen. An honest "I don't know" is fine; a missing answer is what makes
+        a proposal hard to schedule.
+
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: How it would be judged done
+      description: |
+        What someone would have to observe to believe it works. Note that unit
+        tests do not render and `openswitchr-diag` does not click controls, so
+        anything interactive in a tile needs a human to click it.
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered

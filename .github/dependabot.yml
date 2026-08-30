@@ -1,0 +1,16 @@
+version: 2
+
+updates:
+  # The Swift package has no dependencies, so there is nothing for a `swift`
+  # ecosystem entry to update. The pinned action versions in the workflows do
+  # age, and they are the only third-party code this repository executes.
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: build
+      include: scope
+    labels:
+      - dependencies

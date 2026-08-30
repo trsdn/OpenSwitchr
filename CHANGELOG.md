@@ -7,6 +7,54 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Repository conformance record at `.github/conformance.yml`, assessed against
+  version 1.5.1 of the trsdn Repository Quality Standard, with the reasoning
+  behind every result in `docs/self-assessment.md`. A scheduled workflow
+  re-validates it, so an assessment that ages past the review cadence turns the
+  check red on its own.
+- `scripts/check.sh`, the single command that validates a change before it is
+  proposed: build with warnings as errors, tests, markdown lint, and the bundle
+  metadata checks below. It needs no signing identity, no permissions, and no
+  network, so it behaves the same on a laptop, in CI, and for an agent.
+- Drift guards for the three facts nothing used to compare. The version in
+  `Info.plist` is checked against the newest release heading in this file, and
+  the minimum macOS version is checked across `Package.swift`,
+  `scripts/build-app.sh`, and the README badge. All of them had been maintained
+  by hand in parallel.
+- Product identity in the bundle: repository URL, issue tracker URL, licence
+  identifier, and copyright holder as `Info.plist` keys, plus the licence text
+  copied into `Contents/Resources`. The About tab now reads its links back out
+  of the bundle rather than hardcoding them a second time, so the shipped
+  metadata and what the user sees cannot disagree.
+- Issue forms for bug reports and proposals, a `CODEOWNERS` file, a Dependabot
+  configuration for the pinned action versions, `.github/github-app.yml`, and a
+  markdown lint workflow.
+- `.gitattributes`, marking `Resources/AppIcon.icns` as generated. It is
+  rewritten by every build, so hand-editing it accomplishes nothing.
+- README sections stating the cases that were previously only implicit: the app
+  collects nothing and opens no outbound connection, preferences live in
+  `UserDefaults` under `com.openswitchr.app` and how to read or delete them,
+  the project is English-only, and which accessibility limitations are known.
+- `AGENTS.md` now names the operations an agent must not perform, the paths that
+  are generated, and the review expectation for agent-authored changes.
+
+### Changed
+
+- `main` is protected: pull requests are required, the three CI checks must
+  pass, and force pushes and branch deletion are blocked. Secret scanning, push
+  protection, Dependabot security updates, and private vulnerability reporting
+  are enabled.
+- The repository quality section of `AGENTS.md` was reassessed. It had described
+  a default branch holding two files, which stopped being true when the work was
+  merged, and it assessed against version 1.3.3 of a standard now at 1.5.1.
+
+### Fixed
+
+- The two sibling `### Added` headings under `0.1.0` in this file are merged
+  into one, which is both a lint failure and genuinely confusing to read.
+
 ## [0.1.0] - 2026-08-30
 
 ### Added
@@ -40,6 +88,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   they put destructive targets a few pixels from the one that focuses a window;
   close sits top left and quit top right, in opposite corners rather than side
   by side, because only one of the two can be undone.
+- Release process via `trsdn/macos-notarization-broker`, documented in
+  `RELEASE_CHECKLIST.md`. Apple credentials never enter this repository; the
+  broker builds from a pinned commit and signs with its own code.
+- `scripts/make_dmg.sh` for local, explicitly unnotarized test packaging.
+- GitHub Actions: `ci.yml` builds with warnings-as-errors and runs the tests,
+  and `secret-scan.yml` guards against committed credentials. Neither uses a
+  secret, an environment, or write permissions.
+- An app icon, and a menu bar glyph drawn from the same geometry. `WindowMark`
+  in `OpenSwitchrUI` owns the two overlapping windows; `openswitchr-icon`
+  renders `Resources/AppIcon.icns` from it and `build-app.sh` re-runs on every
+  build, so the icon cannot fall behind the glyph. The icon takes the filled
+  weight and the menu bar the outlined one, because solid art that carries a
+  1024 pt icon collapses into a blob at 15 pt.
 
 ### Performance
 
@@ -68,22 +129,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   Recreating it on every render made the overlay cost ~50 ms to appear and
   repeated the same work on every selection change; it now appears in
   ~21–24 ms.
-
-### Added
-
-- Release process via `trsdn/macos-notarization-broker`, documented in
-  `RELEASE_CHECKLIST.md`. Apple credentials never enter this repository; the
-  broker builds from a pinned commit and signs with its own code.
-- `scripts/make_dmg.sh` for local, explicitly unnotarized test packaging.
-- GitHub Actions: `ci.yml` builds with warnings-as-errors and runs the tests,
-  and `secret-scan.yml` guards against committed credentials. Neither uses a
-  secret, an environment, or write permissions.
-- An app icon, and a menu bar glyph drawn from the same geometry. `WindowMark`
-  in `OpenSwitchrUI` owns the two overlapping windows; `openswitchr-icon`
-  renders `Resources/AppIcon.icns` from it and `build-app.sh` re-runs on every
-  build, so the icon cannot fall behind the glyph. The icon takes the filled
-  weight and the menu bar the outlined one, because solid art that carries a
-  1024 pt icon collapses into a blob at 15 pt.
 
 ### Changed
 

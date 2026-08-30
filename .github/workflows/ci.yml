@@ -41,6 +41,13 @@ jobs:
       - name: Test
         run: swift test
 
+      # Catches an Info.plist version typed by hand that has drifted away from
+      # CHANGELOG.md, and identity keys AboutView reads back at runtime. Same
+      # script an agent or a laptop runs, so there is one definition of the
+      # check rather than two that disagree.
+      - name: Check bundle metadata consistency
+        run: bash scripts/check.sh --metadata-only
+
       # The bundle build catches Info.plist and entitlements mistakes that a
       # plain `swift build` cannot see. Signing is unavailable on CI without
       # the release secrets, so only the unsigned packaging steps run here.
