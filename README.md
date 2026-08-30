@@ -1,5 +1,11 @@
 # OpenSwitchr
 
+[![License: MIT](https://img.shields.io/github/license/trsdn/OpenSwitchr?label=license)](LICENSE)
+[![macOS 15+](https://img.shields.io/badge/macOS-15%2B-blue)](#requirements)
+[![CI](https://github.com/trsdn/OpenSwitchr/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/trsdn/OpenSwitchr/actions/workflows/ci.yml)
+[![Latest tag](https://img.shields.io/github/v/tag/trsdn/OpenSwitchr?label=release)](https://github.com/trsdn/OpenSwitchr/releases)
+[![Conformance](.github/badges/conformance.svg)](.github/conformance.yml)
+
 **One app instead of two.** Dock hover previews and an Alt-Tab style window
 switcher, built on a single shared window index.
 
@@ -31,8 +37,9 @@ overlay are thin readers on top.
 
 ## Status
 
-Early. The core is implemented and measured; the release pipeline is not built
-yet. There is no published binary.
+Early, and actively developed. The core is implemented and measured, `v0.1.0`
+is tagged, and releases run through the notarization broker. There is no
+published binary yet, so installing means building from source.
 
 ## Requirements
 
@@ -46,17 +53,43 @@ yet. There is no published binary.
 ```bash
 swift build -c release          # compile
 swift test                      # pure-logic tests
+bash scripts/check.sh           # build, tests, markdown, and bundle metadata
 bash scripts/build-app.sh       # assemble and sign .build/release/OpenSwitchr.app
 
 cp -R .build/release/OpenSwitchr.app /Applications/
 open /Applications/OpenSwitchr.app
 ```
 
+`scripts/check.sh` is the single validation command: it builds with warnings as
+errors, runs the tests, lints the markdown, and asserts that the version in
+`Info.plist` still agrees with `CHANGELOG.md`. It needs no signing identity, no
+permissions, and no network, so it runs the same on a laptop, in CI, and for an
+agent.
+
 There is no Xcode project; the app bundle is assembled by the build script.
 The app icon is generated rather than checked in as an opaque binary —
 `swift run openswitchr-icon` renders `Resources/AppIcon.icns` from the same
 `WindowMark` the menu bar glyph is drawn from, and `build-app.sh` re-runs it on
-every build so the two cannot drift apart.
+every build so the two cannot drift apart. That file is marked
+`linguist-generated` in `.gitattributes`; editing it by hand accomplishes
+nothing, because the next build overwrites it.
+
+## Configuration
+
+Everything is configured from the menu bar item → **Settings**. There is no
+configuration file and no environment variable.
+
+Preferences are stored in `UserDefaults` under the `com.openswitchr.app` suite,
+which on disk is `~/Library/Preferences/com.openswitchr.app.plist`. To inspect
+or reset them:
+
+```bash
+defaults read com.openswitchr.app             # show every stored preference
+defaults delete com.openswitchr.app <key>     # restore one registered default
+defaults delete com.openswitchr.app           # restore all of them
+```
+
+Every setting takes effect immediately; none of them requires a relaunch.
 
 ## Release
 
@@ -180,6 +213,89 @@ otherwise the tile of an already-closed window would stay on screen. Quitting
 deliberately does *not* prune tiles: `terminate()` is a request, and an app with
 unsaved work may put up a dialog and stay. The panel dismisses instead, which
 also stops it covering that dialog.
+
+## Privacy
+
+OpenSwitchr collects nothing and transmits nothing. Stated explicitly, because
+"no privacy policy" and "no data collection" look identical from the outside:
+
+- **No outbound connections.** The app opens no network connection of any kind.
+  There is no update check, no license check, and no remote configuration.
+- **No telemetry, analytics, or crash reporting.** None is present, so there is
+  nothing to opt out of.
+- **No third-party services.** No service, and no AI provider, receives anything
+  from this app. It has no account and no identifier.
+- **Window titles never leave the process.** They are read to render and filter
+  tiles. The unified log deliberately records only counts, pids, and error
+  descriptions, so a log someone pastes into an issue cannot expose what they
+  had open.
+- **Thumbnails live in memory only.** ScreenCaptureKit images are held in an LRU
+  cache under a hard byte budget and are never written to disk. They do not
+  outlive the process; quitting the app is the whole of the deletion story.
+- **The only thing stored on disk is your preferences**, in `UserDefaults` under
+  `com.openswitchr.app`. See [Configuration](#configuration) for how to read,
+  export, or delete them.
+
+Two permissions are required, and both stay local: **Accessibility** to
+enumerate windows, receive the hotkey, and raise a window; **Screen Recording**
+to capture thumbnails. Both are revocable in System Settings → Privacy &
+Security, and the app degrades to icon-only tiles without the second.
+
+One caveat that is about this page rather than the app: viewing this README on
+github.com loads the badge images at the top from `img.shields.io`, which
+observes the request the way any remote image does. Nothing in the app itself
+contacts that host, or any other.
+
+## Language
+
+English only. Every user-facing string, every command-line message, and every
+document in this repository is English, and there is no localization
+infrastructure — no string catalogs, no `.lproj` directories, no translation
+pipeline. This is a declared state rather than an oversight; adding a language
+is tracked in [#5](https://github.com/trsdn/OpenSwitchr/issues/5).
+
+## Accessibility
+
+What works, and what does not:
+
+- **The switcher is fully keyboard-driven.** Hold the modifier, `Tab` and
+  `⇧-Tab` move the selection, typing filters, `Escape` cancels, releasing the
+  modifier commits. The selected tile carries a visible indicator, and tiles
+  expose an accessible name and role to VoiceOver, as does the menu bar item.
+- **Meaning never rests on colour alone.** The quit control on a tile is red
+  *and* a distinct glyph in the opposite corner from the close control; a
+  minimized window is dimmed *and* explicitly marked.
+
+Known limitations, stated rather than left implicit:
+
+- **Dock hover previews are pointer-only.** They are triggered by the pointer
+  entering a Dock icon, so there is no keyboard route to them. This is inherent
+  to the gesture; the switcher overlay reaches every window without a pointer.
+- **Behaviour under enlarged platform text sizes is unverified.** Tiles size
+  themselves from the preview-size preference rather than from the text metrics,
+  so a large accessibility text size may clip a long window title.
+- **Reduced-motion and increased-contrast settings are not specifically
+  honoured.** The panels use the system material and standard SwiftUI controls,
+  so they inherit whatever those do, but nothing here was tested against those
+  settings.
+
+`openswitchr-diag` emits plain text with no colour and no Unicode decoration, so
+its output survives any pipe, log, or screen reader.
+
+## Support and maintenance
+
+Maintained by [@trsdn](https://github.com/trsdn) as a single-maintainer project,
+best-effort and in the open. There is no service-level commitment and no
+guaranteed response time.
+
+- **Bugs and proposals** → [issues](https://github.com/trsdn/OpenSwitchr/issues),
+  which offer a form for each. Please repeat a failing gesture twice before
+  filing; several bugs here only appeared on the second attempt.
+- **Security vulnerabilities** → report privately through
+  [a security advisory](https://github.com/trsdn/OpenSwitchr/security/advisories/new),
+  not a public issue.
+- **Why the code is shaped the way it is** → `AGENTS.md`, which records the
+  design constraints and the traps that produced them.
 
 ## Scope: current Space only
 

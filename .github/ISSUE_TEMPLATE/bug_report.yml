@@ -1,0 +1,93 @@
+name: Bug report
+description: Something in OpenSwitchr behaves differently from what it promises.
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Two things make a report about this app actionable, and both are easy to
+        leave out. Please repeat the gesture **at least twice** before filing:
+        several bugs here were invisible on a first attempt and only appeared on
+        the second, because the failure was stale state left behind by the first.
+        And please say which frontend you were in — the switcher overlay and the
+        Dock hover previews are separate surfaces over one shared index.
+
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened
+      description: What you saw, and what you expected instead.
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: How to reproduce
+      description: The exact gesture, and whether it fails on the first attempt or only on a repeat.
+      placeholder: |
+        1. Hold ⌘ and press Tab
+        2. …
+        3. Repeat — does it still fail?
+    validations:
+      required: true
+
+  - type: dropdown
+    id: surface
+    attributes:
+      label: Which surface
+      options:
+        - Switcher overlay
+        - Dock hover preview
+        - Menu bar or Settings
+        - Diagnostics (openswitchr-diag)
+        - Build, install, or permissions
+        - Not sure
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: OpenSwitchr version
+      description: From the About tab in Settings, or the commit you built.
+    validations:
+      required: true
+
+  - type: input
+    id: macos
+    attributes:
+      label: macOS version and hardware
+      placeholder: "macOS 26.6, Apple Silicon (M2)"
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: permissions
+    attributes:
+      label: Permissions
+      description: The app degrades quietly without these, which produces convincing-looking bugs.
+      options:
+        - label: Accessibility is granted to OpenSwitchr
+        - label: Screen Recording is granted to OpenSwitchr
+
+  - type: textarea
+    id: diagnostics
+    attributes:
+      label: Diagnostics output
+      description: |
+        If you can, run `swift run openswitchr-diag` from a terminal that holds
+        the Accessibility permission and paste the output. The per-app
+        `CG` / `AX` / `LINKED` counts separate "the linking heuristic failed"
+        from "this app exposes no accessibility windows at all".
+      render: text
+
+  - type: textarea
+    id: log
+    attributes:
+      label: Log output
+      description: |
+        Optional. `log stream --predicate 'subsystem == "com.openswitchr.app"' --level debug`
+        while reproducing. The app logs counts, pids, and error descriptions —
+        never window titles — so this is safe to paste.
+      render: text

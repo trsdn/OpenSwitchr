@@ -1,0 +1,22 @@
+# Generated, machine-owned paths. Do not hand-edit anything marked here.
+#
+# `Resources/AppIcon.icns` is rendered by `openswitchr-icon` from `WindowMark`
+# in `OpenSwitchrUI`, and `scripts/build-app.sh` re-runs the renderer on every
+# build. Editing the checked-in file is therefore pointless: the next build
+# overwrites it. It is tracked rather than ignored so a release can be built
+# without a rendering step, and marked here so reviews collapse it and agents
+# leave it alone.
+Resources/AppIcon.icns binary linguist-generated=true
+
+# Statistics and badge artifacts are rendered from an authoritative source and
+# committed. Same rule: regenerate, never edit.
+.github/stats/** linguist-generated=true
+.github/badges/** linguist-generated=true
+
+# Keep shell scripts and Swift sources on LF regardless of platform.
+*.sh text eol=lf
+*.swift text eol=lf
+*.md text eol=lf
+*.yml text eol=lf
+*.plist text eol=lf
+*.entitlements text eol=lf
