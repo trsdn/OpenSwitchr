@@ -1,0 +1,34 @@
+import OpenSwitchrUI
+import SwiftUI
+
+struct AboutView: View {
+
+    private var version: String {
+        Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "dev"
+    }
+
+    var body: some View {
+        VStack(spacing: 10) {
+            Image(nsImage: WindowMark.templateImage(width: 52))
+                .renderingMode(.template)
+                .foregroundStyle(.tint)
+
+            Text("OpenSwitchr")
+                .font(.title2.weight(.semibold))
+
+            Text("Version \(version)")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+
+            Text("Dock hover previews and a window switcher on one shared window index.")
+                .font(.callout)
+                .multilineTextAlignment(.center)
+                .foregroundStyle(.secondary)
+                .padding(.horizontal, 24)
+
+            Link("Source code", destination: URL(string: "https://github.com/trsdn/OpenSwitchr")!)
+                .font(.callout)
+        }
+        .padding(20)
+    }
+}
