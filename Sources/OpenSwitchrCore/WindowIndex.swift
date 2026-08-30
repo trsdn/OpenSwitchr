@@ -106,7 +106,11 @@ public final class WindowIndex {
     ///
     /// Every accessibility read is synchronous inter-process messaging, so this
     /// costs roughly one message per window plus a one-time handshake per app.
-    /// Use ``rebuildConcurrently()`` on any path where a stall would be visible.
+    /// Those handshakes run one after another here, so the per-app timeout in
+    /// ``AXWindowLinker`` adds up instead of overlapping — the app therefore
+    /// never uses this path, and ``rebuildConcurrently()`` is the only rebuild
+    /// reachable from the UI. This exists for diagnostics, which need a
+    /// deterministic, single-threaded rebuild to compare against.
     public func rebuild() {
         let started = CFAbsoluteTimeGetCurrent()
         let (entries, appsByPID, grouped) = gatherCoreGraphicsState()

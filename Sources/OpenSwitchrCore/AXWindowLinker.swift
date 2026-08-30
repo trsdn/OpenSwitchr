@@ -42,7 +42,22 @@ enum AXWindowLinker {
         let app = AXBridge.application(pid: pid)
         // Unresponsive apps must not stall the main thread. The system default
         // is six seconds, which would be catastrophic for a switcher.
-        AXBridge.setTimeout(app, seconds: 0.25)
+        //
+        // 0.25 s was too aggressive. An app's *first* accessibility message
+        // costs far more than its later ones, and a cold rebuild sends that
+        // first message to every app at once, so the slowest handshakes ran out
+        // of the budget and their windows came back unlinked — measured at
+        // 15–16 of 21 windows on a cold run, varying from run to run with load,
+        // and recovering to 21 of 21 once the connections were warm. Unlinked
+        // means every *action* falls back to a guess, so the switcher raised
+        // the wrong window precisely in the moment after launch.
+        //
+        // The budget can afford this because it is spent in parallel: the app
+        // only ever rebuilds through `WindowIndex.rebuildConcurrently()`, which
+        // fans the apps out across a task group on a detached task. The timeout
+        // therefore bounds the slowest single app, not the sum of all of them,
+        // and a cold rebuild measured the same 250–400 ms either way.
+        AXBridge.setTimeout(app, seconds: 1.0)
 
         let attributes = [
             kAXRoleAttribute as String,

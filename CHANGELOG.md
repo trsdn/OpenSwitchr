@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.0] - 2026-08-30
+
 ### Added
 
 - Shared window foundation used by both frontends: `WindowIndex` (single source
@@ -96,6 +98,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   does not.
 
 ### Fixed
+
+- **Windows went unlinked right after launch, so the switcher raised the wrong
+  one.** The accessibility timeout was 0.25 s per app. An app's first
+  accessibility message is far more expensive than its later ones, and a cold
+  rebuild sends that first message to every app at once, so the slowest
+  handshakes ran out of the budget and their windows arrived with no
+  accessibility element — measured at 15–16 of 21 windows on a cold run, with a
+  different set of apps failing each time, recovering to 21 of 21 only once the
+  connections were warm. Thumbnails still looked right, because those come from
+  the `CGWindowID`, but every *action* goes through the element, so activating a
+  tile fell back to a guess in exactly the moment after launch. The budget is
+  now 1.0 s, which is affordable because it is spent in parallel: the app only
+  rebuilds through `rebuildConcurrently()`, so the timeout bounds the slowest
+  single app rather than the sum, and cold rebuilds measured 240–350 ms either
+  way. Cold runs now link every window.
 
 - **Thumbnails disappeared over a session and never came back.** A tile's
   `onAppear` was the only thing that ever requested a capture, and both panels

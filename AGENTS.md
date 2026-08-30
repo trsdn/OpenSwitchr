@@ -242,7 +242,7 @@ was in fact the same corrupt z-order being used to decide who was in front;
 `focus()` was correct all along. A suspiciously round number, or an outcome that
 does not change no matter what you vary, is evidence about the ruler.
 
-## Two window-server facts that are easy to get wrong
+## Three window-server facts that are easy to get wrong
 
 `CGWindowListCopyWindowInfo` documents front-to-back ordering **only** for
 `.optionOnScreenOnly`. The `.optionAll` listing appends off-screen and
@@ -256,6 +256,17 @@ application routinely share a frame and a title — the comparison has to be tot
 or the result changes between runs for no visible reason. `AXWindowLinker` sorts
 by score, then depth correspondence, then both input indices, so nothing is left
 to chance.
+
+An app's **first** accessibility message costs far more than its later ones, and
+a cold rebuild sends that first message to every app at once. A per-app timeout
+tight enough to look safe in isolation therefore expires under that burst, and
+the windows behind it arrive with no accessibility element. This is close to
+invisible while testing: thumbnails come from the `CGWindowID` and still look
+correct, only *actions* degrade, and a second run passes because the connections
+are warm. A tight timeout is also not what buys responsiveness here — the fan-out
+in `rebuildConcurrently()` is, because it makes the timeout bound the slowest
+single app instead of the sum. Judge any change to it on a genuinely cold run,
+against `LINKED` rather than against the clock.
 
 ## Concurrency
 
