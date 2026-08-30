@@ -15,12 +15,9 @@ public extension WindowFilter {
     /// display — the numbers happen to coincide — and silently matches the
     /// wrong display on any layout where the displays differ in height.
     static func coreGraphicsFrame(of screen: NSScreen) -> CGRect {
-        let primaryHeight = NSScreen.screens.first?.frame.height ?? screen.frame.height
-        return CGRect(
-            x: screen.frame.minX,
-            y: primaryHeight - screen.frame.maxY,
-            width: screen.frame.width,
-            height: screen.frame.height
+        coreGraphicsFrame(
+            appKitFrame: screen.frame,
+            primaryHeight: NSScreen.screens.first?.frame.height ?? screen.frame.height
         )
     }
 }

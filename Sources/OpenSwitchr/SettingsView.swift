@@ -93,6 +93,10 @@ struct SettingsView: View {
                 Text("Applies to the switcher only. Dock previews always show every window of the application under the pointer, because that is the one you pointed at.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
+
+                Text("A minimized window sits on no display, so “Only this display” never removes one. Otherwise a display setting would quietly hide everything in the Dock.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
             }
             .disabled(!model.preferences.switcherEnabled)
 

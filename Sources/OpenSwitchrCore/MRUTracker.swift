@@ -33,6 +33,13 @@ public struct MRUTracker {
     public mutating func touch(_ id: CGWindowID) {
         sequence += 1
         ranks[id] = sequence
+
+        // Keeps the two maps consistent by construction rather than by call
+        // order. `seed` only fills `discovery` for IDs it has never ranked, so
+        // an ID that reached `touch` first would have no discovery rank for the
+        // rest of the session and would sort last under "most recently opened"
+        // forever, with nothing to correct it.
+        if discovery[id] == nil { discovery[id] = sequence }
     }
 
     public mutating func forget(_ id: CGWindowID) {

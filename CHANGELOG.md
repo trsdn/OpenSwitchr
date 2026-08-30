@@ -51,7 +51,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   by display leaves no window claimed by no display.
 - Dock previews can switch instantly while one is already open, so the open
   delay applies to the first preview only and moving along the Dock does not
-  wait again. On by default.
+  wait again. On by default. A hover that resolves before the index has caught
+  up is retried once the rebuild lands, rather than leaving the pointer on an
+  icon with nothing shown.
 
 ### Changed
 
@@ -114,6 +116,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   build, so the icon cannot fall behind the glyph. The icon takes the filled
   weight and the menu bar the outlined one, because solid art that carries a
   1024 pt icon collapses into a blob at 15 pt.
+
+### Changed
+
+- The switcher opens even when its filter matches nothing, and says so. The
+  event tap swallows the hotkey either way, so returning early left `⌘-Tab`
+  inert with the system switcher still suppressed — reachable on purpose once a
+  restrictive filter exists, not just on an empty Space.
+- The initial selection is derived from where the current window ended up in the
+  list rather than from a fixed offset of 1, which only ever held while the list
+  was in most-recently-used order and still contained that window.
 
 ### Performance
 

@@ -78,4 +78,56 @@ struct MRUTrackerTests {
 
         #expect(tracker.rank(of: 1) == 0)
     }
+
+    // MARK: - Discovery order
+
+    @Test("Discovery order follows front-to-back z-order, like use order does")
+    func seedRecordsDiscovery() {
+        var tracker = MRUTracker()
+        tracker.seed(zOrdered: [1, 2, 3])
+
+        // Seeded back-to-front, so the frontmost window is the most recent.
+        #expect(tracker.openedRank(of: 1) > tracker.openedRank(of: 2))
+        #expect(tracker.openedRank(of: 2) > tracker.openedRank(of: 3))
+    }
+
+    @Test("Using a window does not make it look newly opened")
+    func touchLeavesDiscoveryAlone() {
+        // The whole point of the second map: "most recently opened" must not
+        // collapse into "most recently used".
+        var tracker = MRUTracker()
+        tracker.seed(zOrdered: [1, 2, 3])
+        let before = tracker.openedRank(of: 3)
+
+        tracker.touch(3)
+
+        #expect(tracker.rank(of: 3) > tracker.rank(of: 1))
+        #expect(tracker.openedRank(of: 3) == before)
+        #expect(tracker.openedRank(of: 1) > tracker.openedRank(of: 3))
+    }
+
+    @Test("A window first seen through use still gets a discovery rank")
+    func touchSeedsDiscoveryForUnknownWindow() {
+        // `seed` skips anything already ranked, so without this the window
+        // would have no discovery rank for the rest of the session and would
+        // sort last under "most recently opened" forever.
+        var tracker = MRUTracker()
+        tracker.touch(9)
+        tracker.seed(zOrdered: [9])
+
+        #expect(tracker.openedRank(of: 9) > 0)
+    }
+
+    @Test("Discovery bookkeeping is pruned with the rest")
+    func retainPrunesDiscovery() {
+        var tracker = MRUTracker()
+        tracker.seed(zOrdered: [1, 2])
+        tracker.retain(only: [1])
+
+        #expect(tracker.openedRank(of: 1) > 0)
+        #expect(tracker.openedRank(of: 2) == 0)
+
+        tracker.forget(1)
+        #expect(tracker.openedRank(of: 1) == 0)
+    }
 }

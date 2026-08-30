@@ -59,11 +59,14 @@ public final class OverlayPanel: NSPanel {
         contentView = created
     }
 
-    /// Shows the panel centred on the screen that currently has the mouse,
-    /// which is the screen the user is looking at.
-    public func showCentered(size: NSSize) {
-        let screen = Self.screenWithMouse() ?? NSScreen.main
-        guard let screen else { return }
+    /// Shows the panel centred on `screen`, or on the screen that currently has
+    /// the mouse when none is given.
+    ///
+    /// Callers that already decided which screen they mean must pass it. The
+    /// switcher scopes its window list by display, so re-deriving the screen
+    /// here would let it filter for one display and draw on another.
+    public func showCentered(size: NSSize, on screen: NSScreen? = nil) {
+        guard let screen = screen ?? Self.screenWithMouse() ?? NSScreen.main else { return }
 
         let visible = screen.visibleFrame
         let origin = NSPoint(
