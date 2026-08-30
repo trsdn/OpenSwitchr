@@ -101,10 +101,11 @@ public final class DockPreviewController {
         hideTask = Task { [weak self] in
             try? await Task.sleep(for: .seconds(delay))
             guard !Task.isCancelled, let self else { return }
-            // Keep the panel open while the pointer is inside it, so the user
-            // can actually move from the Dock icon onto a preview tile.
-            if self.isMouseInsidePanel() { return }
-            self.hide()
+        // Keep the panel open while the pointer is anywhere in the hover
+        // region, so the user can actually travel from the Dock icon onto
+        // a preview tile without the panel closing on the way.
+        if self.isMouseInHoverRegion() { return }
+        self.hide()
         }
     }
 
@@ -229,18 +230,8 @@ public final class DockPreviewController {
     }
 
     /// Places the panel next to the Dock item, on whichever edge the Dock is.
-    ///
-    /// Accessibility reports frames with the origin at the top-left of the
-    /// primary display, while AppKit windows use a bottom-left origin, so the
-    /// vertical axis has to be flipped.
     private func panelOrigin(for item: DockHoverMonitor.DockItem, size: NSSize) -> NSPoint {
-        let primaryHeight = NSScreen.screens.first?.frame.height ?? 0
-        let itemRect = NSRect(
-            x: item.frame.origin.x,
-            y: primaryHeight - item.frame.origin.y - item.frame.height,
-            width: item.frame.width,
-            height: item.frame.height
-        )
+        let itemRect = Self.screenRect(of: item)
 
         let screen = NSScreen.screens.first { $0.frame.intersects(itemRect) } ?? NSScreen.main
         let visible = screen?.visibleFrame ?? NSRect(x: 0, y: 0, width: 1440, height: 900)
@@ -293,7 +284,7 @@ public final class DockPreviewController {
         mouseMonitor = NSEvent.addGlobalMonitorForEvents(matching: [.mouseMoved]) { _ in
             MainActor.assumeIsolated { [weak self] in
                 guard let self, self.isVisible else { return }
-                if !self.isMouseInsidePanel() && !self.isMouseInsideCurrentDockItem() {
+                if !self.isMouseInHoverRegion() {
                     self.scheduleHide()
                 }
             }
@@ -308,23 +299,55 @@ public final class DockPreviewController {
     }
 
     private func isMouseInsidePanel() -> Bool {
-        panel.frame.insetBy(dx: -6, dy: -6).contains(NSEvent.mouseLocation)
-    }
-
-    private func isMouseInsideCurrentDockItem() -> Bool {
-        guard let item = currentItem else { return false }
-        return isMouseInside(item)
+        panel.frame.insetBy(dx: -Self.hoverSlack, dy: -Self.hoverSlack).contains(NSEvent.mouseLocation)
     }
 
     private func isMouseInside(_ item: DockHoverMonitor.DockItem) -> Bool {
+        Self.screenRect(of: item).insetBy(dx: -Self.hoverSlack, dy: -Self.hoverSlack)
+            .contains(NSEvent.mouseLocation)
+    }
+
+    /// How far outside a rectangle still counts as being on it.
+    private static let hoverSlack: CGFloat = 8
+
+    /// Everything that should keep the panel alive: the Dock item, the panel,
+    /// and the corridor between them.
+    ///
+    /// Testing the two rectangles separately leaves a dead strip in the gap.
+    /// The icon was generous by 4 points and the panel by 6 against a gap of 8,
+    /// so the two regions overlapped by two points — and Dock magnification, a
+    /// diagonal approach, or simply pausing on the way was enough to drop the
+    /// pointer into neither and start the hide while the user was still
+    /// travelling towards the panel. The union of the two is the region the
+    /// user actually perceives as "the preview", and leaving it sideways or
+    /// backwards still ends the hover.
+    private func isMouseInHoverRegion() -> Bool {
+        let mouse = NSEvent.mouseLocation
+        if isMouseInsidePanel() { return true }
+        guard let item = currentItem else { return false }
+
+        let itemRect = Self.screenRect(of: item)
+        if itemRect.insetBy(dx: -Self.hoverSlack, dy: -Self.hoverSlack).contains(mouse) { return true }
+        guard isVisible else { return false }
+
+        return itemRect.union(panel.frame)
+            .insetBy(dx: -Self.hoverSlack, dy: -Self.hoverSlack)
+            .contains(mouse)
+    }
+
+    /// A Dock item's frame in AppKit screen coordinates.
+    ///
+    /// Accessibility reports it with the origin at the top-left of the primary
+    /// display and y growing downwards; AppKit windows use a bottom-left
+    /// origin.
+    private static func screenRect(of item: DockHoverMonitor.DockItem) -> NSRect {
         let primaryHeight = NSScreen.screens.first?.frame.height ?? 0
-        let rect = NSRect(
+        return NSRect(
             x: item.frame.origin.x,
             y: primaryHeight - item.frame.origin.y - item.frame.height,
             width: item.frame.width,
             height: item.frame.height
         )
-        return rect.insetBy(dx: -4, dy: -4).contains(NSEvent.mouseLocation)
     }
 
     // MARK: - Teardown
