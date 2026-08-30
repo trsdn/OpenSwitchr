@@ -218,7 +218,16 @@ ordering and `sort` is free to misbehave with one.
 
 "Most recently opened" is honest about its limits: windows that were already
 open when the app launched are ordered back-to-front from z-order, because
-nothing records when a window that predates the process was opened.
+nothing records when a window that predates the process was opened. The same
+applies after a round trip to another Space: the index keeps bookkeeping only
+for windows it can currently see, so a window that leaves and comes back looks
+newly opened — the same way it already loses its place in the recently-used
+order.
+
+The switcher opens even when the filter matches nothing, and says so. It has to:
+the hotkey is swallowed by the event tap either way, so returning early would
+leave `⌘-Tab` doing nothing at all while the system switcher stayed suppressed,
+with no clue why.
 
 ## Scope: current Space only
 

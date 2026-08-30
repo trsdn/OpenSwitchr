@@ -102,7 +102,7 @@ struct WindowFilterTests {
         #expect(WindowFilter(minimized: .showAfterOthers).apply(to: windows).map(\.id) == [2, 4, 1, 3])
     }
 
-    @Test("The partition runs after the sort, not inside its comparator")
+    @Test("Minimized windows go last within whatever order was chosen")
     func minimizedPartitionAppliesToSortedOrder() {
         let windows = [
             window(id: 1, app: "Zed", minimized: true),
@@ -115,6 +115,102 @@ struct WindowFilterTests {
 
         // Alphabetical within each half: Safari before Xcode, then Arc before Zed.
         #expect(filter.apply(to: windows).map(\.id) == [2, 4, 3, 1])
+    }
+
+    // MARK: - Ordering stability
+
+    @Test("Windows that compare equal keep the order the index handed over")
+    func alphabeticalIsStable() {
+        // Same application, same title: every field either comparator looks at
+        // is equal, so an unstable sort is free to return these in any order.
+        // The incoming order is most-recently-used, and the list is re-ordered
+        // on every keystroke, so instability would move tiles under the user.
+        let windows = (1...8).map { window(id: CGWindowID($0), app: "Safari", title: "Untitled") }
+        let result = WindowFilter(order: .alphabetical).apply(to: windows)
+
+        #expect(result.map(\.id) == [1, 2, 3, 4, 5, 6, 7, 8])
+    }
+
+    @Test("Equal discovery ranks also keep the incoming order")
+    func recentlyOpenedIsStable() {
+        let windows = (1...8).map { window(id: CGWindowID($0), openedRank: 4) }
+        let result = WindowFilter(order: .recentlyOpened).apply(to: windows)
+
+        #expect(result.map(\.id) == [1, 2, 3, 4, 5, 6, 7, 8])
+    }
+
+    @Test("The minimized partition preserves the incoming order inside each half")
+    func partitionIsStableUnderIdentityOrder() {
+        // Under `recentlyUsed` there is no sort at all, so this is the case
+        // that catches an *unstable* comparator-based implementation: only
+        // something that leaves the two halves alone can keep 2 before 4 and 1
+        // before 3.
+        let windows = [
+            window(id: 1, minimized: true),
+            window(id: 2),
+            window(id: 3, minimized: true),
+            window(id: 4)
+        ]
+
+        #expect(WindowFilter(minimized: .showAfterOthers).apply(to: windows).map(\.id) == [2, 4, 1, 3])
+    }
+
+    // MARK: - Frontmost resolution
+
+    @Test("The frontmost application comes from the workspace, never from window order")
+    func frontmostPIDUsesWorkspace() {
+        #expect(WindowFilter.Context.frontmostPID(workspaceFrontmost: 42, ownPID: 7) == 42)
+    }
+
+    @Test("Our own process is never treated as the current application")
+    func frontmostPIDRefusesOwnProcess() {
+        // Scoping to a process that owns no window in the index would empty the
+        // switcher, which is the one outcome it cannot recover from. Returning
+        // nil ignores the scope instead.
+        #expect(WindowFilter.Context.frontmostPID(workspaceFrontmost: 7, ownPID: 7) == nil)
+    }
+
+    @Test("An unknown workspace frontmost yields nil rather than a guess")
+    func frontmostPIDWithoutWorkspace() {
+        #expect(WindowFilter.Context.frontmostPID(workspaceFrontmost: nil, ownPID: 7) == nil)
+    }
+
+    // MARK: - Screen coordinate conversion
+
+    @Test("On a single display the conversion is the identity")
+    func conversionOnPrimaryDisplay() {
+        let primary = CGRect(x: 0, y: 0, width: 1440, height: 900)
+        #expect(WindowFilter.coreGraphicsFrame(appKitFrame: primary, primaryHeight: 900) == primary)
+    }
+
+    @Test("A display above the primary lands at a negative y")
+    func conversionForDisplayAbove() {
+        // AppKit: sits on top of a 1440-high primary, so its frame starts at
+        // y = 1440. CoreGraphics measures downwards from the primary's top, so
+        // it has to end up above the origin.
+        let above = CGRect(x: 913, y: 1440, width: 1920, height: 1080)
+        let converted = WindowFilter.coreGraphicsFrame(appKitFrame: above, primaryHeight: 1440)
+
+        #expect(converted == CGRect(x: 913, y: -1080, width: 1920, height: 1080))
+    }
+
+    @Test("A display below the primary lands at a positive y")
+    func conversionForDisplayBelow() {
+        let below = CGRect(x: 0, y: -1080, width: 1920, height: 1080)
+        let converted = WindowFilter.coreGraphicsFrame(appKitFrame: below, primaryHeight: 1440)
+
+        #expect(converted == CGRect(x: 0, y: 1440, width: 1920, height: 1080))
+    }
+
+    @Test("A shorter secondary aligned to the primary's bottom keeps its bottom aligned")
+    func conversionForShorterSecondary() {
+        // The trap the flip exists for: taking the AppKit origin unchanged
+        // would put this display at y = 0, level with the primary's *top*,
+        // when it is actually level with its bottom.
+        let secondary = CGRect(x: 1440, y: 0, width: 1280, height: 800)
+        let converted = WindowFilter.coreGraphicsFrame(appKitFrame: secondary, primaryHeight: 1440)
+
+        #expect(converted == CGRect(x: 1440, y: 640, width: 1280, height: 800))
     }
 
     // MARK: - Screen scope

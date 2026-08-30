@@ -30,14 +30,14 @@ public final class PreferencesStore {
 
     /// The default for anything added here lives exactly once, because a
     /// registered default and the fallback used when a stored value no longer
-    /// parses are two places for the same number, and they have drifted apart
+    /// parses are two spellings of the same value, and they have drifted apart
     /// in this file's history before.
     private enum Default {
         static let dockHoverInstantSwitch = true
-        static let applicationScope = WindowFilter.ApplicationScope.all
-        static let minimizedPolicy = WindowFilter.MinimizedPolicy.show
-        static let screenScope = WindowFilter.ScreenScope.allScreens
-        static let order = WindowFilter.Order.recentlyUsed
+
+        /// Derived rather than restated: `WindowFilter.switcherDefault` is the
+        /// one place the switcher's starting profile is written down.
+        static let filter = WindowFilter.switcherDefault
     }
 
     // Every preference is a *stored* property that writes through to
@@ -138,10 +138,10 @@ public final class PreferencesStore {
             Key.thumbnailRefreshRate: ThumbnailRefreshRate.default.rawValue,
             Key.tileWidth: 200.0,
             Key.showCloseButton: false,
-            Key.switcherApplicationScope: Default.applicationScope.rawValue,
-            Key.switcherMinimizedPolicy: Default.minimizedPolicy.rawValue,
-            Key.switcherScreenScope: Default.screenScope.rawValue,
-            Key.switcherOrder: Default.order.rawValue
+            Key.switcherApplicationScope: Default.filter.applications.rawValue,
+            Key.switcherMinimizedPolicy: Default.filter.minimized.rawValue,
+            Key.switcherScreenScope: Default.filter.screens.rawValue,
+            Key.switcherOrder: Default.filter.order.rawValue
         ])
 
         // An unknown stored modifier means the value was removed from the app,
@@ -166,16 +166,16 @@ public final class PreferencesStore {
         // registered default rather than leaving the switcher without a filter.
         switcherApplicationScope = WindowFilter.ApplicationScope(
             rawValue: defaults.string(forKey: Key.switcherApplicationScope) ?? ""
-        ) ?? Default.applicationScope
+        ) ?? Default.filter.applications
         switcherMinimizedPolicy = WindowFilter.MinimizedPolicy(
             rawValue: defaults.string(forKey: Key.switcherMinimizedPolicy) ?? ""
-        ) ?? Default.minimizedPolicy
+        ) ?? Default.filter.minimized
         switcherScreenScope = WindowFilter.ScreenScope(
             rawValue: defaults.string(forKey: Key.switcherScreenScope) ?? ""
-        ) ?? Default.screenScope
+        ) ?? Default.filter.screens
         switcherOrder = WindowFilter.Order(
             rawValue: defaults.string(forKey: Key.switcherOrder) ?? ""
-        ) ?? Default.order
+        ) ?? Default.filter.order
 
         launchAtLogin = SMAppService.mainApp.status == .enabled
     }

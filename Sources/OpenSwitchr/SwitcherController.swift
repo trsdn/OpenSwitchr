@@ -27,6 +27,26 @@ public final class SwitcherController {
     /// drawn on a different one.
     private var surfaceScreen: NSScreen?
 
+    /// The filter context for this whole session, frozen when the overlay
+    /// opens.
+    ///
+    /// Both of its inputs move underneath us otherwise. A background
+    /// application activating changes the frontmost pid — `noteFocus` is not
+    /// gated on the overlay being visible — and the pointer can cross a display
+    /// while the user types. Re-deriving the context on every keystroke would
+    /// change which windows the list is even *about* halfway through narrowing
+    /// it down, which reads as the switcher losing its mind rather than as a
+    /// setting doing its job.
+    private var sessionContext = WindowFilter.Context()
+
+    /// Whether the profile actually dropped anything this session.
+    ///
+    /// Measured rather than inferred from the settings: a profile that *could*
+    /// remove windows may not have removed any, and on a Space with no windows
+    /// at all, blaming the filter is the same kind of misdirection as the
+    /// message it replaced.
+    private var filterRemovedWindows = false
+
     public private(set) var isVisible = false
 
     /// Called whenever the overlay opens or closes, so the hotkey monitor knows
@@ -69,41 +89,69 @@ public final class SwitcherController {
         guard !isVisible else { return }
         query = ""
         surfaceScreen = OverlayPanel.screenWithMouse() ?? NSScreen.main
+        sessionContext = WindowFilter.Context(
+            frontmostPID: Self.frontmostPID(),
+            screen: surfaceScreen
+        )
+
+        // Identified before filtering, because the filter is entitled to remove
+        // it — "everything but the current application" does so by definition.
+        let currentWindowID = currentWindow()?.id
+
         visibleWindows = baseWindows()
 
-        guard !visibleWindows.isEmpty else { return }
+        selectedIndex = SwitcherSelection.initialIndex(
+            count: visibleWindows.count,
+            currentIndex: currentWindowID.flatMap { id in visibleWindows.firstIndex { $0.id == id } },
+            reverse: reverse
+        )
 
-        // Opening jumps straight to the previously used window, which is what
-        // makes a single hotkey press a fast toggle between two windows.
-        selectedIndex = reverse
-            ? visibleWindows.count - 1
-            : min(1, visibleWindows.count - 1)
-
+        // Presented even with nothing to show. The event tap swallows the
+        // keystroke either way, so returning here would leave the user with a
+        // dead ⌘-Tab *and* the system switcher suppressed, with no clue why —
+        // and a restrictive filter makes that reachable on purpose rather than
+        // only on an empty Space.
         present()
+    }
+
+    /// The window the user is looking at right now, or `nil` when that cannot
+    /// be established.
+    ///
+    /// Used **only** as the anchor the initial selection steps away from, never
+    /// as a filter input. `nil` is a real answer here and must not be papered
+    /// over with the index head: an application can be frontmost while owning
+    /// no window in the index — Finder after a click on the desktop is the
+    /// everyday case, since the desktop is not a switchable window — and
+    /// substituting some other application's window would make the selection
+    /// step past the very window the user wants.
+    private func currentWindow() -> WindowInfo? {
+        guard let pid = sessionContext.frontmostPID else { return nil }
+        return index.windows.first { $0.pid == pid }
     }
 
     /// The index, reduced to what the user configured this surface to show.
     ///
     /// A filter and a sort over a list that is already in memory, on the path
     /// that puts the overlay on screen. It issues no accessibility read.
+    ///
+    /// Records whether anything was actually dropped, because both call sites
+    /// need that answer and neither should have to recompute it.
     private func baseWindows() -> [WindowInfo] {
-        preferences.switcherFilter.apply(to: index.windows, context: filterContext())
-    }
-
-    private func filterContext() -> WindowFilter.Context {
-        WindowFilter.Context(frontmostPID: frontmostPID(), screen: surfaceScreen)
+        let all = index.windows
+        let kept = preferences.switcherFilter.apply(to: all, context: sessionContext)
+        filterRemovedWindows = kept.count < all.count
+        return kept
     }
 
     /// Which application the user is currently in.
     ///
-    /// Read from the index rather than from `NSWorkspace.frontmostApplication`,
-    /// which is driven by notifications and is the value that has already
-    /// caused trouble here when read on a short path. The index is sorted
-    /// most-recently-used first, so its head is the window the user was last
-    /// in — which is the better answer anyway. The workspace is kept only as a
-    /// fallback for an empty index.
-    private func frontmostPID() -> pid_t? {
-        index.windows.first?.pid ?? NSWorkspace.shared.frontmostApplication?.processIdentifier
+    /// The rule, and the reason window order is not used for this, live in
+    /// `WindowFilter.Context.frontmostPID` where they can be tested.
+    private static func frontmostPID() -> pid_t? {
+        WindowFilter.Context.frontmostPID(
+            workspaceFrontmost: NSWorkspace.shared.frontmostApplication?.processIdentifier,
+            ownPID: ProcessInfo.processInfo.processIdentifier
+        )
     }
 
     private func present() {
@@ -124,7 +172,7 @@ public final class SwitcherController {
 
         prefetchThumbnails()
         render()
-        panel.showCentered(size: size)
+        panel.showCentered(size: size, on: surfaceScreen)
         setVisible(true)
     }
 
@@ -145,6 +193,7 @@ public final class SwitcherController {
                 thumbnails: thumbnails,
                 tileSize: tileSize(),
                 showsCloseButtons: preferences.showCloseButton,
+                isFiltered: filterRemovedWindows,
                 onActivate: { [weak self] index in
                     self?.selectedIndex = index
                     self?.commit()

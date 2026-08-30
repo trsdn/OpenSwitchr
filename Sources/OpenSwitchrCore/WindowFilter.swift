@@ -106,6 +106,27 @@ public struct WindowFilter: Equatable, Sendable {
             self.frontmostPID = frontmostPID
             self.screenFrame = screenFrame
         }
+
+        /// Which pid the application scope should treat as the current
+        /// application.
+        ///
+        /// The window server's frontmost application is the authoritative
+        /// answer, and deliberately the *only* one used. Window order is not an
+        /// acceptable substitute: the index promotes a newly *discovered*
+        /// window above everything else, so any background application opening
+        /// a window would be mistaken for the one the user is in — which is
+        /// exactly wrong for both `frontmostOnly` and `excludingFrontmost`.
+        ///
+        /// It also must never be our own pid. The overlay is a non-activating
+        /// panel precisely so the user's application stays frontmost, but if
+        /// that ever stopped holding, scoping to a process with no windows in
+        /// the index would empty the switcher — the one outcome it cannot
+        /// recover from. Returning `nil` instead means the scope is ignored and
+        /// everything is shown, which fails in the harmless direction.
+        public static func frontmostPID(workspaceFrontmost: pid_t?, ownPID: pid_t) -> pid_t? {
+            guard let workspaceFrontmost, workspaceFrontmost != ownPID else { return nil }
+            return workspaceFrontmost
+        }
     }
 
     public var applications: ApplicationScope
@@ -138,6 +159,33 @@ public struct WindowFilter: Equatable, Sendable {
         screens: .allScreens,
         order: .recentlyUsed
     )
+
+    /// What the switcher starts with: exactly the behaviour the app had before
+    /// this type existed.
+    ///
+    /// This is the *only* place those defaults are written down. `PreferencesStore`
+    /// registers them and falls back to them from here rather than repeating
+    /// the values, because a registered default and its parsing fallback are
+    /// two spellings of one number and they have drifted apart in this project
+    /// before.
+    public static let switcherDefault = WindowFilter()
+
+    /// The vertical flip between AppKit's screen geometry and the CoreGraphics
+    /// geometry `WindowInfo.frame` uses, with no AppKit involved so it can be
+    /// tested against synthetic display layouts.
+    ///
+    /// AppKit measures y upwards from the bottom-left of the primary display;
+    /// CoreGraphics measures it downwards from the top-left of the same
+    /// display. Both agree on x. `NSScreen`-flavoured callers go through
+    /// `coreGraphicsFrame(of:)`.
+    public static func coreGraphicsFrame(appKitFrame: CGRect, primaryHeight: CGFloat) -> CGRect {
+        CGRect(
+            x: appKitFrame.minX,
+            y: primaryHeight - appKitFrame.maxY,
+            width: appKitFrame.width,
+            height: appKitFrame.height
+        )
+    }
 
     // MARK: - Application
 
@@ -190,9 +238,9 @@ public struct WindowFilter: Equatable, Sendable {
             // filter cannot see would only be a chance to get it wrong.
             ordered = windows
         case .recentlyOpened:
-            ordered = windows.sorted { $0.openedRank > $1.openedRank }
+            ordered = Self.stableSorted(windows) { $0.openedRank > $1.openedRank }
         case .alphabetical:
-            ordered = windows.sorted { lhs, rhs in
+            ordered = Self.stableSorted(windows) { lhs, rhs in
                 let byApplication = lhs.appName.localizedCaseInsensitiveCompare(rhs.appName)
                 if byApplication != .orderedSame { return byApplication == .orderedAscending }
                 return lhs.displayTitle.localizedCaseInsensitiveCompare(rhs.displayTitle) == .orderedAscending
@@ -201,5 +249,28 @@ public struct WindowFilter: Equatable, Sendable {
 
         guard minimized == .showAfterOthers else { return ordered }
         return ordered.filter { !$0.isMinimized } + ordered.filter(\.isMinimized)
+    }
+
+    /// Sorts without letting equal elements move relative to each other.
+    ///
+    /// `Array.sorted(by:)` is explicitly *not* guaranteed stable, and equal
+    /// keys are not an edge case here: two untitled windows of the same
+    /// application compare equal on every field either comparator looks at, and
+    /// windows sharing a title are common. Because the incoming order is
+    /// most-recently-used and the list is re-ordered on every keystroke, an
+    /// unstable result would let tiles swap places under the user's fingers
+    /// for no reason. Decorating with the incoming position and using it as the
+    /// final tie-break is the same trick `WindowMatcher` already uses.
+    private static func stableSorted(
+        _ windows: [WindowInfo],
+        by areInIncreasingOrder: (WindowInfo, WindowInfo) -> Bool
+    ) -> [WindowInfo] {
+        windows.enumerated()
+            .sorted { lhs, rhs in
+                if areInIncreasingOrder(lhs.element, rhs.element) { return true }
+                if areInIncreasingOrder(rhs.element, lhs.element) { return false }
+                return lhs.offset < rhs.offset
+            }
+            .map(\.element)
     }
 }

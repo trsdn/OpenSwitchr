@@ -19,6 +19,10 @@ public final class DockPreviewController {
     private var hideTask: Task<Void, Never>?
     private var mouseMonitor: Any?
 
+    /// An item whose hover resolved to no windows, kept so a later index
+    /// rebuild can retry it. See ``indexDidRebuild()``.
+    private var unresolvedItem: DockHoverMonitor.DockItem?
+
     public private(set) var isVisible = false
 
     /// Called whenever a hover ends, so the Dock monitor can reset its
@@ -39,6 +43,11 @@ public final class DockPreviewController {
         showTask = nil
 
         guard let item else {
+            // The pointer left the Dock, so a retry armed by an earlier hover
+            // is no longer wanted. `scheduleHide()` cannot do this on our
+            // behalf: it returns early when no panel is visible, which is
+            // exactly the state an unresolved hover leaves behind.
+            unresolvedItem = nil
             scheduleHide()
             return
         }
@@ -69,6 +78,22 @@ public final class DockPreviewController {
         }
     }
 
+    /// Retries a hover that resolved to nothing before the index caught up.
+    ///
+    /// Called after a rebuild. Hovering a Dock icon starts an asynchronous
+    /// rebuild and then resolves the panel's contents; with the instant path
+    /// those two happen in the wrong order, so an application whose window the
+    /// index had not seen yet produced no panel and nothing ever tried again.
+    /// The pointer must still be on the same icon — the user has otherwise
+    /// moved on, and a panel appearing now would be a surprise rather than a
+    /// recovery.
+    public func indexDidRebuild() {
+        guard let item = unresolvedItem else { return }
+        unresolvedItem = nil
+        guard isMouseInside(item) else { return }
+        show(for: item, isRetry: true)
+    }
+
     private func scheduleHide() {
         guard isVisible else { return }
         let delay = preferences.dockHideDelay
@@ -85,12 +110,21 @@ public final class DockPreviewController {
 
     // MARK: - Presentation
 
-    private func show(for item: DockHoverMonitor.DockItem) {
+    private func show(for item: DockHoverMonitor.DockItem, isRetry: Bool = false) {
         let matches = resolveWindows(for: item)
         guard !matches.isEmpty else {
             hide()
+            // Hovering kicks off an index rebuild that does not block, and the
+            // instant path resolves before it lands — so "no windows" may only
+            // mean "not yet". Armed *once*, and only for a first attempt:
+            // a retry that also came up empty means the icon genuinely has
+            // nothing here, and re-arming would make every later rebuild try
+            // again for as long as the pointer sits on it. Set after `hide()`,
+            // which clears it.
+            if !isRetry { unresolvedItem = item }
             return
         }
+        unresolvedItem = nil
 
         currentItem = item
         windows = matches
@@ -279,6 +313,10 @@ public final class DockPreviewController {
 
     private func isMouseInsideCurrentDockItem() -> Bool {
         guard let item = currentItem else { return false }
+        return isMouseInside(item)
+    }
+
+    private func isMouseInside(_ item: DockHoverMonitor.DockItem) -> Bool {
         let primaryHeight = NSScreen.screens.first?.frame.height ?? 0
         let rect = NSRect(
             x: item.frame.origin.x,
@@ -296,6 +334,7 @@ public final class DockPreviewController {
         hideTask?.cancel()
         showTask = nil
         hideTask = nil
+        unresolvedItem = nil
         stopMouseTracking()
         // Fires even when no panel was on screen: hovering an icon without
         // windows also ends a hover, and the monitor must forget it either way.
