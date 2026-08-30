@@ -259,6 +259,7 @@ public final class AppModel {
             await self.index.rebuildConcurrently()
             guard !Task.isCancelled else { return }
             self.thumbnails.retain(only: Set(self.index.windows.map(\.id)))
+            self.rebuildFinished()
         }
     }
 
@@ -278,6 +279,20 @@ public final class AppModel {
             guard !Task.isCancelled else { return }
             self.logger.debug("Stale rebuild on show: \(before) -> \(self.index.windows.count) windows")
             self.thumbnails.retain(only: Set(self.index.windows.map(\.id)))
+            self.rebuildFinished()
         }
+    }
+
+    /// The one place a finished rebuild is announced, so every path agrees on
+    /// what happens afterwards.
+    ///
+    /// The switcher check has to happen **here**, at completion, not where the
+    /// rebuild was scheduled: a rebuild is in flight for tens of milliseconds
+    /// and the overlay can open during it, so a guard taken at scheduling time
+    /// says nothing about the state on arrival. A keystroke in one frontend
+    /// must not materialise a panel in the other.
+    private func rebuildFinished() {
+        guard !switcher.isVisible else { return }
+        dockPreview.indexDidRebuild()
     }
 }

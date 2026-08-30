@@ -22,6 +22,11 @@ swift test
 # Run from a terminal that holds the Accessibility permission.
 swift run openswitchr-diag --bench --capture
 
+# The filter profiles, applied to the windows actually open. The display scope
+# is the one axis a unit test cannot judge, because a wrong CoreGraphics/AppKit
+# coordinate flip still looks correct on a single display.
+swift run openswitchr-diag --filters
+
 # End-to-end check against the *installed, running* app: synthetic hotkey,
 # overlay latency, real focus change, and two Dock hovers on the same icon.
 swift run openswitchr-diag --probe-app
@@ -349,7 +354,7 @@ change that moves the most criteria.
 | `B04` | partial | `.gitignore` covers build output, `dist/`, and `.release.env`; the generated `AppIcon.icns` is tracked without being marked. |
 | `B09`, `B10` | partial | Visibility and archive state are intentional; there is no `CODEOWNERS`, and the README states "Early" without naming an owner or a maintenance commitment. |
 | `P05`, `P06` | partial | The README covers install, build, and compatibility, but not configuration, security, or support. The community profile sits at 85 %. |
-| `S02` | partial | 42 tests, all pure logic. Everything touching accessibility or the window server is covered only by `openswitchr-diag`, which is manual and absent from CI — as the section above already admits. |
+| `S02` | partial | 88 tests, all pure logic. Everything touching accessibility or the window server is covered only by `openswitchr-diag`, which is manual and absent from CI — as the section above already admits. |
 | `T02` | partial | Nothing validates the markdown. Against the standard's own `.markdownlint.jsonc` this repository reports 26 issues: 24 table-separator spacings, one fenced block without a language, and one duplicate `### Added` heading in `CHANGELOG.md`. All trivial, none currently visible to anyone. |
 
 ### Notable passes

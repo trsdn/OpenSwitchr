@@ -9,6 +9,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `WindowFilter`: one pure value type describing which windows a surface wants
+  and in what order, applied by both frontends. Four axes — application scope,
+  minimized handling, display scope, and order — with the switcher's
+  configurable in Settings and the Dock preview's fixed and permissive, because
+  the pointer already chose the application. Defaults reproduce the previous
+  behaviour exactly.
+- `openswitchr-diag --filters`, which applies the profiles to the windows
+  actually open and checks the one axis unit tests cannot judge: that scoping
+  by display leaves no window claimed by no display.
+- Dock previews can switch instantly while one is already open, so the open
+  delay applies to the first preview only and moving along the Dock does not
+  wait again. On by default. A hover that resolves before the index has caught
+  up is retried once the rebuild lands, rather than leaving the pointer on an
+  icon with nothing shown.
+
 - Shared window foundation used by both frontends: `WindowIndex` (single source
   of truth), `WindowEventBus` (accessibility and `NSWorkspace` notifications,
   no polling), `ThumbnailStore` (ScreenCaptureKit behind an LRU cache with a
@@ -38,6 +53,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   they put destructive targets a few pixels from the one that focuses a window;
   close sits top left and quit top right, in opposite corners rather than side
   by side, because only one of the two can be undone.
+
+### Changed
+
+- The switcher opens even when its filter matches nothing, and says so. The
+  event tap swallows the hotkey either way, so returning early left `⌘-Tab`
+  inert with the system switcher still suppressed — reachable on purpose once a
+  restrictive filter exists, not just on an empty Space.
+- The initial selection is derived from where the current window ended up in the
+  list rather than from a fixed offset of 1, which only ever held while the list
+  was in most-recently-used order and still contained that window.
 
 ### Performance
 

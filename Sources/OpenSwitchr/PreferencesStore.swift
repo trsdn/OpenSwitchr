@@ -19,9 +19,26 @@ public final class PreferencesStore {
         static let tileWidth = "tileWidth"
         static let showCloseButton = "showCloseButton"
         static let launchAtLogin = "launchAtLogin"
+        static let dockHoverInstantSwitch = "dockHoverInstantSwitch"
+        static let switcherApplicationScope = "switcherApplicationScope"
+        static let switcherMinimizedPolicy = "switcherMinimizedPolicy"
+        static let switcherScreenScope = "switcherScreenScope"
+        static let switcherOrder = "switcherOrder"
     }
 
     private let defaults: UserDefaults
+
+    /// The default for anything added here lives exactly once, because a
+    /// registered default and the fallback used when a stored value no longer
+    /// parses are two spellings of the same value, and they have drifted apart
+    /// in this file's history before.
+    private enum Default {
+        static let dockHoverInstantSwitch = true
+
+        /// Derived rather than restated: `WindowFilter.switcherDefault` is the
+        /// one place the switcher's starting profile is written down.
+        static let filter = WindowFilter.switcherDefault
+    }
 
     // Every preference is a *stored* property that writes through to
     // UserDefaults on change. The @Observable macro only tracks stored
@@ -47,6 +64,46 @@ public final class PreferencesStore {
 
     public var dockHideDelay: TimeInterval {
         didSet { defaults.set(dockHideDelay, forKey: Key.dockHideDelay) }
+    }
+
+    /// Whether the hover delay applies only to the first preview.
+    ///
+    /// The delay exists so that sweeping across the Dock on the way somewhere
+    /// else does not fire a panel. Once one is open the user has already said
+    /// what they want, and waiting again for every icon they move onto reads as
+    /// the app lagging.
+    public var dockHoverInstantSwitch: Bool {
+        didSet { defaults.set(dockHoverInstantSwitch, forKey: Key.dockHoverInstantSwitch) }
+    }
+
+    // The switcher's filter profile. The Dock preview does not get one: it is
+    // already scoped to the application under the pointer, so every further
+    // restriction could only hide windows the user pointed at.
+
+    public var switcherApplicationScope: WindowFilter.ApplicationScope {
+        didSet { defaults.set(switcherApplicationScope.rawValue, forKey: Key.switcherApplicationScope) }
+    }
+
+    public var switcherMinimizedPolicy: WindowFilter.MinimizedPolicy {
+        didSet { defaults.set(switcherMinimizedPolicy.rawValue, forKey: Key.switcherMinimizedPolicy) }
+    }
+
+    public var switcherScreenScope: WindowFilter.ScreenScope {
+        didSet { defaults.set(switcherScreenScope.rawValue, forKey: Key.switcherScreenScope) }
+    }
+
+    public var switcherOrder: WindowFilter.Order {
+        didSet { defaults.set(switcherOrder.rawValue, forKey: Key.switcherOrder) }
+    }
+
+    /// The four axes as the one value the switcher actually applies.
+    public var switcherFilter: WindowFilter {
+        WindowFilter(
+            applications: switcherApplicationScope,
+            minimized: switcherMinimizedPolicy,
+            screens: switcherScreenScope,
+            order: switcherOrder
+        )
     }
 
     public var thumbnailBudgetMB: Int {
@@ -76,10 +133,15 @@ public final class PreferencesStore {
             Key.dockHoverEnabled: true,
             Key.dockHoverDelay: 0.18,
             Key.dockHideDelay: 0.25,
+            Key.dockHoverInstantSwitch: Default.dockHoverInstantSwitch,
             Key.thumbnailBudgetMB: 96,
             Key.thumbnailRefreshRate: ThumbnailRefreshRate.default.rawValue,
             Key.tileWidth: 200.0,
-            Key.showCloseButton: false
+            Key.showCloseButton: false,
+            Key.switcherApplicationScope: Default.filter.applications.rawValue,
+            Key.switcherMinimizedPolicy: Default.filter.minimized.rawValue,
+            Key.switcherScreenScope: Default.filter.screens.rawValue,
+            Key.switcherOrder: Default.filter.order.rawValue
         ])
 
         // An unknown stored modifier means the value was removed from the app,
@@ -91,12 +153,30 @@ public final class PreferencesStore {
         dockHoverEnabled = defaults.bool(forKey: Key.dockHoverEnabled)
         dockHoverDelay = defaults.double(forKey: Key.dockHoverDelay)
         dockHideDelay = defaults.double(forKey: Key.dockHideDelay)
+        dockHoverInstantSwitch = defaults.bool(forKey: Key.dockHoverInstantSwitch)
         thumbnailBudgetMB = defaults.integer(forKey: Key.thumbnailBudgetMB)
         thumbnailRefreshRate = ThumbnailRefreshRate(
             rawValue: defaults.string(forKey: Key.thumbnailRefreshRate) ?? ""
         ) ?? .default
         tileWidth = defaults.double(forKey: Key.tileWidth)
         showCloseButton = defaults.bool(forKey: Key.showCloseButton)
+
+        // Same fallback rule as the hold modifier: a stored value the app no
+        // longer recognises means the case was removed, so it reverts to the
+        // registered default rather than leaving the switcher without a filter.
+        switcherApplicationScope = WindowFilter.ApplicationScope(
+            rawValue: defaults.string(forKey: Key.switcherApplicationScope) ?? ""
+        ) ?? Default.filter.applications
+        switcherMinimizedPolicy = WindowFilter.MinimizedPolicy(
+            rawValue: defaults.string(forKey: Key.switcherMinimizedPolicy) ?? ""
+        ) ?? Default.filter.minimized
+        switcherScreenScope = WindowFilter.ScreenScope(
+            rawValue: defaults.string(forKey: Key.switcherScreenScope) ?? ""
+        ) ?? Default.filter.screens
+        switcherOrder = WindowFilter.Order(
+            rawValue: defaults.string(forKey: Key.switcherOrder) ?? ""
+        ) ?? Default.filter.order
+
         launchAtLogin = SMAppService.mainApp.status == .enabled
     }
 

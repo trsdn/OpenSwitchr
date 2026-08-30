@@ -7,9 +7,9 @@ import OSLog
 
 /// The single source of truth for open windows.
 ///
-/// This is the whole point of consolidating DockDoor-style previews and an
-/// AltTab-style switcher into one app: both frontends read from this index,
-/// so the expensive work of enumerating and tracking windows happens once.
+/// This is the whole point of consolidating Dock hover previews and a window
+/// switcher into one app: both frontends read from this index, so the
+/// expensive work of enumerating and tracking windows happens once.
 ///
 /// Scope is deliberately limited to the **current Space**. Reaching windows on
 /// other Spaces requires private SkyLight calls, which are out of bounds.
@@ -211,6 +211,12 @@ public final class WindowIndex {
 
         mru.seed(zOrdered: zOrdered)
         mru.retain(only: Set(result.map(\.id)))
+
+        // Stamped here rather than looked up later, so a pure filter can order
+        // by "most recently opened" without reaching back into the index.
+        for offset in result.indices {
+            result[offset].openedRank = mru.openedRank(of: result[offset].id)
+        }
 
         windows = mru.sorted(result)
         lastRebuildDuration = CFAbsoluteTimeGetCurrent() - started

@@ -19,6 +19,10 @@ public final class DockPreviewController {
     private var hideTask: Task<Void, Never>?
     private var mouseMonitor: Any?
 
+    /// An item whose hover resolved to no windows, kept so a later index
+    /// rebuild can retry it. See ``indexDidRebuild()``.
+    private var unresolvedItem: DockHoverMonitor.DockItem?
+
     public private(set) var isVisible = false
 
     /// Called whenever a hover ends, so the Dock monitor can reset its
@@ -39,6 +43,11 @@ public final class DockPreviewController {
         showTask = nil
 
         guard let item else {
+            // The pointer left the Dock, so a retry armed by an earlier hover
+            // is no longer wanted. `scheduleHide()` cannot do this on our
+            // behalf: it returns early when no panel is visible, which is
+            // exactly the state an unresolved hover leaves behind.
+            unresolvedItem = nil
             scheduleHide()
             return
         }
@@ -48,12 +57,41 @@ public final class DockPreviewController {
 
         guard item != currentItem || !isVisible else { return }
 
-        let delay = preferences.dockHoverDelay
+        // Once a preview is on screen the user has already declared intent, so
+        // moving along the Dock switches without waiting again. `isVisible` is
+        // still true while a hide has merely been scheduled, which is
+        // deliberate: that is exactly the moment a fast pointer is crossing the
+        // gap between two icons.
+        let delay = preferences.dockHoverInstantSwitch && isVisible ? 0 : preferences.dockHoverDelay
+
+        // Showing straight away rather than sleeping for zero: the point of
+        // this path is that nothing is scheduled at all.
+        guard delay > 0 else {
+            show(for: item)
+            return
+        }
+
         showTask = Task { [weak self] in
             try? await Task.sleep(for: .seconds(delay))
             guard !Task.isCancelled, let self else { return }
             self.show(for: item)
         }
+    }
+
+    /// Retries a hover that resolved to nothing before the index caught up.
+    ///
+    /// Called after a rebuild. Hovering a Dock icon starts an asynchronous
+    /// rebuild and then resolves the panel's contents; with the instant path
+    /// those two happen in the wrong order, so an application whose window the
+    /// index had not seen yet produced no panel and nothing ever tried again.
+    /// The pointer must still be on the same icon — the user has otherwise
+    /// moved on, and a panel appearing now would be a surprise rather than a
+    /// recovery.
+    public func indexDidRebuild() {
+        guard let item = unresolvedItem else { return }
+        unresolvedItem = nil
+        guard isMouseInside(item) else { return }
+        show(for: item, isRetry: true)
     }
 
     private func scheduleHide() {
@@ -72,12 +110,21 @@ public final class DockPreviewController {
 
     // MARK: - Presentation
 
-    private func show(for item: DockHoverMonitor.DockItem) {
+    private func show(for item: DockHoverMonitor.DockItem, isRetry: Bool = false) {
         let matches = resolveWindows(for: item)
         guard !matches.isEmpty else {
             hide()
+            // Hovering kicks off an index rebuild that does not block, and the
+            // instant path resolves before it lands — so "no windows" may only
+            // mean "not yet". Armed *once*, and only for a first attempt:
+            // a retry that also came up empty means the icon genuinely has
+            // nothing here, and re-arming would make every later rebuild try
+            // again for as long as the pointer sits on it. Set after `hide()`,
+            // which clears it.
+            if !isRetry { unresolvedItem = item }
             return
         }
+        unresolvedItem = nil
 
         currentItem = item
         windows = matches
@@ -182,18 +229,8 @@ public final class DockPreviewController {
     }
 
     /// Places the panel next to the Dock item, on whichever edge the Dock is.
-    ///
-    /// Accessibility reports frames with the origin at the top-left of the
-    /// primary display, while AppKit windows use a bottom-left origin, so the
-    /// vertical axis has to be flipped.
     private func panelOrigin(for item: DockHoverMonitor.DockItem, size: NSSize) -> NSPoint {
-        let primaryHeight = NSScreen.screens.first?.frame.height ?? 0
-        let itemRect = NSRect(
-            x: item.frame.origin.x,
-            y: primaryHeight - item.frame.origin.y - item.frame.height,
-            width: item.frame.width,
-            height: item.frame.height
-        )
+        let itemRect = Self.screenRect(of: item)
 
         let screen = NSScreen.screens.first { $0.frame.intersects(itemRect) } ?? NSScreen.main
         let visible = screen?.visibleFrame ?? NSRect(x: 0, y: 0, width: 1440, height: 900)
@@ -225,12 +262,16 @@ public final class DockPreviewController {
     }
 
     private func resolveWindows(for item: DockHoverMonitor.DockItem) -> [WindowInfo] {
-        if let bundleID = item.bundleID {
-            let matches = index.windows(forBundleID: bundleID)
-            if !matches.isEmpty { return matches }
+        var matches = item.bundleID.map { index.windows(forBundleID: $0) } ?? []
+        if matches.isEmpty, !item.title.isEmpty {
+            matches = index.windows.filter { $0.appName == item.title }
         }
-        guard !item.title.isEmpty else { return [] }
-        return index.windows.filter { $0.appName == item.title }
+        guard !matches.isEmpty else { return [] }
+
+        // This surface has a profile too, even though it is the permissive one.
+        // Going through it keeps the claim that both frontends are filtered the
+        // same way true in code rather than only in the README.
+        return WindowFilter.dockPreview.apply(to: matches)
     }
 
     // MARK: - Mouse tracking
@@ -262,14 +303,28 @@ public final class DockPreviewController {
 
     private func isMouseInsideCurrentDockItem() -> Bool {
         guard let item = currentItem else { return false }
+        return isMouseInside(item)
+    }
+
+    private func isMouseInside(_ item: DockHoverMonitor.DockItem) -> Bool {
+        Self.screenRect(of: item).insetBy(dx: -4, dy: -4).contains(NSEvent.mouseLocation)
+    }
+
+    /// A Dock item's frame in AppKit screen coordinates.
+    ///
+    /// Accessibility reports it with the origin at the top-left of the primary
+    /// display and y growing downwards; AppKit windows use a bottom-left
+    /// origin. Kept in one place because both the placement maths and the
+    /// hover test need it, and two copies of a coordinate flip is how they
+    /// stop agreeing.
+    private static func screenRect(of item: DockHoverMonitor.DockItem) -> NSRect {
         let primaryHeight = NSScreen.screens.first?.frame.height ?? 0
-        let rect = NSRect(
+        return NSRect(
             x: item.frame.origin.x,
             y: primaryHeight - item.frame.origin.y - item.frame.height,
             width: item.frame.width,
             height: item.frame.height
         )
-        return rect.insetBy(dx: -4, dy: -4).contains(NSEvent.mouseLocation)
     }
 
     // MARK: - Teardown
@@ -279,6 +334,7 @@ public final class DockPreviewController {
         hideTask?.cancel()
         showTask = nil
         hideTask = nil
+        unresolvedItem = nil
         stopMouseTracking()
         // Fires even when no panel was on screen: hovering an icon without
         // windows also ends a hover, and the monitor must forget it either way.
