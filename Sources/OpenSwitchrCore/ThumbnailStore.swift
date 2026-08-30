@@ -167,15 +167,43 @@ public actor ThumbnailStore {
         let filter = SCContentFilter(desktopIndependentWindow: window)
 
         do {
-            let image = try await SCScreenshotManager.captureImage(
-                contentFilter: filter,
-                configuration: configuration
+            return try await Self.captureImage(
+                CaptureRequest(filter: filter, configuration: configuration)
             )
-            return ThumbnailImage(cgImage: image, capturedAt: Date())
         } catch {
             logger.debug("Capture failed for window \(windowID): \(error.localizedDescription)")
             return nil
         }
+    }
+
+    /// One capture's inputs, ready to leave the actor.
+    ///
+    /// Neither type is `Sendable`. Both are built immediately above, used
+    /// exactly once, and never read or mutated again on this side, so carrying
+    /// them across is safe in the way `@unchecked` is meant to assert.
+    private struct CaptureRequest: @unchecked Sendable {
+        let filter: SCContentFilter
+        let configuration: SCStreamConfiguration
+    }
+
+    /// Runs the capture outside the actor.
+    ///
+    /// `SCScreenshotManager.captureImage` is nonisolated, so calling it with a
+    /// filter built inside the actor sends a `self`-isolated, non-`Sendable`
+    /// value into another isolation domain. The macOS 26 SDK annotates its way
+    /// out of that; the macOS 15 SDK the release is built against does not, and
+    /// rejects it outright — which is why this has to cross the boundary as
+    /// `Sendable` values in both directions. The result is boxed in
+    /// ``ThumbnailImage`` for the same reason: `CGImage` is immutable but
+    /// unmarked.
+    private nonisolated static func captureImage(
+        _ request: CaptureRequest
+    ) async throws -> ThumbnailImage {
+        let image = try await SCScreenshotManager.captureImage(
+            contentFilter: request.filter,
+            configuration: request.configuration
+        )
+        return ThumbnailImage(cgImage: image, capturedAt: Date())
     }
 
     private func shareableWindow(id: CGWindowID) async -> SCWindow? {

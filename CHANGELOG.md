@@ -99,6 +99,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **The release build did not compile at all, while CI was green.** Published
+  builds are produced on `macos-15`, but CI only ever ran `macos-latest`. On the
+  macOS 26 SDK, `SCScreenshotManager.captureImage` is annotated such that
+  handing it a content filter built inside the `ThumbnailStore` actor is
+  accepted; on the macOS 15 SDK it is a `sending` violation and a hard error, so
+  the very first notarization request failed on a tree that had passed every
+  check. The capture now crosses the actor boundary as `Sendable` values in both
+  directions, and CI builds and tests on `macos-15` as well, so the toolchain
+  that produces releases can no longer go untested.
+
 - **Windows went unlinked right after launch, so the switcher raised the wrong
   one.** The accessibility timeout was 0.25 s per app. An app's first
   accessibility message is far more expensive than its later ones, and a cold
