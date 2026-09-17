@@ -1,10 +1,11 @@
 # Self-assessment
 
-Evidence for `.github/conformance.yml`. Assessed against version **1.5.1** of
+Evidence for `.github/conformance.yml`. Assessed against version **1.12.0** of
 the [trsdn Repository Quality Standard](https://github.com/trsdn/.github/blob/main/docs/repository-quality-standard.md)
-on **2026-08-30**. Overall state: **Needs work** — two criteria fail, both for
-reasons named below, and the repository is otherwise usable and honest about
-itself.
+on **2026-09-17**. Overall state: **Needs work** — five criteria fail, all for
+reasons named below, none of them a critical gap in the standard's sense
+(no committed secret, no write-capable exposure, no unrecoverable state), and
+the repository is otherwise usable and honest about itself.
 
 Every line here is evidence from the GitHub API, a workflow run, a measurement,
 or a file in the tree. Nothing is assumed. Where a result is `partial` or
@@ -24,6 +25,22 @@ That failure is the reason `B13` exists and the reason this document is now
 separate from `AGENTS.md`: a fact with two homes has no home. It is also why
 the record is validated by a scheduled workflow rather than by memory.
 
+### 1.5.1 → 1.12.0
+
+This reassessment is a version catch-up, not a response to a change in the
+repository: `main` carries no commits between the 1.5.1 assessment
+(2026-08-30) and this one beyond a dependency bump still pending as an open
+pull request. Every `pass`, `partial`, and `fail` carried over from the
+previous record was re-verified against the GitHub API and the tree rather
+than assumed, and none of them moved.
+
+The standard itself grew by eleven criteria in that window: `B14`-`B16`,
+`P10`, `P11`, `R07`, `R08`, and `S11`-`S13`. Assessing those against this
+repository for the first time surfaced one real, previously unrecorded gap —
+`S12` — described below. `W05` and `W06` were retired in the same window and
+are recorded `na` with the rest of the Published Site profile, which does not
+apply here.
+
 ## Profiles
 
 | Profile | Applies | Why |
@@ -39,10 +56,49 @@ the record is validated by a scheduled workflow rather than by memory.
 | Data Protection And Privacy | Yes | Reads window metadata and captures screen content |
 | Deployable | No | Nothing is deployed to any environment |
 | Documentation | No | The product is software; docs support it |
-| Published Sites | No | There is no site. The homepage points at the releases page |
+| Published Site | No | There is no site. The homepage points at the releases page |
 | Archived | No | Actively developed |
 
 ## Failures
+
+### `S12` — an executable reference in a workflow can change underneath the repository
+
+**Fail, and new to this assessment** — the criterion did not exist at 1.5.1.
+Two references in `.github/workflows/` are not pinned to anything immutable:
+
+- `actions/checkout@v4` in `ci.yml`, `markdown.yml`, and `secret-scan.yml`.
+  `v4` is a major-version tag that `actions/checkout` repoints to a new commit
+  on every patch release; the workflow that runs tomorrow is not guaranteed to
+  run the code it ran today.
+- `trsdn/.github/.github/workflows/conformance.yml@main` in `conformance.yml`.
+  This is worse than a version tag: `@main` is a branch pointer that can move
+  multiple times a day, entirely outside this repository's control or review.
+
+Every workflow here already runs with `contents: read` and no secrets — `S11`
+is a clean pass — so the blast radius of an upstream compromise is small. But
+"small blast radius" is a mitigation, not the property `S12` asks for. The fix
+is mechanical: pin `actions/checkout` to a full commit SHA (with a `# v4.x.x`
+comment for readability, the pattern GitHub itself recommends for third-party
+actions), and pin the reusable conformance workflow to a released tag or a
+commit SHA in `trsdn/.github` rather than `@main`.
+
+### `R07` — release notes generated from the changelog, gated automatically
+
+**Fail.** No release workflow exists yet — `R03` below is the reason — so
+there is nothing that could extract a changelog entry for a version, and
+nothing that could fail a release when that entry is missing. This criterion
+has no evidence to be partial about; it depends entirely on `R03` landing
+first.
+
+### `R08` — a consumer can verify a published artifact came from this repository
+
+**Fail.** No release has been published (`R05`, `R06`), so there is no
+artifact to attest and no provenance claim to make one way or the other.
+Unlike `R07`, this one does not have to wait for `R03`: once a release exists,
+GitHub Artifact Attestations can be generated for it independent of whether
+the release itself is tag-triggered. Until then, this is unmet rather than
+not-yet-applicable — the standard's own wording is "or the repository states
+why they cannot," and nothing here states that yet either.
 
 ### `P09` — repository activity card
 
@@ -228,8 +284,9 @@ Both limitations are stated in the README under `X05`.
   infrastructure, and no operational surface. The app runs on a user's machine.
 - **`T01`–`T05`** — the product is an application, not documentation. The
   documentation here supports the software rather than being the deliverable.
-- **`W01`–`W08`** — there is no published site. The repository homepage points
-  at its own releases page, which is not a site in the sense the profile means.
+- **`W01`–`W09`** — there is no published site. The repository homepage points
+  at its own releases page, which is not a site in the sense the profile
+  means. `W05` and `W06` are additionally retired as of standard 1.12.0.
 - **`S06`** — there is no runtime configuration. No environment variable, no
   configuration file, no remote configuration; only user preferences in
   `UserDefaults`, which are the user's own data rather than deployment config.
@@ -275,21 +332,50 @@ These are recorded because they took work, not because they were free.
   whose location and deletion command are documented. `Y01` is the load-bearing
   one: the README states the "none" case explicitly, because "no privacy policy"
   and "no data collection" look identical from the outside.
+- **`B14`** — this repository holds no Apple credential and says so more than
+  once: `AGENTS.md` states plainly that Apple credentials must never be added
+  here and that releases exist specifically so that never has to happen, and
+  `.release.env.example` documents that the one identity string a local build
+  uses is a Keychain selector, not a secret, gitignored regardless.
+- **`B15`** — the Swift package has zero external dependencies, stated as a
+  deliberate constraint in `AGENTS.md`'s forbidden-operations list ("Adding a
+  third-party dependency… which is why a clean checkout builds with no network
+  access"), so there is nothing here to redistribute.
+- **`B16`** — verified against the rulesets API directly: `main` carries both a
+  `deletion` rule and a `non_fast_forward` rule with no exempted actor.
+- **`P10`, `P11`** — the bug-report form asks for what happened, reproduction
+  steps, the affected surface, version, macOS version and hardware, and
+  permission state; the pull-request template (inherited from `trsdn/.github`)
+  covers the summary, the related issue, validation, and risk.
+- **`S11`** — every workflow in `.github/workflows` declares
+  `permissions: contents: read` and nothing broader, verified by reading all
+  four files rather than trusting the one `AGENTS.md` sentence that promises it.
+- **`S13`** — no workflow here references a `secrets.*` context, and none
+  triggers on `pull_request_target`, so there is no path from an untrusted
+  fork's pull request to a secret this repository holds (it holds none).
 
 ## What to do next
 
 In order of how much each one moves:
 
-1. **Publish a GitHub Release for `v0.1.0`** with a notarized artifact from the
+1. **Pin `actions/checkout` to a commit SHA and the reusable conformance
+   workflow to a tag or SHA in `trsdn/.github` instead of `@main`.** Closes
+   `S12`, is a small, mechanical, low-risk change, and is the only new fail
+   this assessment found that isn't downstream of the release gap.
+2. **Publish a GitHub Release for `v0.1.0`** with a notarized artifact from the
    broker. That is the single change that most improves the release profile,
-   moving `R04` and `R06` and making `R05` testable at all.
-2. **Smoke-test that artifact somewhere clean** — a machine or VM that has never
+   moving `R04` and `R06`, making `R05` testable at all, and unblocking `R08`
+   (an artifact attestation needs an artifact).
+3. **Smoke-test that artifact somewhere clean** — a machine or VM that has never
    run OpenSwitchr — and record the result. Clears `R05`.
-3. **Decide the `P09` conflict deliberately**: either accept no activity card,
+4. **Decide the `P09` conflict deliberately**: either accept no activity card,
    or relax the no-write-permissions rule with a stated reason. Either is a
    defensible answer; leaving it undecided is not.
-4. **Add a Swift formatter or linter** to close `S03`.
-5. **Verify the app under enlarged accessibility text sizes** and either fix the
+5. **Add a Swift formatter or linter** to close `S03`.
+6. **Verify the app under enlarged accessibility text sizes** and either fix the
    clipping or keep the limitation documented. Moves `X03`.
-6. **Resolve the version derivation** with the broker so `I06` stops depending
+7. **Resolve the version derivation** with the broker so `I06` stops depending
    on a human typing the same number in two files.
+8. **Automate the tag-to-artifact path (`R03`)**, which is the prerequisite for
+   `R07`'s changelog-gated release notes — there is nothing to gate until a
+   release workflow exists to gate.
