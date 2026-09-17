@@ -89,6 +89,18 @@ enum AppProbe {
         }
 
         usleep(250_000)
+        // The overlay has to survive the modifier simply being held. Nothing
+        // used to check that: this probe held for 250 ms and released, so an
+        // overlay that gives up while the user is still deciding which window
+        // they want was invisible to it.
+        if appearance != nil {
+            if let vanished = timeUntilPanelVanishes(within: 4.0, ignoring: panelsBefore) {
+                print(String(format: "  FAILED: overlay vanished %.1f s into the hold, with the modifier still down.", vanished))
+            } else {
+                print("  Held for 4 s: still on screen.")
+            }
+            probeDockInterference(panelsBefore: panelsBefore)
+        }
         key(modifier.key, down: false, flags: [])
         usleep(700_000)
 
@@ -100,6 +112,34 @@ enum AppProbe {
     }
 
     // MARK: - Dock hover
+
+    /// Moves the pointer onto the Dock while the switcher is still held open.
+    ///
+    /// Ordinary use, and worth a check of its own: both frontends put a
+    /// floating panel on screen, and a Dock preview appearing beside the
+    /// overlay must not take it away. Reaching for the mouse mid-switch is
+    /// exactly the sort of thing a synthetic press-and-release never does.
+    private static func probeDockInterference(panelsBefore: Set<Int>) {
+        let switcherPanels = Set(panels().keys).subtracting(panelsBefore)
+        guard !switcherPanels.isEmpty else { return }
+        guard let item = dockItems().first(where: {
+            ["Safari", "Google Chrome", "Microsoft Edge", "Finder"].contains($0.title)
+        }) else { return }
+
+        move(to: item.point)
+        usleep(150_000)
+        // A pointer that never moves again may not generate the events a hover
+        // monitor is waiting for.
+        move(to: CGPoint(x: item.point.x + 1, y: item.point.y))
+        usleep(900_000)
+
+        let survived = !Set(panels().keys).isDisjoint(with: switcherPanels)
+        print(survived
+            ? "  Survived the pointer reaching the Dock during the hold."
+            : "  FAILED: the overlay vanished when the pointer reached the Dock.")
+
+        parkPointer()
+    }
 
     private static func probeDockHover() {
         print("Dock hover preview")
@@ -203,6 +243,26 @@ enum AppProbe {
                 return (Date().timeIntervalSince(start), fresh.value)
             }
             usleep(5_000)
+        }
+        return nil
+    }
+
+    /// How long an already-visible overlay lasts, or `nil` if it outlives the
+    /// timeout.
+    ///
+    /// The counterpart to `waitForPanel`: that one proves the overlay arrives,
+    /// this one proves it stays. Both are needed, because "appears and then
+    /// disappears on its own" passes the first check.
+    private static func timeUntilPanelVanishes(
+        within timeout: TimeInterval,
+        ignoring baseline: Set<Int> = []
+    ) -> TimeInterval? {
+        let start = Date()
+        while Date().timeIntervalSince(start) < timeout {
+            if panels().first(where: { !baseline.contains($0.key) }) == nil {
+                return Date().timeIntervalSince(start)
+            }
+            usleep(50_000)
         }
         return nil
     }

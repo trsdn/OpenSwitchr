@@ -10,6 +10,14 @@ public struct SwitcherView: View {
     private let thumbnails: ThumbnailProvider
     private let tileSize: CGSize
     private let showsCloseButtons: Bool
+
+    /// Whether a non-default window filter is narrowing the list.
+    ///
+    /// Only used to tell the two empty states apart. "No open windows on this
+    /// Space" is a lie when there are windows and a setting is hiding them, and
+    /// it sends the user looking for the wrong problem.
+    private let isFiltered: Bool
+
     private let onActivate: (Int) -> Void
     private let onClose: (Int) -> Void
     private let onQuitApp: (Int) -> Void
@@ -22,6 +30,7 @@ public struct SwitcherView: View {
         thumbnails: ThumbnailProvider,
         tileSize: CGSize,
         showsCloseButtons: Bool = false,
+        isFiltered: Bool = false,
         onActivate: @escaping (Int) -> Void,
         onClose: @escaping (Int) -> Void = { _ in },
         onQuitApp: @escaping (Int) -> Void = { _ in },
@@ -33,6 +42,7 @@ public struct SwitcherView: View {
         self.thumbnails = thumbnails
         self.tileSize = tileSize
         self.showsCloseButtons = showsCloseButtons
+        self.isFiltered = isFiltered
         self.onActivate = onActivate
         self.onClose = onClose
         self.onQuitApp = onQuitApp
@@ -91,11 +101,18 @@ public struct SwitcherView: View {
             Image(systemName: "macwindow.badge.plus")
                 .font(.system(size: 28))
                 .foregroundStyle(.tertiary)
-            Text(query.isEmpty ? "No open windows on this Space" : "No matches")
+            Text(emptyMessage)
                 .font(.system(size: 12))
                 .foregroundStyle(.secondary)
         }
         .frame(maxWidth: .infinity, minHeight: 120)
+    }
+
+    private var emptyMessage: String {
+        if !query.isEmpty { return "No matches" }
+        return isFiltered
+            ? "No windows match the switcher's filter"
+            : "No open windows on this Space"
     }
 
     private var grid: some View {

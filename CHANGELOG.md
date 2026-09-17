@@ -40,6 +40,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   the project is English-only, and which accessibility limitations are known.
 - `AGENTS.md` now names the operations an agent must not perform, the paths that
   are generated, and the review expectation for agent-authored changes.
+- `WindowFilter`: one pure value type describing which windows a surface wants
+  and in what order, applied by both frontends. Four axes — application scope,
+  minimized handling, display scope, and order — with the switcher's
+  configurable in Settings and the Dock preview's fixed and permissive, because
+  the pointer already chose the application. Defaults reproduce the previous
+  behaviour exactly.
+- `openswitchr-diag --filters`, which applies the profiles to the windows
+  actually open and checks the one axis unit tests cannot judge: that scoping
+  by display leaves no window claimed by no display.
+- Dock previews can switch instantly while one is already open, so the open
+  delay applies to the first preview only and moving along the Dock does not
+  wait again. On by default. A hover that resolves before the index has caught
+  up is retried once the rebuild lands, rather than leaving the pointer on an
+  icon with nothing shown.
 
 ### Changed
 
@@ -103,6 +117,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   weight and the menu bar the outlined one, because solid art that carries a
   1024 pt icon collapses into a blob at 15 pt.
 
+### Changed
+
+- The switcher opens even when its filter matches nothing, and says so. The
+  event tap swallows the hotkey either way, so returning early left `⌘-Tab`
+  inert with the system switcher still suppressed — reachable on purpose once a
+  restrictive filter exists, not just on an empty Space.
+- The initial selection is derived from where the current window ended up in the
+  list rather than from a fixed offset of 1, which only ever held while the list
+  was in most-recently-used order and still contained that window.
+- `⌘-Tab` is now the default hold modifier, so OpenSwitchr replaces the macOS
+  app switcher out of the box. `⌥-Tab` and `⌃-Tab` remain selectable, and an
+  existing stored preference is left untouched.
+- `⌘-Tab` is available again as a hold modifier, and it does replace the macOS
+  app switcher. It had been removed on the assumption that the system switcher
+  is dispatched before any session event tap; that assumption was never
+  measured and is wrong. A session tap sees `⌘-Tab` and suppresses it: passing
+  the same event through makes the Dock's switcher window appear, swallowing it
+  does not.
+
 ### Performance
 
 - Rebuild the window index only when a frontend is about to be shown. A single
@@ -130,18 +163,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   Recreating it on every render made the overlay cost ~50 ms to appear and
   repeated the same work on every selection change; it now appears in
   ~21–24 ms.
-
-### Changed
-
-- `⌘-Tab` is now the default hold modifier, so OpenSwitchr replaces the macOS
-  app switcher out of the box. `⌥-Tab` and `⌃-Tab` remain selectable, and an
-  existing stored preference is left untouched.
-- `⌘-Tab` is available again as a hold modifier, and it does replace the macOS
-  app switcher. It had been removed on the assumption that the system switcher
-  is dispatched before any session event tap; that assumption was never
-  measured and is wrong. A session tap sees `⌘-Tab` and suppresses it: passing
-  the same event through makes the Dock's switcher window appear, swallowing it
-  does not.
 
 ### Fixed
 
