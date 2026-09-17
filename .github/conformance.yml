@@ -5,8 +5,8 @@
 # Do not edit a result here without editing the evidence there. A record that
 # disagrees with its evidence is worse than no record.
 
-standard_version: "1.5.1"
-assessed_on: "2026-08-30"
+standard_version: "1.11.1"
+assessed_on: "2026-09-17"
 state: "Needs work"
 evidence: "docs/self-assessment.md"
 
@@ -25,6 +25,9 @@ criteria:
   B11: pass
   B12: pass
   B13: partial
+  B14: pass
+  B15: pass
+  B16: pass
 
   # --- Public Repositories ----------------------------------------------
   P01: pass
@@ -36,6 +39,8 @@ criteria:
   P07: pass
   P08: partial
   P09: fail
+  P10: pass
+  P11: pass
 
   # --- Software Repositories --------------------------------------------
   S01: pass
@@ -48,6 +53,9 @@ criteria:
   S08: pass
   S09: pass
   S10: pass
+  S11: pass
+  S12: fail
+  S13: pass
 
   # --- Deployable Repositories (nothing is deployed) --------------------
   D01: na
@@ -64,6 +72,8 @@ criteria:
   R04: partial
   R05: fail
   R06: partial
+  R07: fail
+  R08: fail
 
   # --- Product Identity --------------------------------------------------
   I01: pass
@@ -80,7 +90,7 @@ criteria:
   T04: na
   T05: na
 
-  # --- Published Sites (there is no site) --------------------------------
+  # --- Published Sites (there is no site) ----------------------------------
   W01: na
   W02: na
   W03: na
