@@ -54,7 +54,7 @@ criteria:
   S09: pass
   S10: pass
   S11: pass
-  S12: fail
+  S12: pass
   S13: pass
 
   # --- Deployable Repositories (nothing is deployed) --------------------

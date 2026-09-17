@@ -2,7 +2,7 @@
 
 Evidence for `.github/conformance.yml`. Assessed against version **1.11.1** of
 the [trsdn Repository Quality Standard](https://github.com/trsdn/.github/blob/main/docs/repository-quality-standard.md)
-on **2026-09-17**. Overall state: **Needs work** — five criteria fail, all for
+on **2026-09-17**. Overall state: **Needs work** — four criteria fail, all for
 reasons named below, none of them a critical gap in the standard's sense
 (no committed secret, no write-capable exposure, no unrecoverable state), and
 the repository is otherwise usable and honest about itself.
@@ -43,8 +43,10 @@ version the workflow can actually check out; `W09` will be assessed once a
 
 The standard grew by ten criteria between 1.5.1 and 1.11.1: `B14`-`B16`,
 `P10`, `P11`, `R07`, `R08`, and `S11`-`S13`. Assessing those against this
-repository for the first time surfaced one real, previously unrecorded gap —
-`S12` — described below.
+repository for the first time surfaced one real, previously unrecorded gap:
+`actions/checkout` and the reusable conformance workflow were pinned to
+mutable refs (`S12`), fixed in the same change that added this reassessment
+and recorded under Notable passes below.
 
 ## Profiles
 
@@ -65,27 +67,6 @@ repository for the first time surfaced one real, previously unrecorded gap —
 | Archived | No | Actively developed |
 
 ## Failures
-
-### `S12` — an executable reference in a workflow can change underneath the repository
-
-**Fail, and new to this assessment** — the criterion did not exist at 1.5.1.
-Two references in `.github/workflows/` are not pinned to anything immutable:
-
-- `actions/checkout@v4` in `ci.yml`, `markdown.yml`, and `secret-scan.yml`.
-  `v4` is a major-version tag that `actions/checkout` repoints to a new commit
-  on every patch release; the workflow that runs tomorrow is not guaranteed to
-  run the code it ran today.
-- `trsdn/.github/.github/workflows/conformance.yml@main` in `conformance.yml`.
-  This is worse than a version tag: `@main` is a branch pointer that can move
-  multiple times a day, entirely outside this repository's control or review.
-
-Every workflow here already runs with `contents: read` and no secrets — `S11`
-is a clean pass — so the blast radius of an upstream compromise is small. But
-"small blast radius" is a mitigation, not the property `S12` asks for. The fix
-is mechanical: pin `actions/checkout` to a full commit SHA (with a `# v4.x.x`
-comment for readability, the pattern GitHub itself recommends for third-party
-actions), and pin the reusable conformance workflow to a released tag or a
-commit SHA in `trsdn/.github` rather than `@main`.
 
 ### `R07` — release notes generated from the changelog, gated automatically
 
@@ -358,29 +339,31 @@ These are recorded because they took work, not because they were free.
 - **`S13`** — no workflow here references a `secrets.*` context, and none
   triggers on `pull_request_target`, so there is no path from an untrusted
   fork's pull request to a secret this repository holds (it holds none).
+- **`S12`** — was a fail as of the first pass of this reassessment:
+  `actions/checkout@v4` (later `@v7` via #29) and the reusable conformance
+  workflow pinned to `trsdn/.github/...@main` could both change underneath
+  this repository without a commit here. Both are now pinned to a full commit
+  SHA, with a trailing comment naming the tag for readability — the pattern
+  GitHub itself recommends for third-party actions.
 
 ## What to do next
 
 In order of how much each one moves:
 
-1. **Pin `actions/checkout` to a commit SHA and the reusable conformance
-   workflow to a tag or SHA in `trsdn/.github` instead of `@main`.** Closes
-   `S12`, is a small, mechanical, low-risk change, and is the only new fail
-   this assessment found that isn't downstream of the release gap.
-2. **Publish a GitHub Release for `v0.1.0`** with a notarized artifact from the
+1. **Publish a GitHub Release for `v0.1.0`** with a notarized artifact from the
    broker. That is the single change that most improves the release profile,
    moving `R04` and `R06`, making `R05` testable at all, and unblocking `R08`
    (an artifact attestation needs an artifact).
-3. **Smoke-test that artifact somewhere clean** — a machine or VM that has never
+2. **Smoke-test that artifact somewhere clean** — a machine or VM that has never
    run OpenSwitchr — and record the result. Clears `R05`.
-4. **Decide the `P09` conflict deliberately**: either accept no activity card,
+3. **Decide the `P09` conflict deliberately**: either accept no activity card,
    or relax the no-write-permissions rule with a stated reason. Either is a
    defensible answer; leaving it undecided is not.
-5. **Add a Swift formatter or linter** to close `S03`.
-6. **Verify the app under enlarged accessibility text sizes** and either fix the
+4. **Add a Swift formatter or linter** to close `S03`.
+5. **Verify the app under enlarged accessibility text sizes** and either fix the
    clipping or keep the limitation documented. Moves `X03`.
-7. **Resolve the version derivation** with the broker so `I06` stops depending
+6. **Resolve the version derivation** with the broker so `I06` stops depending
    on a human typing the same number in two files.
-8. **Automate the tag-to-artifact path (`R03`)**, which is the prerequisite for
+7. **Automate the tag-to-artifact path (`R03`)**, which is the prerequisite for
    `R07`'s changelog-gated release notes — there is nothing to gate until a
    release workflow exists to gate.
