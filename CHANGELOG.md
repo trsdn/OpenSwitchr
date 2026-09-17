@@ -77,6 +77,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - The two sibling `### Added` headings under `0.1.0` in this file are merged
   into one, which is both a lint failure and genuinely confusing to read.
+- A modifier release landing in the gap between the hotkey opening the
+  overlay and the overlay reporting itself visible no longer strands the
+  overlay on screen. `HotkeySessionGate` tracks the open request separately
+  from confirmed visibility, so a fast tap of the hotkey still commits.
 
 ## [0.1.0] - 2026-08-30
 

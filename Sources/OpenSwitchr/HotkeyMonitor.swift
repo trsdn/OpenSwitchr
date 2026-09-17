@@ -3,6 +3,7 @@ import Carbon.HIToolbox
 import CoreGraphics
 import Foundation
 import OSLog
+import OpenSwitchrCore
 
 /// Reads the switcher hotkey straight from the event stream.
 ///
@@ -176,13 +177,21 @@ private final class TapCore: @unchecked Sendable {
     /// Tracks whether the last Tab key-down was swallowed, so the matching
     /// key-up can be swallowed too and nothing else.
     private var _swallowedTabKeyDown = false
+    /// Covers the gap between `.open` being emitted and the controller
+    /// reporting the overlay visible — see `HotkeySessionGate`.
+    private var _sessionGate = HotkeySessionGate()
     private var _tap: CFMachPort?
     private var _runLoop: CFRunLoop?
     private var _emit: ((HotkeyMonitor.Action) -> Void)?
 
     var isOverlayVisible: Bool {
         get { lock.withLock { _isOverlayVisible } }
-        set { lock.withLock { _isOverlayVisible = newValue } }
+        set {
+            lock.withLock {
+                _isOverlayVisible = newValue
+                _sessionGate.visibilityReported()
+            }
+        }
     }
 
     var holdModifier: HotkeyMonitor.HoldModifier {
@@ -206,7 +215,10 @@ private final class TapCore: @unchecked Sendable {
     }
 
     func reset() {
-        lock.withLock { _swallowedTabKeyDown = false }
+        lock.withLock {
+            _swallowedTabKeyDown = false
+            _sessionGate.visibilityReported()
+        }
     }
 
     private let logger = Logger(subsystem: "com.openswitchr.app", category: "HotkeyMonitor")
@@ -230,13 +242,18 @@ private final class TapCore: @unchecked Sendable {
             return false
         }
 
-        let (overlayVisible, modifier, swallowedTab) = lock.withLock {
-            (_isOverlayVisible, _holdModifier, _swallowedTabKeyDown)
+        let (overlayVisible, modifier, swallowedTab, shouldCommitOnRelease) = lock.withLock {
+            (
+                _isOverlayVisible,
+                _holdModifier,
+                _swallowedTabKeyDown,
+                _sessionGate.shouldCommitOnRelease(overlayVisible: _isOverlayVisible)
+            )
         }
 
         switch type {
         case .flagsChanged:
-            if overlayVisible && !event.flags.contains(modifier.flag) {
+            if shouldCommitOnRelease && !event.flags.contains(modifier.flag) {
                 emit?(.commit)
             }
             return false
@@ -270,7 +287,12 @@ private final class TapCore: @unchecked Sendable {
         let reverse = flags.contains(.maskShift)
 
         if keyCode == kVK_Tab && flags.contains(modifier.flag) {
-            emit?(overlayVisible ? .advance(reverse: reverse) : .open(reverse: reverse))
+            if overlayVisible {
+                emit?(.advance(reverse: reverse))
+            } else {
+                lock.withLock { _sessionGate.opened() }
+                emit?(.open(reverse: reverse))
+            }
             lock.withLock { _swallowedTabKeyDown = true }
             return true
         }
