@@ -81,6 +81,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   pinned to a full commit SHA instead of `@v7` and `@main`. Both were mutable
   references that could change underneath this repository without a commit
   here — the `S12` gap the last reassessment found. `S12` moves to `pass`.
+- A modifier release landing in the gap between the hotkey opening the
+  overlay and the overlay reporting itself visible no longer strands the
+  overlay on screen. `HotkeySessionGate` tracks the open request separately
+  from confirmed visibility, so a fast tap of the hotkey still commits.
+- The switcher overlay now picks up an index rebuild that lands after it
+  opened, instead of showing a stale list — including an empty one under a
+  restrictive filter — for the rest of the session. Selection is preserved by
+  window identity across the refresh, not by position.
 
 ## [0.1.0] - 2026-08-30
 

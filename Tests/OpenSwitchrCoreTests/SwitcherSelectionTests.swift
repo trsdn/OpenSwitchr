@@ -1,9 +1,24 @@
+import CoreGraphics
 import Testing
 
 @testable import OpenSwitchrCore
 
 @Suite("SwitcherSelection")
 struct SwitcherSelectionTests {
+
+    private func window(_ id: CGWindowID) -> WindowInfo {
+        WindowInfo(
+            id: id,
+            pid: 1,
+            bundleID: nil,
+            appName: "App",
+            title: "Window \(id)",
+            frame: .zero,
+            isMinimized: false,
+            isOnScreen: true,
+            element: nil
+        )
+    }
 
     @Test("Opening forwards lands on the entry after the current window")
     func forwardFromHead() {
@@ -59,5 +74,33 @@ struct SwitcherSelectionTests {
     func outOfRangeCurrentIndex() {
         #expect(SwitcherSelection.initialIndex(count: 3, currentIndex: 9, reverse: false) == 0)
         #expect(SwitcherSelection.initialIndex(count: 3, currentIndex: -1, reverse: false) == 0)
+    }
+
+    // MARK: - Preserving selection across a rebuild
+
+    @Test("The selected window keeps its identity when the rebuild reorders the list")
+    func preservesSelectionAcrossReordering() {
+        let windows = [window(30), window(10), window(20)]
+        // Was selected at index 0 before the rebuild, by id 10.
+        #expect(SwitcherSelection.indexPreservingSelection(in: windows, selectedID: 10, fallbackIndex: 0) == 1)
+    }
+
+    @Test("A selected window dropped by the rebuild falls back to the clamped previous index")
+    func fallsBackWhenSelectedWindowIsGone() {
+        let windows = [window(30), window(20)]
+        // Window 10 closed during the rebuild; the old index (2) no longer fits.
+        #expect(SwitcherSelection.indexPreservingSelection(in: windows, selectedID: 10, fallbackIndex: 2) == 1)
+    }
+
+    @Test("An empty rebuilt list selects nothing")
+    func emptyRebuiltList() {
+        #expect(SwitcherSelection.indexPreservingSelection(in: [], selectedID: 10, fallbackIndex: 2) == 0)
+    }
+
+    @Test("No previously selected id falls back to the clamped index")
+    func noSelectedIDFallsBack() {
+        let windows = [window(30), window(20), window(10)]
+        #expect(SwitcherSelection.indexPreservingSelection(in: windows, selectedID: nil, fallbackIndex: 1) == 1)
+        #expect(SwitcherSelection.indexPreservingSelection(in: windows, selectedID: nil, fallbackIndex: 99) == 2)
     }
 }
