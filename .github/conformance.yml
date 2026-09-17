@@ -5,7 +5,7 @@
 # Do not edit a result here without editing the evidence there. A record that
 # disagrees with its evidence is worse than no record.
 
-standard_version: "1.12.0"
+standard_version: "1.11.1"
 assessed_on: "2026-09-17"
 state: "Needs work"
 evidence: "docs/self-assessment.md"
@@ -90,18 +90,15 @@ criteria:
   T04: na
   T05: na
 
-  # --- Published Site (there is no site) ----------------------------------
+  # --- Published Sites (there is no site) ----------------------------------
   W01: na
   W02: na
   W03: na
   W04: na
-  # W05, W06: retired 2026-09-17 (standard 1.12.0); recorded na like the rest
-  # of this profile, which does not apply.
   W05: na
   W06: na
   W07: na
   W08: na
-  W09: na
 
   # --- Agent Readiness ---------------------------------------------------
   G01: pass

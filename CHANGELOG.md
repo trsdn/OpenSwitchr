@@ -50,12 +50,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The repository quality section of `AGENTS.md` was reassessed. It had described
   a default branch holding two files, which stopped being true when the work was
   merged, and it assessed against version 1.3.3 of a standard now at 1.5.1.
-- Reassessed against version 1.12.0 of the standard (previously 1.5.1). No
-  criterion regressed; the eleven added since 1.5.1 were assessed for the
-  first time and surfaced one real gap, `S12`: `actions/checkout@v4` and the
-  reusable conformance workflow pinned to `@main` can both change underneath
-  the repository. `docs/self-assessment.md` and the badge are updated to
-  match.
+- Reassessed against version 1.11.1 of the standard (previously 1.5.1), the
+  latest version actually tagged in `trsdn/.github` — the reusable conformance
+  workflow resolves the standard at its published tag, and the untagged
+  1.12.0 bump on its `main` is not yet consumable. No criterion regressed; the
+  ten added since 1.5.1 were assessed for the first time and surfaced one real
+  gap, `S12`: `actions/checkout@v4` and the reusable conformance workflow
+  pinned to `@main` can both change underneath the repository.
+  `docs/self-assessment.md` and the badge are updated to match.
 
 ### Fixed
 

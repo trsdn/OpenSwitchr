@@ -1,6 +1,6 @@
 # Self-assessment
 
-Evidence for `.github/conformance.yml`. Assessed against version **1.12.0** of
+Evidence for `.github/conformance.yml`. Assessed against version **1.11.1** of
 the [trsdn Repository Quality Standard](https://github.com/trsdn/.github/blob/main/docs/repository-quality-standard.md)
 on **2026-09-17**. Overall state: **Needs work** — five criteria fail, all for
 reasons named below, none of them a critical gap in the standard's sense
@@ -25,7 +25,7 @@ That failure is the reason `B13` exists and the reason this document is now
 separate from `AGENTS.md`: a fact with two homes has no home. It is also why
 the record is validated by a scheduled workflow rather than by memory.
 
-### 1.5.1 → 1.12.0
+### 1.5.1 → 1.11.1
 
 This reassessment is a version catch-up, not a response to a change in the
 repository: `main` carries no commits between the 1.5.1 assessment
@@ -34,12 +34,17 @@ pull request. Every `pass`, `partial`, and `fail` carried over from the
 previous record was re-verified against the GitHub API and the tree rather
 than assumed, and none of them moved.
 
-The standard itself grew by eleven criteria in that window: `B14`-`B16`,
+`trsdn/.github`'s `main` branch has moved to an unreleased 1.12.0 — it adds
+one further criterion, `W09` — but the reusable conformance workflow resolves
+the standard at its published tag, and `v1.12.0` does not exist yet (the
+latest tag is `v1.11.1`). This assessment is therefore against `v1.11.1`, the
+version the workflow can actually check out; `W09` will be assessed once a
+`v1.12.0` tag exists.
+
+The standard grew by ten criteria between 1.5.1 and 1.11.1: `B14`-`B16`,
 `P10`, `P11`, `R07`, `R08`, and `S11`-`S13`. Assessing those against this
 repository for the first time surfaced one real, previously unrecorded gap —
-`S12` — described below. `W05` and `W06` were retired in the same window and
-are recorded `na` with the rest of the Published Site profile, which does not
-apply here.
+`S12` — described below.
 
 ## Profiles
 
@@ -56,7 +61,7 @@ apply here.
 | Data Protection And Privacy | Yes | Reads window metadata and captures screen content |
 | Deployable | No | Nothing is deployed to any environment |
 | Documentation | No | The product is software; docs support it |
-| Published Site | No | There is no site. The homepage points at the releases page |
+| Published Sites | No | There is no site. The homepage points at the releases page |
 | Archived | No | Actively developed |
 
 ## Failures
@@ -284,9 +289,9 @@ Both limitations are stated in the README under `X05`.
   infrastructure, and no operational surface. The app runs on a user's machine.
 - **`T01`–`T05`** — the product is an application, not documentation. The
   documentation here supports the software rather than being the deliverable.
-- **`W01`–`W09`** — there is no published site. The repository homepage points
+- **`W01`–`W08`** — there is no published site. The repository homepage points
   at its own releases page, which is not a site in the sense the profile
-  means. `W05` and `W06` are additionally retired as of standard 1.12.0.
+  means.
 - **`S06`** — there is no runtime configuration. No environment variable, no
   configuration file, no remote configuration; only user preferences in
   `UserDefaults`, which are the user's own data rather than deployment config.
