@@ -126,6 +126,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The initial selection is derived from where the current window ended up in the
   list rather than from a fixed offset of 1, which only ever held while the list
   was in most-recently-used order and still contained that window.
+- `⌘-Tab` is now the default hold modifier, so OpenSwitchr replaces the macOS
+  app switcher out of the box. `⌥-Tab` and `⌃-Tab` remain selectable, and an
+  existing stored preference is left untouched.
+- `⌘-Tab` is available again as a hold modifier, and it does replace the macOS
+  app switcher. It had been removed on the assumption that the system switcher
+  is dispatched before any session event tap; that assumption was never
+  measured and is wrong. A session tap sees `⌘-Tab` and suppresses it: passing
+  the same event through makes the Dock's switcher window appear, swallowing it
+  does not.
 
 ### Performance
 
@@ -154,18 +163,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   Recreating it on every render made the overlay cost ~50 ms to appear and
   repeated the same work on every selection change; it now appears in
   ~21–24 ms.
-
-### Changed
-
-- `⌘-Tab` is now the default hold modifier, so OpenSwitchr replaces the macOS
-  app switcher out of the box. `⌥-Tab` and `⌃-Tab` remain selectable, and an
-  existing stored preference is left untouched.
-- `⌘-Tab` is available again as a hold modifier, and it does replace the macOS
-  app switcher. It had been removed on the assumption that the system switcher
-  is dispatched before any session event tap; that assumption was never
-  measured and is wrong. A session tap sees `⌘-Tab` and suppresses it: passing
-  the same event through makes the Dock's switcher window appear, swallowing it
-  does not.
 
 ### Fixed
 
