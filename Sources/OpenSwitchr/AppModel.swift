@@ -264,9 +264,12 @@ public final class AppModel {
     }
 
     /// Called on the paths that put a frontend on screen. The rebuild is not
-    /// awaited: the overlay renders from the previous index within ~25 ms and
-    /// the refreshed one arrives ~10 ms later through observation, which is
-    /// invisible and keeps the open path off the critical path.
+    /// awaited: the overlay renders from the previous index within ~25 ms, and
+    /// the refreshed one arrives ~10 ms later through `rebuildFinished()`,
+    /// which calls back into whichever frontend is visible — this was once a
+    /// claim rather than a mechanism; see `SwitcherController.indexDidRebuild()`
+    /// and `DockPreviewController.indexDidRebuild()`. Invisible to the user,
+    /// and keeps the open path off the critical path.
     private func refreshIfStale() {
         guard indexIsStale else { return }
         indexIsStale = false
@@ -292,7 +295,10 @@ public final class AppModel {
     /// says nothing about the state on arrival. A keystroke in one frontend
     /// must not materialise a panel in the other.
     private func rebuildFinished() {
-        guard !switcher.isVisible else { return }
-        dockPreview.indexDidRebuild()
+        if switcher.isVisible {
+            switcher.indexDidRebuild()
+        } else {
+            dockPreview.indexDidRebuild()
+        }
     }
 }

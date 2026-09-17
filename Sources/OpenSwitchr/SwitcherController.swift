@@ -268,6 +268,28 @@ public final class SwitcherController {
         }
     }
 
+    /// Called when a rebuild lands while the overlay is already open.
+    ///
+    /// `sessionContext` — the frozen filter, display, and frontmost
+    /// application for this session — is deliberately not re-derived; only
+    /// the window list itself refreshes. The selected window's identity is
+    /// preserved across the reorder a rebuild can produce, falling back to
+    /// the previous index only if that window is no longer present.
+    public func indexDidRebuild() {
+        guard isVisible else { return }
+
+        let selectedID = visibleWindows.indices.contains(selectedIndex) ? visibleWindows[selectedIndex].id : nil
+        visibleWindows = WindowMatcher.filter(baseWindows(), query: query)
+        selectedIndex = SwitcherSelection.indexPreservingSelection(
+            in: visibleWindows,
+            selectedID: selectedID,
+            fallbackIndex: selectedIndex
+        )
+
+        prefetchThumbnails()
+        render()
+    }
+
     private func refreshList(resetSelection: Bool) {
         visibleWindows = WindowMatcher.filter(baseWindows(), query: query)
         if resetSelection {

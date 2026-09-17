@@ -35,4 +35,33 @@ public enum SwitcherSelection {
         let step = reverse ? -1 : 1
         return ((currentIndex + step) % count + count) % count
     }
+
+    /// Where the selection lands after the list is rebuilt while the overlay
+    /// stays open — a rebuild landing mid-session, not the switcher opening.
+    ///
+    /// Unlike ``initialIndex(count:currentIndex:reverse:)``, this does not step
+    /// away from anything: the user already chose a window, and a rebuild
+    /// reordering the list underneath them must not move the selection off it.
+    /// Identity therefore comes from the window's id, not its old position,
+    /// which the rebuild is free to change.
+    ///
+    /// - Parameters:
+    ///   - windows: the list after the rebuild.
+    ///   - selectedID: the id of the window that was selected before the
+    ///     rebuild, or `nil` if nothing was selected.
+    ///   - fallbackIndex: where to land if that window is no longer present —
+    ///     typically the previous index, clamped to the new list.
+    public static func indexPreservingSelection(
+        in windows: [WindowInfo],
+        selectedID: CGWindowID?,
+        fallbackIndex: Int
+    ) -> Int {
+        guard !windows.isEmpty else { return 0 }
+
+        if let selectedID, let found = windows.firstIndex(where: { $0.id == selectedID }) {
+            return found
+        }
+
+        return min(max(fallbackIndex, 0), windows.count - 1)
+    }
 }
