@@ -102,9 +102,14 @@ public struct WindowFilter: Equatable, Sendable {
         /// knows which screen it means.
         public var screenFrame: CGRect?
 
-        public init(frontmostPID: pid_t? = nil, screenFrame: CGRect? = nil) {
+        /// The per-application rules governing which windows are hidden
+        /// outright, independent of anything a surface's own filter asks for.
+        public var appRules: AppRuleTable
+
+        public init(frontmostPID: pid_t? = nil, screenFrame: CGRect? = nil, appRules: AppRuleTable = AppRuleTable()) {
             self.frontmostPID = frontmostPID
             self.screenFrame = screenFrame
+            self.appRules = appRules
         }
 
         /// Which pid the application scope should treat as the current
@@ -197,7 +202,8 @@ public struct WindowFilter: Equatable, Sendable {
 
     private func kept(_ windows: [WindowInfo], context: Context) -> [WindowInfo] {
         windows.filter { window in
-            includesApplication(of: window, context: context)
+            !context.appRules.hides(window)
+                && includesApplication(of: window, context: context)
                 && (minimized != .hide || !window.isMinimized)
                 && includesScreen(of: window, context: context)
         }

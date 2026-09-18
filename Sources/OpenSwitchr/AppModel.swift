@@ -87,6 +87,10 @@ public final class AppModel {
         // immediately; the switcher simply has an empty list for a moment.
         rebuildTask = Task { [weak self] in
             await self?.index.rebuildConcurrently()
+            // Covers launching straight into an already-full-screen
+            // application: nothing else calls this before the first hotkey
+            // press could.
+            self?.updateStandAside()
         }
         startEventBus()
         startHotkeys()
@@ -228,6 +232,12 @@ public final class AppModel {
             // Cheap place to notice a tap the system switched off behind our
             // back, and it needs no timer of its own.
             hotkeys.ensureEnabled()
+            // Resolved immediately, from whatever the index already knows,
+            // rather than waiting for the rebuild scheduleRebuild() is about
+            // to start: activating a fullscreen application's hotkey has to
+            // be suppressed from the first press, not from the second one
+            // that happens to land after the rebuild completes.
+            updateStandAside()
             scheduleRebuild()
         case .focusedWindowChanged(let focused):
             index.noteFocus(pid: focused.pid, element: focused.element)
@@ -295,10 +305,33 @@ public final class AppModel {
     /// says nothing about the state on arrival. A keystroke in one frontend
     /// must not materialise a panel in the other.
     private func rebuildFinished() {
+        // Corrects `standAsideActive` for the case `appActivated` could not
+        // see: an application that was already frontmost when it *entered*
+        // full screen, which changes no pid and fires no activation event,
+        // only the windowsChanged/spaceChanged that scheduled this rebuild.
+        updateStandAside()
+
         if switcher.isVisible {
             switcher.indexDidRebuild()
         } else {
             dockPreview.indexDidRebuild()
         }
+    }
+
+    /// Recomputes whether the switcher hotkey should stand aside entirely,
+    /// from whatever `NSWorkspace` and the index already know — never a
+    /// fresh accessibility read of their own — and pushes the single result
+    /// to `hotkeys`, which is all the event tap ever sees. See
+    /// `AppRuleTable.shouldStandAside`.
+    private func updateStandAside() {
+        guard let frontmost = NSWorkspace.shared.frontmostApplication else {
+            hotkeys.standAsideActive = false
+            return
+        }
+        let isFullScreen = index.windows.contains { $0.pid == frontmost.processIdentifier && $0.isFullScreen }
+        hotkeys.standAsideActive = AppRuleTable.defaults.shouldStandAside(
+            frontmostBundleID: frontmost.bundleIdentifier,
+            isFullScreen: isFullScreen
+        )
     }
 }

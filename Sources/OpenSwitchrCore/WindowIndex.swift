@@ -179,6 +179,14 @@ public final class WindowIndex {
         var result: [WindowInfo] = []
         result.reserveCapacity(entries.count)
 
+        // Computed once per rebuild rather than once per window: full screen
+        // is the signal the event tap needs without an accessibility round
+        // trip, so it is decided here and carried on the snapshot.
+        let primaryHeight = NSScreen.screens.first?.frame.height ?? 0
+        let screenFrames = NSScreen.screens.map {
+            WindowFilter.coreGraphicsFrame(appKitFrame: $0.frame, primaryHeight: primaryHeight)
+        }
+
         for (pid, pidEntries) in grouped {
             guard let app = appsByPID[pid] else { continue }
             let appName = app.localizedName ?? pidEntries.first?.ownerName ?? "Unknown"
@@ -202,7 +210,8 @@ public final class WindowIndex {
                         frame: entry.frame,
                         isMinimized: link?.isMinimized ?? false,
                         isOnScreen: entry.isOnScreen,
-                        element: link?.element
+                        element: link?.element,
+                        isFullScreen: CGWindowSnapshot.isFullScreen(entry.frame, matchingAnyOf: screenFrames)
                     )
                 )
             }

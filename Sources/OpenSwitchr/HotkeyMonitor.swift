@@ -66,6 +66,18 @@ public final class HotkeyMonitor {
         didSet { core.isOverlayVisible = isOverlayVisible }
     }
 
+    /// Set by `AppModel` from `AppRuleTable.shouldStandAside`, recomputed
+    /// whenever the frontmost application or its full-screen state changes.
+    ///
+    /// While true, the tap swallows nothing at all: a remote desktop, screen
+    /// share, or virtual machine running full screen gets the hotkey, not an
+    /// overlay raised over it. Resolved outside the tap — no `NSWorkspace`, no
+    /// accessibility, no preferences on this thread — the same way
+    /// `HotkeySessionGate` keeps the callback free of main-actor state.
+    public var standAsideActive = false {
+        didSet { core.standAsideActive = standAsideActive }
+    }
+
     /// Always overwritten from `PreferencesStore` before the tap starts; the
     /// initial value only matters if that ever stops being true.
     public var holdModifier: HoldModifier = .command {
@@ -173,6 +185,7 @@ private final class TapCore: @unchecked Sendable {
 
     private let lock = NSLock()
     private var _isOverlayVisible = false
+    private var _standAsideActive = false
     private var _holdModifier: HotkeyMonitor.HoldModifier = .command
     /// Tracks whether the last Tab key-down was swallowed, so the matching
     /// key-up can be swallowed too and nothing else.
@@ -192,6 +205,11 @@ private final class TapCore: @unchecked Sendable {
                 _sessionGate.visibilityReported()
             }
         }
+    }
+
+    var standAsideActive: Bool {
+        get { lock.withLock { _standAsideActive } }
+        set { lock.withLock { _standAsideActive = newValue } }
     }
 
     var holdModifier: HotkeyMonitor.HoldModifier {
@@ -242,14 +260,21 @@ private final class TapCore: @unchecked Sendable {
             return false
         }
 
-        let (overlayVisible, modifier, swallowedTab, shouldCommitOnRelease) = lock.withLock {
+        let (overlayVisible, modifier, swallowedTab, shouldCommitOnRelease, standAsideActive) = lock.withLock {
             (
                 _isOverlayVisible,
                 _holdModifier,
                 _swallowedTabKeyDown,
-                _sessionGate.shouldCommitOnRelease(overlayVisible: _isOverlayVisible)
+                _sessionGate.shouldCommitOnRelease(overlayVisible: _isOverlayVisible),
+                _standAsideActive
             )
         }
+
+        // A remote desktop, screen share, or virtual machine running full
+        // screen gets every keystroke, including the hotkey: no overlay, no
+        // swallowed Tab. `standAsideActive` is resolved outside this thread —
+        // see `AppRuleTable.shouldStandAside` — so this is a single Bool read.
+        guard !standAsideActive else { return false }
 
         switch type {
         case .flagsChanged:

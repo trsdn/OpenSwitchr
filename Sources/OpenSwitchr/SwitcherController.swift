@@ -91,7 +91,8 @@ public final class SwitcherController {
         surfaceScreen = OverlayPanel.screenWithMouse() ?? NSScreen.main
         sessionContext = WindowFilter.Context(
             frontmostPID: Self.frontmostPID(),
-            screen: surfaceScreen
+            screen: surfaceScreen,
+            appRules: .defaults
         )
 
         // Identified before filtering, because the filter is entitled to remove

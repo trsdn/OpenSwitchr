@@ -83,6 +83,24 @@ public enum CGWindowSnapshot {
         return entries.sorted { $0.zOrder < $1.zOrder }
     }
 
+    /// Whether `frame` covers one of `screenFrames` closely enough to be a
+    /// full-screen window rather than merely a large one.
+    ///
+    /// True native full screen hides the menu bar, so the window's frame
+    /// covers the *entire* screen frame, not the visible frame beneath a menu
+    /// bar and Dock. A small tolerance absorbs sub-pixel rounding on a scaled
+    /// display without accepting a window that is a few points short —
+    /// almost maximized is not the signal this exists to catch.
+    public static func isFullScreen(_ frame: CGRect, matchingAnyOf screenFrames: [CGRect]) -> Bool {
+        let tolerance: CGFloat = 1
+        return screenFrames.contains { screenFrame in
+            abs(frame.minX - screenFrame.minX) <= tolerance
+                && abs(frame.minY - screenFrame.minY) <= tolerance
+                && abs(frame.width - screenFrame.width) <= tolerance
+                && abs(frame.height - screenFrame.height) <= tolerance
+        }
+    }
+
     /// Front-to-back position of every on-screen window, which is the only
     /// ordering CoreGraphics actually promises.
     private static func onScreenRanks() -> [CGWindowID: Int] {
