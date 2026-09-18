@@ -271,7 +271,7 @@ public final class DockPreviewController {
         // This surface has a profile too, even though it is the permissive one.
         // Going through it keeps the claim that both frontends are filtered the
         // same way true in code rather than only in the README.
-        return WindowFilter.dockPreview.apply(to: matches)
+        return WindowFilter.dockPreview.apply(to: matches, context: .init(appRules: .defaults))
     }
 
     // MARK: - Mouse tracking

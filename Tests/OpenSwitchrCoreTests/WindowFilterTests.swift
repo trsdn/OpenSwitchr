@@ -309,4 +309,22 @@ struct WindowFilterTests {
         let windows = [window(id: 1, minimized: true)]
         #expect(WindowFilter(minimized: .hide).apply(to: windows).isEmpty)
     }
+
+    // MARK: - Per-application rules
+
+    @Test("A window hidden by an app rule is removed regardless of every other axis")
+    func appRuleHidesAWindow() {
+        let windows = [window(id: 1, app: "Helper"), window(id: 2, app: "Safari")]
+        let rules = AppRuleTable(rules: [AppRule(bundleIDPrefix: "com.example.helper", hide: .always)])
+
+        let result = WindowFilter().apply(to: windows, context: .init(appRules: rules))
+
+        #expect(result.map(\.id) == [2])
+    }
+
+    @Test("No app rule table hides nothing, matching the identity filter's behaviour")
+    func noAppRulesHidesNothing() {
+        let windows = [window(id: 1, app: "Helper")]
+        #expect(WindowFilter().apply(to: windows).map(\.id) == [1])
+    }
 }

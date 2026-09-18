@@ -25,10 +25,11 @@ public extension WindowFilter {
 public extension WindowFilter.Context {
 
     /// Builds a context for a surface that is about to appear on `screen`.
-    init(frontmostPID: pid_t?, screen: NSScreen?) {
+    init(frontmostPID: pid_t?, screen: NSScreen?, appRules: AppRuleTable = AppRuleTable()) {
         self.init(
             frontmostPID: frontmostPID,
-            screenFrame: screen.map(WindowFilter.coreGraphicsFrame(of:))
+            screenFrame: screen.map(WindowFilter.coreGraphicsFrame(of:)),
+            appRules: appRules
         )
     }
 }
