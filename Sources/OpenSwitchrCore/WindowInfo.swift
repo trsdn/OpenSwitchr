@@ -21,6 +21,13 @@ public struct WindowInfo: Identifiable, Equatable {
     public var isOnScreen: Bool
     public var element: AXUIElement?
 
+    /// Whether this window's frame covers its screen's entire frame — the
+    /// signal for true native full screen, where the menu bar hides.
+    ///
+    /// Filled in by ``WindowIndex`` from `CGWindowSnapshot.isFullScreen`
+    /// while the index is being built, so the event tap never has to ask.
+    public var isFullScreen: Bool
+
     /// Discovery order, higher meaning seen more recently.
     ///
     /// Filled in by ``WindowIndex`` from its own bookkeeping so that a pure
@@ -41,7 +48,8 @@ public struct WindowInfo: Identifiable, Equatable {
         isMinimized: Bool,
         isOnScreen: Bool,
         element: AXUIElement?,
-        openedRank: Int = 0
+        openedRank: Int = 0,
+        isFullScreen: Bool = false
     ) {
         self.id = id
         self.pid = pid
@@ -53,6 +61,7 @@ public struct WindowInfo: Identifiable, Equatable {
         self.isOnScreen = isOnScreen
         self.element = element
         self.openedRank = openedRank
+        self.isFullScreen = isFullScreen
     }
 
     /// What the switcher shows as the primary label.

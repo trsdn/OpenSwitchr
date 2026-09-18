@@ -151,6 +151,32 @@ enum Diag {
                       + "\(Int(frame.width))×\(Int(frame.height)) at \(Int(frame.minX)),\(Int(frame.minY))")
             }
         }
+
+        // Full screen detection has the same class of bug the display scope
+        // check above exists to catch: comparing a CoreGraphics frame against
+        // an AppKit one, where a wrong flip still looks right on one display.
+        // Only real displays can judge it, so put whatever is actually full
+        // screen right now in front of a human rather than assert a number.
+        print("")
+        print("Full screen detection, against the attached displays")
+        let fullScreen = windows.filter(\.isFullScreen)
+        if fullScreen.isEmpty {
+            print("  No window is currently detected as full screen.")
+        } else {
+            for window in fullScreen {
+                print("  " + pad(short(window.appName, 20), 22) + short(window.title, 40))
+            }
+        }
+
+        if let frontmostBundleID = windows.first?.bundleID {
+            let isFrontmostFullScreen = windows.contains { $0.pid == windows.first?.pid && $0.isFullScreen }
+            let standAside = AppRuleTable.defaults.shouldStandAside(
+                frontmostBundleID: frontmostBundleID,
+                isFullScreen: isFrontmostFullScreen
+            )
+            print("")
+            print("Stand-aside for the current application (\(frontmostBundleID)): \(standAside)")
+        }
     }
 
     /// Checks every accessibility link against CoreGraphics without touching a
