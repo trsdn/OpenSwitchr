@@ -88,16 +88,16 @@ done
 
 # The minimum macOS version is stated in three places that no compiler compares:
 # the package manifest, the bundle the build script writes, and the README badge
-# a reader believes. A hardcoded badge beside a manifest that has moved on is
+# a reader believes (generated from the manifest by scripts/badges.py). A hardcoded badge beside a manifest that has moved on is
 # precisely the drift the badge convention exists to prevent.
 step "Minimum macOS version agrees everywhere"
 manifest_major="$(sed -n 's/.*\.macOS(\.v\([0-9][0-9]*\)).*/\1/p' Package.swift | head -1)"
 bundle_major="$(sed -n "s/.*LSMinimumSystemVersion'\] = '\([0-9][0-9]*\)\..*/\1/p" scripts/build-app.sh | head -1)"
-badge_major="$(sed -n 's/.*img\.shields\.io\/badge\/macOS-\([0-9][0-9]*\)%2B.*/\1/p' README.md | head -1)"
+badge_major="$(python3 scripts/badges.py --print platform | sed -n 's/^macOS \([0-9][0-9]*\)+$/\1/p')"
 
 echo "Package.swift platforms:               ${manifest_major:-<missing>}"
 echo "build-app.sh LSMinimumSystemVersion:   ${bundle_major:-<missing>}"
-echo "README badge:                          ${badge_major:-<missing>}"
+echo "README badge (scripts/badges.py):        ${badge_major:-<missing>}"
 
 if [[ -z "$manifest_major" || -z "$bundle_major" || -z "$badge_major" ]]; then
     fail "could not read the minimum macOS version from all three places"
@@ -105,6 +105,13 @@ elif [[ "$manifest_major" != "$bundle_major" || "$manifest_major" != "$badge_maj
     fail "minimum macOS version disagrees: manifest $manifest_major, bundle $bundle_major, badge $badge_major"
 else
     echo "ok"
+fi
+
+step "Badge generator"
+if (cd scripts && python3 -m unittest test_badges -q); then
+    echo "ok"
+else
+    fail "scripts/test_badges.py failed"
 fi
 
 # Documentation in this repository carries design rationale, so it is linted

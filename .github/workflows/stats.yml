@@ -4,6 +4,8 @@ on:
   workflow_dispatch:
   schedule:
     - cron: "23 5 * * *"
+  release:
+    types: [published]
 
 permissions:
   contents: read
@@ -21,3 +23,39 @@ jobs:
       theme: both
       cards: repo-card
       generator-ref: d99c090e092e4b4ef7f12fd58d191b3a33372860
+
+  badges:
+    # Same limits as `stats`: write access only to the generated `repo-stats`
+    # branch, no secret, no environment. Runs after `stats` so the two never push
+    # to that branch at the same time.
+    needs: stats
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Check out main, with every tag
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.0
+        with:
+          ref: main
+          fetch-depth: 0
+          fetch-tags: true
+          path: source
+      - name: Check out the generated branch
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.0
+        with:
+          ref: repo-stats
+          path: target
+      - name: Render badges from their sources
+        run: python3 source/scripts/badges.py --out target/.github/badges-generated
+      - name: Commit changed badges
+        run: |
+          cd target
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A -- .github/badges-generated
+          if git diff --cached --quiet -- .github/badges-generated; then
+            echo "No badge changes."
+            exit 0
+          fi
+          git commit -m "chore(badges): update generated badges"
+          git push origin HEAD:repo-stats

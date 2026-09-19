@@ -78,8 +78,9 @@ because the operation is on this list.
   writes only to the generated `repo-stats` branch (never `main`, which the
   ruleset protects and the token cannot push to), it uses no secret and no
   environment, and it calls the shared `repo-stats` workflow pinned to a full
-  commit SHA. Any other workflow, or any widening of this one, is still on this
-  list.
+  commit SHA. Its second job, `badges`, renders the license, platform and release
+  badges with `scripts/badges.py` and is held to the same three limits. Any other
+  workflow, or any widening of this one, is still on this list.
 - **Commit anything into `.release.env`.** It is git-ignored and holds a local
   signing identity. `.release.env.example` is the only version that is tracked.
 - **Rewrite published history.** No `git rebase`, `commit --amend`, or
