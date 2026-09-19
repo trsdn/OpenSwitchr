@@ -121,6 +121,8 @@ public final class AppModel {
     /// Applies preference changes that affect running subsystems.
     public func applyPreferences() {
         hotkeys.holdModifier = preferences.holdModifier
+        // Editing a rule can change whether the hotkey stands aside right now.
+        updateStandAside()
 
         let budget = Self.budgetBytes(preferences.thumbnailBudgetMB)
         let maxAge = preferences.thumbnailRefreshRate.maxAge
@@ -333,7 +335,7 @@ public final class AppModel {
             return
         }
         let isFullScreen = index.windows.contains { $0.pid == frontmost.processIdentifier && $0.isFullScreen }
-        hotkeys.standAsideActive = AppRuleTable.defaults.shouldStandAside(
+        hotkeys.standAsideActive = preferences.appRules.shouldStandAside(
             frontmostBundleID: frontmost.bundleIdentifier,
             isFullScreen: isFullScreen
         )

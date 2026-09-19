@@ -13,10 +13,12 @@ struct SettingsView: View {
                 .tabItem { Label("Appearance", systemImage: "paintbrush") }
             permissions
                 .tabItem { Label("Permissions", systemImage: "lock.shield") }
+            AppRulesView(model: model)
+                .tabItem { Label("Apps", systemImage: "app.badge.checkmark") }
             AboutView()
                 .tabItem { Label("About", systemImage: "info.circle") }
         }
-        .frame(width: 460, height: 340)
+        .frame(width: 500, height: 420)
     }
 
     // MARK: - General

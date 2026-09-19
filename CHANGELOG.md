@@ -118,6 +118,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- The per-application rules are editable: a new **Apps** tab lists them, adds one
+  by bundle identifier prefix or from a running application, and restores the
+  shipped defaults. Each hiding rule shows how many windows it removes right now
+  (`AppRuleTable.hiddenCount`), so a rule that empties the switcher is noticed
+  where it was set. Stored as JSON under `appRules`; nothing stored, or data that
+  no longer parses, yields the defaults rather than an empty table, which would
+  silently switch off the stand-aside protection. Editing a rule recomputes
+  whether the hotkey stands aside immediately.
 - A project page at `docs/index.html`, served by GitHub Pages: what it is, who it
   is for, status and version, how to get it, the privacy statement, and the
   repository, license, security and support links. One page, no scripts, no
