@@ -5,9 +5,9 @@
 # Do not edit a result here without editing the evidence there. A record that
 # disagrees with its evidence is worse than no record.
 
-standard_version: "1.11.1"
+standard_version: "1.13.0"
 assessed_on: "2026-09-19"
-state: "Needs work"
+state: "Healthy"
 evidence: "docs/self-assessment.md"
 
 criteria:
@@ -66,14 +66,14 @@ criteria:
   D06: na
 
   # --- Package And Release Repositories ---------------------------------
-  R01: partial
+  R01: pass
   R02: pass
-  R03: partial
+  R03: pass
   R04: pass
-  R05: fail
+  R05: pass
   R06: pass
-  R07: fail
-  R08: fail
+  R07: pass
+  R08: pass
 
   # --- Product Identity --------------------------------------------------
   I01: pass
@@ -95,10 +95,11 @@ criteria:
   W02: pass
   W03: pass
   W04: pass
-  W05: pass
-  W06: pass
+  W05: na
+  W06: na
   W07: pass
   W08: pass
+  W09: partial
 
   # --- Agent Readiness ---------------------------------------------------
   G01: pass
