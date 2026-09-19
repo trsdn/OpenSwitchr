@@ -97,10 +97,14 @@ because the operation is on this list.
   `.github/conformance.yml`, so changing one silently makes the record wrong.
 - **Publishing a release**, or triggering the broker.
 - **Deleting a branch or a worktree that is not yours.**
-- **Adding a third-party dependency.** The Swift package deliberately has none,
-  which is why a clean checkout builds with no network access.
-- **Adding anything that opens a network connection.** The app makes none, and
-  the README states that as a guarantee to the user.
+- **Adding a third-party dependency.** There is exactly one, AppUpdater (pinned
+  `exact:`, `Package.resolved` committed, with its own transitive `Version`),
+  approved for in-app updates (#30). Every further one needs the same explicit
+  say-so, a license check, an entry in `THIRD_PARTY_NOTICES.txt`, and a pin.
+- **Adding anything that opens a network connection.** The only one is the daily
+  update check to GitHub in `UpdateManager`, which the README and Settings state
+  and which "Check for Updates Automatically" switches off. A second one is a
+  change to a guarantee the README makes to the user.
 - **Loosening a permission or a usage-description string in `Info.plist`.**
 
 ## Generated and machine-owned paths

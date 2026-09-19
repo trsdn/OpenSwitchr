@@ -28,6 +28,8 @@ struct MenuBarView: View {
             }
             .keyboardShortcut(",", modifiers: .command)
 
+            updateItems
+
             Button("Quit OpenSwitchr") {
                 model.stop()
                 NSApp.terminate(nil)
@@ -53,6 +55,41 @@ struct MenuBarView: View {
             Button("Refresh window list") {
                 Task { await model.index.rebuildConcurrently() }
             }
+        }
+    }
+
+    /// The updater's menu items. Only what is worth a click shows: a ready update
+    /// offers to install, everything else offers to check.
+    @ViewBuilder
+    private var updateItems: some View {
+        switch model.updates.state {
+        case .readyToInstall(let version):
+            Button("Install Update \(version) and Restart") {
+                Task { await model.updates.installAndRelaunch() }
+            }
+            Button("Dismiss Update") {
+                Task { await model.updates.dismiss() }
+            }
+        case .checking:
+            Text("Checking for Updates…")
+        case .downloading(let version):
+            Text("Downloading Update \(version)…")
+        case .installing:
+            Text("Installing Update…")
+        case .upToDate:
+            Text("OpenSwitchr is up to date")
+            checkButton
+        case .failed(let message), .installFailed(let message):
+            Text("Update failed: \(message)")
+            checkButton
+        case .idle:
+            checkButton
+        }
+    }
+
+    private var checkButton: some View {
+        Button("Check for Updates…") {
+            Task { await model.updates.check(userInitiated: true) }
         }
     }
 

@@ -309,15 +309,23 @@ with no clue why.
 
 ## Privacy
 
-OpenSwitchr collects nothing and transmits nothing. Stated explicitly, because
-"no privacy policy" and "no data collection" look identical from the outside:
+OpenSwitchr collects nothing and sends no data about you or your windows. Stated
+explicitly, because "no privacy policy" and "no data collection" look identical
+from the outside:
 
-- **No outbound connections.** The app opens no network connection of any kind.
-  There is no update check, no license check, and no remote configuration.
+- **One outbound connection, and it is the update check.** Once a day the app
+  asks the GitHub Releases API whether a newer version exists, and downloads it if
+  so. The request carries no identifier, no window information and no account. It
+  goes to GitHub only, and nothing else in the app opens a network connection.
+  **Turn "Check for Updates Automatically" off in Settings and nothing is
+  contacted** unless you choose Check for Updates… yourself. There is no license
+  check and no remote configuration. GitHub, like any server, sees the request's
+  IP address.
 - **No telemetry, analytics, or crash reporting.** None is present, so there is
   nothing to opt out of.
-- **No third-party services.** No service, and no AI provider, receives anything
-  from this app. It has no account and no identifier.
+- **No third-party services.** Apart from GitHub for updates, no service, and no
+  AI provider, receives anything from this app. It has no account and no
+  identifier.
 - **Window titles never leave the process.** They are read to render and filter
   tiles. The unified log deliberately records only counts, pids, and error
   descriptions, so a log someone pastes into an issue cannot expose what they

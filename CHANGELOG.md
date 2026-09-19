@@ -118,6 +118,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- In-app updates from GitHub Releases (#30), through
+  [AppUpdater](https://github.com/mxcl/AppUpdater) 4.1.2 pinned `exact:` with
+  `Package.resolved` committed, the same setup as the sibling apps. **This is the
+  app's first third-party dependency and its first network connection**, so the
+  README's Privacy section, the project page and Settings now say so: one daily
+  request to GitHub, no identifier, and **"Check for Updates Automatically" turns
+  it off** entirely. The menu gains Check for Updates…, an update that is ready
+  offers "Install and Restart", and the app stops its event tap, Dock observer and
+  panels before the bundle is replaced. The schedule (`UpdateSchedule`: a daily
+  check that wakes hourly so a slept-through deadline catches up, and survives a
+  clock that moved back) and the state rules (`UpdateState`: a failed background
+  check stays silent, a manual one always answers) are pure and unit tested.
+  `THIRD_PARTY_NOTICES.txt` carries AppUpdater's (Unlicense) and its dependency
+  Version's (Apache-2.0) licenses verbatim and is copied into the bundle. **Not
+  done here, and recorded in `RELEASE_CHECKLIST.md`: the broker still has to emit
+  an `OpenSwitchr-<semver>.dmg` asset, lock the dependency and declare the
+  resource bundle, so no release can update an installed copy yet, and a real
+  update has never been run.**
 - The interface is localized, with German as the first additional language
   (#5). Two String Catalogs, `Localizable.xcstrings` for the app and `UI.xcstrings`
   for the shared views, are compiled by SwiftPM and copied into the app bundle by

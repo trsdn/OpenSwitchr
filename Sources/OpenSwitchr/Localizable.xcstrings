@@ -252,12 +252,52 @@
         }
       }
     },
+    "Check for Updates Automatically": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Automatisch nach Updates suchen"
+          }
+        }
+      }
+    },
+    "Check for Updates…": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nach Updates suchen …"
+          }
+        }
+      }
+    },
+    "Checking for Updates…": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Suche nach Updates …"
+          }
+        }
+      }
+    },
     "Delete the rule for %@": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
             "value": "Regel für %@ löschen"
+          }
+        }
+      }
+    },
+    "Dismiss Update": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Update verwerfen"
           }
         }
       }
@@ -298,6 +338,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Dock-Vorschauen"
+          }
+        }
+      }
+    },
+    "Downloading Update %@…": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lade Update %@ herunter …"
           }
         }
       }
@@ -443,6 +493,26 @@
         }
       }
     },
+    "Install Update %@ and Restart": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Update %@ installieren und neu starten"
+          }
+        }
+      }
+    },
+    "Installing Update…": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Installiere Update …"
+          }
+        }
+      }
+    },
     "Launch at login": {
       "localizations": {
         "de": {
@@ -533,6 +603,16 @@
         }
       }
     },
+    "Once a day OpenSwitchr asks GitHub whether a newer release exists, and downloads it so installing is one click. This is the only network connection the app makes, and it goes to GitHub only. Turn it off and nothing is contacted unless you choose Check for Updates… yourself.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Einmal am Tag fragt OpenSwitchr bei GitHub nach, ob eine neuere Version vorliegt, und lädt sie herunter, damit die Installation ein Klick ist. Das ist die einzige Netzwerkverbindung der App, und sie geht nur zu GitHub. Ist die Option aus, wird nichts kontaktiert, es sei denn, du wählst selbst „Nach Updates suchen …“."
+          }
+        }
+      }
+    },
     "Only once per window": {
       "localizations": {
         "de": {
@@ -569,6 +649,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Systemeinstellungen öffnen …"
+          }
+        }
+      }
+    },
+    "OpenSwitchr is up to date": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "OpenSwitchr ist auf dem neuesten Stand"
           }
         }
       }
@@ -979,6 +1069,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "Erneut versuchen"
+          }
+        }
+      }
+    },
+    "Update failed: %@": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Update fehlgeschlagen: %@"
+          }
+        }
+      }
+    },
+    "Updates": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Updates"
           }
         }
       }

@@ -69,6 +69,9 @@ cp "$PROJECT_DIR/Info.plist" "$APP/Contents/Info.plist"
 # The licence travels with the artifact, not just with the repository: someone
 # handed a .app has no checkout to read it from.
 cp "$PROJECT_DIR/LICENSE" "$APP/Contents/Resources/LICENSE"
+# Compiled-in third-party code (AppUpdater, Version): their license terms travel
+# with the app. See THIRD_PARTY_NOTICES.txt.
+cp "$PROJECT_DIR/THIRD_PARTY_NOTICES.txt" "$APP/Contents/Resources/THIRD_PARTY_NOTICES.txt"
 
 HAS_ICON=false
 # Localized strings. SwiftPM compiles each target's String Catalog into a
