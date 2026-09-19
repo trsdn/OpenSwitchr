@@ -74,6 +74,19 @@ struct SettingsView: View {
                     }
                 }
 
+                Picker("Applications with no windows", selection: Binding(
+                    get: { model.preferences.switcherWindowless },
+                    set: { model.preferences.switcherWindowless = $0 }
+                )) {
+                    ForEach(WindowFilter.WindowlessPolicy.allCases, id: \.self) { policy in
+                        Text(policy.title).tag(policy)
+                    }
+                }
+
+                Text("Lists running applications that have every window closed, so you can switch to them. Choosing one activates the application and asks it to open a window, as clicking its Dock icon does. Not every application makes one, and some make an unexpected one.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+
                 Picker("Minimized windows", selection: Binding(
                     get: { model.preferences.switcherMinimizedPolicy },
                     set: { model.preferences.switcherMinimizedPolicy = $0 }

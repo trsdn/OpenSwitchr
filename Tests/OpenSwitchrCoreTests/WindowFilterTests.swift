@@ -322,6 +322,35 @@ struct WindowFilterTests {
         #expect(result.map(\.id) == [2])
     }
 
+    // MARK: - Applications with no windows
+
+    private func applicationOnly(_ id: CGWindowID) -> WindowInfo {
+        WindowInfo(
+            id: id, pid: 50, bundleID: "com.example.idle", appName: "Idle", title: "",
+            frame: .zero, isMinimized: false, isOnScreen: false, element: nil,
+            isApplicationOnly: true
+        )
+    }
+
+    @Test("Applications with no windows are hidden by default")
+    func windowlessHiddenByDefault() {
+        let windows = [window(id: 1), applicationOnly(0xF000_0001)]
+        #expect(WindowFilter().apply(to: windows).map(\.id) == [1])
+    }
+
+    @Test("Showing them keeps those entries after the real windows")
+    func windowlessShown() {
+        let windows = [window(id: 1), applicationOnly(0xF000_0001)]
+        let result = WindowFilter(windowless: .show).apply(to: windows)
+        #expect(result.map(\.id) == [1, 0xF000_0001])
+    }
+
+    @Test("The Dock preview profile never lists them: a hover is about one application's windows")
+    func dockPreviewIgnoresWindowless() {
+        let windows = [applicationOnly(0xF000_0001)]
+        #expect(WindowFilter.dockPreview.apply(to: windows).isEmpty)
+    }
+
     @Test("No app rule table hides nothing, matching the identity filter's behaviour")
     func noAppRulesHidesNothing() {
         let windows = [window(id: 1, app: "Helper")]

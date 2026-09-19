@@ -28,6 +28,12 @@ public struct WindowInfo: Identifiable, Equatable {
     /// while the index is being built, so the event tap never has to ask.
     public var isFullScreen: Bool
 
+    /// Whether this is not a window but a running application with none open,
+    /// listed so it can be switched to. It has no real `CGWindowID` — the id is
+    /// synthetic, see ``WindowlessApplications`` — so it cannot be captured or
+    /// raised, only activated.
+    public var isApplicationOnly: Bool
+
     /// Discovery order, higher meaning seen more recently.
     ///
     /// Filled in by ``WindowIndex`` from its own bookkeeping so that a pure
@@ -49,7 +55,8 @@ public struct WindowInfo: Identifiable, Equatable {
         isOnScreen: Bool,
         element: AXUIElement?,
         openedRank: Int = 0,
-        isFullScreen: Bool = false
+        isFullScreen: Bool = false,
+        isApplicationOnly: Bool = false
     ) {
         self.id = id
         self.pid = pid
@@ -62,6 +69,7 @@ public struct WindowInfo: Identifiable, Equatable {
         self.element = element
         self.openedRank = openedRank
         self.isFullScreen = isFullScreen
+        self.isApplicationOnly = isApplicationOnly
     }
 
     /// What the switcher shows as the primary label.

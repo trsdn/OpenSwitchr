@@ -432,6 +432,19 @@ icon's frame. Do not leave it enabled, and do not widen the frame check. Which
 window is next is `WindowCycle`, ordered by window id on purpose: the index is in
 recency order, and stepping through that only ping-pongs between two windows.
 
+### Applications with no windows
+
+Listed only when the switcher's `windowless` policy is `show`. They are built by
+`WindowlessApplications.entries` when the overlay opens, from one read of
+`NSWorkspace.runningApplications`, and **never** by the index: the index resolves
+only processes that own a window because walking every process once cost about
+60 % of a rebuild. An entry is a `WindowInfo` with `isApplicationOnly` and a
+synthetic id at or above `WindowlessApplications.idBase`, so nothing may pass its
+id to ScreenCaptureKit, the accessibility API or `index.noteFocus`; `prefetch`
+already filters them out and `commit` activates instead of raising. Choosing one
+launches the running application again, which sends the reopen event a Dock click
+does. That is an assumption about the application, not a guarantee.
+
 ## Three window-server facts that are easy to get wrong
 
 `CGWindowListCopyWindowInfo` documents front-to-back ordering **only** for

@@ -118,6 +118,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- The switcher can list running applications that have no open windows (off by
+  default, "Applications with no windows"). They come after the windows, and
+  choosing one activates the application and asks it to open a window by
+  launching it again, which sends the reopen event a Dock click sends; not every
+  application makes a window on that, and some make an unexpected one, which the
+  setting says. Built when the overlay opens and only if the setting is on, from
+  a list of running applications read once (10-18 ms measured here), so the
+  index and its rebuild path keep resolving only processes that own a window. An
+  entry is a `WindowInfo` marked `isApplicationOnly` with a synthetic id above a
+  reserved base, so both frontends, the thumbnail cache and the actions already
+  understand it, and the few that must differ (no capture, no raise) can ask.
+  `WindowlessApplications` and the filter axis are unit tested, and
+  `openswitchr-diag --filters` reports them against the real running applications.
 - Optional scroll-to-cycle on a Dock icon (off by default): scrolling with the
   pointer on an application's icon focuses its next or previous window without
   opening a preview. It is the version the deferral said was the only one worth
