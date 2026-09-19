@@ -139,11 +139,12 @@ and states that nothing in the app itself contacts it.
 
 ### `S02` — automated test coverage
 
-48 tests across 6 suites, all pure logic: the AX-to-`CGWindowID` linker
-including its tie-breaking and determinism, MRU ordering, the window matcher,
-the thumbnail refresh-rate age limits, permission-grant watching, and focus
-target resolution. They cover the parts where a subtle bug is invisible, and
-several encode a bug that actually shipped.
+234 tests across 27 suites, all pure logic: the AX-to-`CGWindowID` linker, MRU
+ordering, the window matcher, filters and per-app rules, the selection and
+session logic, thumbnail retention and capture limiting, Dock panel lifecycle and
+placement, performance budgets, update scheduling, and a localization test that
+reads both String Catalogs and the views. They cover the parts where a subtle bug
+is invisible, and several encode a bug that actually shipped.
 
 They cannot cover anything that talks to another process or draws: accessibility
 enumeration, ScreenCaptureKit, the event tap, and every SwiftUI view. That gap
@@ -151,7 +152,9 @@ is filled by `openswitchr-diag`, which is run by hand and is not in CI, because
 it needs the Accessibility permission and real windows. Three release-blocking
 bugs have gone through exactly that gap — the app never starting, settings that
 could not be changed, and a Dock hover that worked only the first time — while
-every test stayed green.
+every test stayed green. The release gap is the same kind: 0.2.0 shipped without
+its German localization while every test was green, and only mounting the
+published DMG showed it.
 
 ### `S03` — automated static analysis
 
@@ -181,27 +184,28 @@ pinned commit, signs, and notarizes, without any Apple credential reaching this
 repository. That is a better arrangement than a release workflow here would be.
 
 It is not triggered by a tag. Someone runs `scripts/request.sh openswitchr
-v0.1.0` from a broker checkout. Pushing a tag therefore publishes nothing on its
-own, and a tag can exist with no artifact behind it — which is the state this
-repository is in right now.
+vX.Y.Z` from a broker checkout, after tagging. Pushing a tag therefore publishes
+nothing on its own; v0.2.0 and v0.2.1 both exist because that command was run.
 
 ### `R04` — tag, package version, and release title agree
 
-`v0.1.0` is tagged and pushed, and points at the current `main`. `Info.plist`
-and `CHANGELOG.md` both say `0.1.0`, and `scripts/check.sh` now fails if those
-two ever disagree.
+For v0.2.1 all of them are `0.2.1`: the tag `v0.2.1`, `CFBundleShortVersionString`
+and `CFBundleVersion` in `Info.plist`, the newest `CHANGELOG.md` heading, and the
+GitHub Release title `v0.2.1`. `scripts/check.sh` fails in CI when the plist and the
+changelog disagree, and the broker refuses to publish for a tag without a matching
+changelog entry.
 
-No GitHub Release exists, so there is no release title to agree with anything,
-and the tag has no artifact attached. Two of the three things the criterion
-compares are present and consistent; the third has not been created.
+One caveat: the broker used to create releases with an empty title, so v0.2.0 and
+v0.2.1 were titled by hand afterwards. The broker now passes `--title "$tag"`
+(macos-notarization-broker#62), so later releases get it without a manual step.
 
 ### `R06` — release notes
 
 `CHANGELOG.md` follows Keep a Changelog, states the versioning policy, and its
 entries describe the measurement or the trap behind each change rather than
-listing files. It is materially better than most release notes.
-
-It has never been published as release notes, because no release exists.
+listing files. The broker publishes the entry for the tag as the release notes, so
+the notes on the Releases page are the changelog entry for that version, including
+the upgrade-relevant items (v0.2.1 states that 0.2.0 shipped without German and why).
 
 ### `I06` — identity metadata produced by the build
 

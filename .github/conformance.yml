@@ -69,9 +69,9 @@ criteria:
   R01: partial
   R02: pass
   R03: partial
-  R04: partial
+  R04: pass
   R05: fail
-  R06: partial
+  R06: pass
   R07: fail
   R08: fail
 
