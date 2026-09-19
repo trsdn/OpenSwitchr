@@ -48,15 +48,13 @@ jobs:
       - name: Check bundle metadata consistency
         run: bash scripts/check.sh --metadata-only
 
-      # The bundle build catches Info.plist and entitlements mistakes that a
-      # plain `swift build` cannot see. Signing is unavailable on CI without
-      # the release secrets, so only the unsigned packaging steps run here.
+      # The bundle build catches Info.plist, entitlements and packaging mistakes
+      # that a plain `swift build` cannot see, and it checks its own output for
+      # the German localization and the notices. That check exists because 0.2.0
+      # shipped English-only while every test was green: this runner's SwiftPM
+      # copies string catalogs instead of compiling them. No certificate is
+      # needed, so the bundle is built unsigned.
       - name: Verify app bundle packaging
         run: |
           set -euo pipefail
-          chmod +x scripts/*.sh
-          if security find-identity -v -p codesigning | grep -q 'Developer ID Application'; then
-            scripts/build-app.sh
-          else
-            echo "No signing identity on this runner; skipping bundle build."
-          fi
+          bash scripts/build-app.sh --unsigned

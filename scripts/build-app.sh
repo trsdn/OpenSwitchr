@@ -9,6 +9,12 @@ APP="$BUILD_DIR/OpenSwitchr.app"
 DEFAULT_BUNDLE_ID="com.openswitchr.app"
 PREFERRED_IDENTITY="${OPENSWITCHR_SIGNING_IDENTITY:-${CODE_SIGN_IDENTITY:-}}"
 
+# --unsigned assembles the bundle without a signing identity. It exists so CI can
+# exercise the whole packaging path, including localization, on a runner that holds
+# no certificate. The result is not for distribution.
+UNSIGNED=false
+[[ "${1:-}" == "--unsigned" ]] && UNSIGNED=true
+
 if [[ -f "$ENV_FILE" ]]; then
     set -a
     . "$ENV_FILE"
@@ -42,9 +48,10 @@ find_signing_identity() {
         '
 }
 
-SIGNING_IDENTITY="$(find_signing_identity || true)"
+SIGNING_IDENTITY=""
+$UNSIGNED || SIGNING_IDENTITY="$(find_signing_identity || true)"
 
-if [[ -z "$SIGNING_IDENTITY" ]]; then
+if ! $UNSIGNED && [[ -z "$SIGNING_IDENTITY" ]]; then
     echo "No valid macOS codesigning identity found." >&2
     echo "Install a Developer ID Application or Apple Development certificate, or set OPENSWITCHR_SIGNING_IDENTITY to a valid fingerprint." >&2
     exit 1
@@ -74,18 +81,17 @@ cp "$PROJECT_DIR/LICENSE" "$APP/Contents/Resources/LICENSE"
 cp "$PROJECT_DIR/THIRD_PARTY_NOTICES.txt" "$APP/Contents/Resources/THIRD_PARTY_NOTICES.txt"
 
 HAS_ICON=false
-# Localized strings. SwiftPM compiles each target's String Catalog into a
-# resource bundle holding *.lproj directories, but SwiftUI resolves literals
-# against the app's main bundle, so they are copied in beside the icon. The
-# release broker assembles the bundle itself and has to do the same, or released
-# builds are English-only while local ones are not (see RELEASE_CHECKLIST.md).
-# Each module uses its own table (Localizable, UI), so the copies merge.
-for bundle in "$BUILD_DIR"/OpenSwitchr_*.bundle; do
-    [[ -d "$bundle" ]] || continue
-    while IFS= read -r lproj; do
-        cp -R "$lproj" "$APP/Contents/Resources/"
-    done < <(find "$bundle" -name '*.lproj' -type d)
-done
+# Localized strings. SwiftUI resolves literals against the app's main bundle, so
+# the compiled *.lproj directories have to sit in Contents/Resources. They are
+# compiled here from the String Catalogs rather than copied out of SwiftPM's
+# resource bundles, because whether SwiftPM compiles a catalog at all depends on
+# its build backend: some toolchains only copy the raw .xcstrings, and the first
+# localized release shipped English-only for exactly that reason. The release
+# broker does the same (see RELEASE_CHECKLIST.md). Each module has its own table
+# (Localizable, UI), so the outputs merge into one lproj.
+while IFS= read -r catalog; do
+    xcrun xcstringstool compile "$catalog" --output-directory "$APP/Contents/Resources"
+done < <(find "$PROJECT_DIR/Sources" -name '*.xcstrings' -type f)
 
 if [[ -f "$PROJECT_DIR/Resources/AppIcon.icns" ]]; then
     cp "$PROJECT_DIR/Resources/AppIcon.icns" "$APP/Contents/Resources/AppIcon.icns"
@@ -107,6 +113,20 @@ if os.environ['HAS_ICON'] == 'true':
 with open(app + '/Contents/Info.plist', 'wb') as f:
     plistlib.dump(p, f)
 "
+
+# A bundle that lacks its localization or notices is a broken release even when it
+# launches, so the build checks its own output instead of trusting the copy steps.
+for required in de.lproj/Localizable.strings de.lproj/UI.strings THIRD_PARTY_NOTICES.txt LICENSE; do
+    [[ -e "$APP/Contents/Resources/$required" ]] || {
+        echo "Bundle is missing Contents/Resources/$required" >&2
+        exit 1
+    }
+done
+
+if $UNSIGNED; then
+    echo "App bundle created at: $APP (unsigned, not for distribution)"
+    exit 0
+fi
 
 # Sign with a stable, trusted identity so TCC permissions survive rebuilds.
 codesign --force --sign "$SIGNING_IDENTITY" \
