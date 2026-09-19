@@ -158,4 +158,52 @@ struct LocalizationCatalogTests {
         #expect(!keys.isEmpty)
         #expect(missing.isEmpty, "Not in UI.xcstrings: \(missing.sorted())")
     }
+
+    /// The other half of keeping a catalog complete: an entry nothing looks up any
+    /// more is a dead translation that survives every removal of its string.
+    ///
+    /// A key counts as used when its text appears inside a string literal
+    /// anywhere under `Sources`, with each format specifier standing for the
+    /// interpolation that produces it. That is deliberately generous, since a
+    /// key can be reached through a `title` property in Core as well as a view.
+    @Test("No catalog entry is orphaned: every key is still used by the code")
+    func noCatalogEntryIsOrphaned() throws {
+        let sources = Self.root.appendingPathComponent("Sources")
+        var code = ""
+        if let files = FileManager.default.enumerator(at: sources, includingPropertiesForKeys: nil) {
+            for case let file as URL in files where file.pathExtension == "swift" {
+                code += try String(contentsOf: file, encoding: .utf8)
+            }
+        }
+        #expect(code.count > 10_000, "the scan read almost nothing, so it proves nothing")
+
+        var orphans: [String] = []
+        for path in Self.catalogPaths {
+            let catalog = try Catalog(path)
+            #expect(!catalog.strings.isEmpty)
+            for key in catalog.strings.keys where !Self.isUsed(key, in: code) {
+                orphans.append("\(path): \(key)")
+            }
+        }
+        #expect(orphans.isEmpty, "Catalog entries no code refers to: \(orphans.sorted())")
+    }
+
+    private static func isUsed(_ key: String, in code: String) -> Bool {
+        let specifier = try! NSRegularExpression(pattern: "%(?:\\d+\\$)?(?:lld|ld|d|@|f|s)")
+        var pattern = ""
+        var cursor = key.startIndex
+        for match in specifier.matches(in: key, range: NSRange(key.startIndex..., in: key)) {
+            let matched = Range(match.range, in: key)!
+            pattern += NSRegularExpression.escapedPattern(for: literalForm(String(key[cursor..<matched.lowerBound])))
+            pattern += #"[^"\n]*"#
+            cursor = matched.upperBound
+        }
+        pattern += NSRegularExpression.escapedPattern(for: literalForm(String(key[cursor...])))
+        return code.range(of: pattern, options: .regularExpression) != nil
+    }
+
+    /// How a key's text is spelled inside Swift source, where quotes and backslashes are escaped.
+    private static func literalForm(_ text: String) -> String {
+        text.replacingOccurrences(of: "\\", with: "\\\\").replacingOccurrences(of: "\"", with: "\\\"")
+    }
 }
