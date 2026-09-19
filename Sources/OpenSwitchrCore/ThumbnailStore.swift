@@ -44,6 +44,13 @@ public actor ThumbnailStore {
     /// listing.
     private static let contentCacheLifetime: TimeInterval = 1.0
 
+    /// How many captures may run at once. A cold burst for a dozen tiles used
+    /// to fire a dozen at the window server together; this is enough to overlap
+    /// them without asking another process to do everything at the same moment.
+    public static let maxConcurrentCaptures = 4
+
+    private let limiter = CaptureLimiter(maxConcurrent: ThumbnailStore.maxConcurrentCaptures)
+
     private var cache: [CGWindowID: Entry] = [:]
 
     /// Windows currently in the Dock. Their cached thumbnail cannot be
@@ -104,7 +111,11 @@ public actor ThumbnailStore {
     ///
     /// Never throws: a failed capture is a normal outcome (window closed
     /// mid-flight, screen recording not granted) and simply yields `nil`.
-    public func thumbnail(for windowID: CGWindowID, maxPixelSize: CGFloat = 640) async -> ThumbnailImage? {
+    public func thumbnail(
+        for windowID: CGWindowID,
+        maxPixelSize: CGFloat = 640,
+        priority: CaptureLimiter.Priority = .normal
+    ) async -> ThumbnailImage? {
         if let entry = cache[windowID],
            ThumbnailRetention.isFresh(
                age: Date().timeIntervalSince(entry.image.capturedAt),
@@ -120,7 +131,13 @@ public actor ThumbnailStore {
 
         let task = Task<ThumbnailImage?, Never> { [weak self] in
             guard let self else { return nil }
-            return await self.capture(windowID: windowID, maxPixelSize: maxPixelSize)
+            // A request cancelled while it waits for a slot never starts, and
+            // yields nil like any other failed capture. Nothing is recorded, so
+            // a later request for the same window simply tries again.
+            let image = await self.limiter.run(priority: priority) {
+                await self.capture(windowID: windowID, maxPixelSize: maxPixelSize)
+            }
+            return image ?? nil
         }
         inFlight[windowID] = task
 
@@ -134,6 +151,15 @@ public actor ThumbnailStore {
     }
 
     // MARK: - Invalidation
+
+    /// Cancels every capture that has not started yet.
+    ///
+    /// Called when a panel is dismissed: what is still waiting for a slot would
+    /// otherwise complete into a cache nobody will read this session. A capture
+    /// already running cannot be interrupted and is left to finish.
+    public func cancelInFlight() {
+        for task in inFlight.values { task.cancel() }
+    }
 
     public func invalidate(_ windowID: CGWindowID) {
         if let entry = cache.removeValue(forKey: windowID) {
