@@ -19,6 +19,7 @@ public struct WindowTile: View {
     private let thumbnailSize: CGSize
     private let thumbnails: ThumbnailProvider
     private let showsCloseButton: Bool
+    private let usesPreviews: Bool
     private let onActivate: () -> Void
     private let onClose: (() -> Void)?
     private let onQuitApp: (() -> Void)?
@@ -32,6 +33,7 @@ public struct WindowTile: View {
         thumbnailSize: CGSize,
         thumbnails: ThumbnailProvider,
         showsCloseButton: Bool = false,
+        usesPreviews: Bool = true,
         onActivate: @escaping () -> Void,
         onClose: (() -> Void)? = nil,
         onQuitApp: (() -> Void)? = nil,
@@ -42,6 +44,7 @@ public struct WindowTile: View {
         self.thumbnailSize = thumbnailSize
         self.thumbnails = thumbnails
         self.showsCloseButton = showsCloseButton
+        self.usesPreviews = usesPreviews
         self.onActivate = onActivate
         self.onClose = onClose
         self.onQuitApp = onQuitApp
@@ -145,7 +148,10 @@ public struct WindowTile: View {
 
     @ViewBuilder
     private var preview: some View {
-        if let image = thumbnails.image(for: window.id) {
+        // In icon mode the provider is not consulted at all, so an image that
+        // happens to be cached is never shown: the mode is a decision, not a
+        // fallback.
+        if usesPreviews, let image = thumbnails.image(for: window.id) {
             Image(decorative: image, scale: 2, orientation: .up)
                 .resizable()
                 .aspectRatio(contentMode: .fit)
@@ -161,7 +167,7 @@ public struct WindowTile: View {
                 Image(nsImage: icon)
                     .resizable()
                     .aspectRatio(contentMode: .fit)
-                    .frame(width: min(64, thumbnailSize.height * 0.5))
+                    .frame(width: min(64, thumbnailSize.height * 0.6))
                     .opacity(0.9)
             } else {
                 Image(systemName: "macwindow")

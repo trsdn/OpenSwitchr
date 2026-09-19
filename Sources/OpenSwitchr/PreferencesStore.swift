@@ -18,6 +18,7 @@ public final class PreferencesStore {
         static let thumbnailRefreshRate = "thumbnailRefreshRate"
         static let tileWidth = "tileWidth"
         static let showCloseButton = "showCloseButton"
+        static let tilePreference = "tilePreference"
         static let launchAtLogin = "launchAtLogin"
         static let dockHoverInstantSwitch = "dockHoverInstantSwitch"
         static let switcherApplicationScope = "switcherApplicationScope"
@@ -34,6 +35,7 @@ public final class PreferencesStore {
     /// in this file's history before.
     private enum Default {
         static let dockHoverInstantSwitch = true
+        static let tilePreference = TilePreference.previews
 
         /// Derived rather than restated: `WindowFilter.switcherDefault` is the
         /// one place the switcher's starting profile is written down.
@@ -125,6 +127,12 @@ public final class PreferencesStore {
         didSet { defaults.set(showCloseButton, forKey: Key.showCloseButton) }
     }
 
+    /// What the user asked for; the automatic rules in `TileModePolicy` can
+    /// still move a surface to icons on their own, never the other way.
+    public var tilePreference: TilePreference {
+        didSet { defaults.set(tilePreference.rawValue, forKey: Key.tilePreference) }
+    }
+
     public init(defaults: UserDefaults = .standard) {
         self.defaults = defaults
         defaults.register(defaults: [
@@ -138,6 +146,7 @@ public final class PreferencesStore {
             Key.thumbnailRefreshRate: ThumbnailRefreshRate.default.rawValue,
             Key.tileWidth: 200.0,
             Key.showCloseButton: false,
+            Key.tilePreference: Default.tilePreference.rawValue,
             Key.switcherApplicationScope: Default.filter.applications.rawValue,
             Key.switcherMinimizedPolicy: Default.filter.minimized.rawValue,
             Key.switcherScreenScope: Default.filter.screens.rawValue,
@@ -160,6 +169,9 @@ public final class PreferencesStore {
         ) ?? .default
         tileWidth = defaults.double(forKey: Key.tileWidth)
         showCloseButton = defaults.bool(forKey: Key.showCloseButton)
+        tilePreference = TilePreference(
+            rawValue: defaults.string(forKey: Key.tilePreference) ?? ""
+        ) ?? Default.tilePreference
 
         // Same fallback rule as the hold modifier: a stored value the app no
         // longer recognises means the case was removed, so it reverts to the

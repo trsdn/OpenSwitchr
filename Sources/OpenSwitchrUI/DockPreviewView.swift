@@ -13,6 +13,7 @@ public struct DockPreviewView: View {
     private let thumbnails: ThumbnailProvider
     private let tileSize: CGSize
     private let showsCloseButtons: Bool
+    private let usesPreviews: Bool
     private let onActivate: (Int) -> Void
     private let onClose: (Int) -> Void
     private let onQuitApp: (Int) -> Void
@@ -24,6 +25,7 @@ public struct DockPreviewView: View {
         thumbnails: ThumbnailProvider,
         tileSize: CGSize,
         showsCloseButtons: Bool = false,
+        usesPreviews: Bool = true,
         onActivate: @escaping (Int) -> Void,
         onClose: @escaping (Int) -> Void = { _ in },
         onQuitApp: @escaping (Int) -> Void = { _ in },
@@ -34,6 +36,7 @@ public struct DockPreviewView: View {
         self.thumbnails = thumbnails
         self.tileSize = tileSize
         self.showsCloseButtons = showsCloseButtons
+        self.usesPreviews = usesPreviews
         self.onActivate = onActivate
         self.onClose = onClose
         self.onQuitApp = onQuitApp
@@ -49,6 +52,7 @@ public struct DockPreviewView: View {
                     thumbnailSize: tileSize,
                     thumbnails: thumbnails,
                     showsCloseButton: showsCloseButtons,
+                    usesPreviews: usesPreviews,
                     onActivate: { onActivate(index) },
                     onClose: { onClose(index) },
                     onQuitApp: { onQuitApp(index) },
