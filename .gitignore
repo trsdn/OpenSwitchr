@@ -10,3 +10,4 @@ dist/
 *.xcworkspace/
 *.xcuserstate
 .DS_Store
+__pycache__/

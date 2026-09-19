@@ -1,9 +1,9 @@
 # OpenSwitchr
 
-[![License: MIT](https://img.shields.io/github/license/trsdn/OpenSwitchr?label=license)](LICENSE)
-[![macOS 15+](https://img.shields.io/badge/macOS-15%2B-blue)](#requirements)
+[![License](https://raw.githubusercontent.com/trsdn/OpenSwitchr/repo-stats/.github/badges-generated/license.svg)](LICENSE)
+[![Minimum macOS version](https://raw.githubusercontent.com/trsdn/OpenSwitchr/repo-stats/.github/badges-generated/platform.svg)](#requirements)
 [![CI](https://github.com/trsdn/OpenSwitchr/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/trsdn/OpenSwitchr/actions/workflows/ci.yml)
-[![Latest tag](https://img.shields.io/github/v/tag/trsdn/OpenSwitchr?label=release)](https://github.com/trsdn/OpenSwitchr/releases)
+[![Latest release](https://raw.githubusercontent.com/trsdn/OpenSwitchr/repo-stats/.github/badges-generated/release.svg)](https://github.com/trsdn/OpenSwitchr/releases/latest)
 [![Conformance](.github/badges/conformance.svg)](.github/conformance.yml)
 
 <picture>
@@ -349,9 +349,10 @@ to capture thumbnails. Both are revocable in System Settings → Privacy &
 Security, and the app degrades to icon-only tiles without the second.
 
 One caveat that is about this page rather than the app: viewing this README on
-github.com loads the badge images at the top from `img.shields.io`, which
-observes the request the way any remote image does. Nothing in the app itself
-contacts that host, or any other.
+github.com loads its images (the badges and the activity card) from this
+repository's generated `repo-stats` branch on `raw.githubusercontent.com`, a
+GitHub host, through GitHub's own image proxy. No third-party host is contacted,
+and nothing in the app itself contacts it.
 
 ## Language
 
