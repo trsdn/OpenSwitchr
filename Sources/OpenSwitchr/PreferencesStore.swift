@@ -21,6 +21,7 @@ public final class PreferencesStore {
         static let tilePreference = "tilePreference"
         static let appRules = "appRules"
         static let secondHotkeyEnabled = "secondHotkeyEnabled"
+        static let dockScrollCycling = "dockScrollCycling"
         static let fitTilesToWindowCount = "fitTilesToWindowCount"
         static let launchAtLogin = "launchAtLogin"
         static let dockHoverInstantSwitch = "dockHoverInstantSwitch"
@@ -41,6 +42,7 @@ public final class PreferencesStore {
         static let tilePreference = TilePreference.previews
         static let fitTilesToWindowCount = true
         static let secondHotkeyEnabled = false
+        static let dockScrollCycling = false
 
         /// Derived rather than restated: `WindowFilter.switcherDefault` is the
         /// one place the switcher's starting profile is written down.
@@ -162,6 +164,12 @@ public final class PreferencesStore {
         didSet { defaults.set(secondHotkeyEnabled, forKey: Key.secondHotkeyEnabled) }
     }
 
+    /// Off by default: it takes over scrolling while the pointer is on a Dock
+    /// icon, which the Dock otherwise handles itself.
+    public var dockScrollCycling: Bool {
+        didSet { defaults.set(dockScrollCycling, forKey: Key.dockScrollCycling) }
+    }
+
     public init(defaults: UserDefaults = .standard) {
         self.defaults = defaults
         defaults.register(defaults: [
@@ -177,6 +185,7 @@ public final class PreferencesStore {
             Key.showCloseButton: false,
             Key.tilePreference: Default.tilePreference.rawValue,
             Key.secondHotkeyEnabled: Default.secondHotkeyEnabled,
+            Key.dockScrollCycling: Default.dockScrollCycling,
             Key.fitTilesToWindowCount: Default.fitTilesToWindowCount,
             Key.switcherApplicationScope: Default.filter.applications.rawValue,
             Key.switcherMinimizedPolicy: Default.filter.minimized.rawValue,
@@ -203,6 +212,7 @@ public final class PreferencesStore {
         fitTilesToWindowCount = defaults.bool(forKey: Key.fitTilesToWindowCount)
         appRules = AppRuleTable.decode(from: defaults.data(forKey: Key.appRules))
         secondHotkeyEnabled = defaults.bool(forKey: Key.secondHotkeyEnabled)
+        dockScrollCycling = defaults.bool(forKey: Key.dockScrollCycling)
         tilePreference = TilePreference(
             rawValue: defaults.string(forKey: Key.tilePreference) ?? ""
         ) ?? Default.tilePreference

@@ -335,7 +335,9 @@ public final class DockPreviewController {
         return (edge, size, origin)
     }
 
-    private func resolveWindows(for item: DockHoverMonitor.DockItem) -> [WindowInfo] {
+    /// The windows a Dock item stands for, filtered the way its preview is.
+    /// Shared with the scroll cycler so both agree on what "its windows" are.
+    func resolveWindows(for item: DockHoverMonitor.DockItem) -> [WindowInfo] {
         var matches = item.bundleID.map { index.windows(forBundleID: $0) } ?? []
         if matches.isEmpty, !item.title.isEmpty {
             matches = index.windows.filter { $0.appName == item.title }

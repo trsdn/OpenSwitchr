@@ -40,6 +40,9 @@ overlay are thin readers on top.
 - **Dock hover previews** — hover a Dock icon to see that app's windows; click
   one to jump straight to it. The open delay applies to the first preview only,
   so moving along the Dock does not wait again.
+- **Scroll to cycle, off by default** — with the pointer on a Dock icon, scrolling
+  focuses that application's next or previous window without opening a preview.
+  It listens to scrolling only while the pointer is on a Dock icon.
 - **Window actions** — focus, minimize, restore, and close from either frontend.
 - **Minimized windows included** — a window in the Dock is still listed, dimmed
   and marked, and activating its tile restores it.
