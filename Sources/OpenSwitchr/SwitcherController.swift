@@ -101,7 +101,7 @@ public final class SwitcherController {
         sessionContext = WindowFilter.Context(
             frontmostPID: Self.frontmostPID(),
             screen: surfaceScreen,
-            appRules: .defaults
+            appRules: preferences.appRules
         )
 
         // Identified before filtering, because the filter is entitled to remove

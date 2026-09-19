@@ -99,6 +99,14 @@ defaults delete com.openswitchr.app           # restore all of them
 
 Every setting takes effect immediately; none of them requires a relaunch.
 
+The **Apps** tab edits the per-application rules: for each bundle identifier
+prefix, hide its windows (never, always, or when the title contains some text)
+and stand aside while it is frontmost and full screen, so a remote desktop,
+screen share or virtual machine gets the switcher hotkey itself. Each hiding rule
+shows how many windows it removes right now, so a rule that empties the switcher
+is noticed where it was set. The rules are stored as one JSON value under the
+`appRules` key; deleting that key restores the shipped defaults.
+
 ## Release
 
 Distributable builds come from

@@ -19,6 +19,7 @@ public final class PreferencesStore {
         static let tileWidth = "tileWidth"
         static let showCloseButton = "showCloseButton"
         static let tilePreference = "tilePreference"
+        static let appRules = "appRules"
         static let fitTilesToWindowCount = "fitTilesToWindowCount"
         static let launchAtLogin = "launchAtLogin"
         static let dockHoverInstantSwitch = "dockHoverInstantSwitch"
@@ -142,6 +143,17 @@ public final class PreferencesStore {
         didSet { defaults.set(fitTilesToWindowCount, forKey: Key.fitTilesToWindowCount) }
     }
 
+    /// The per-application rules. Nothing stored means the shipped defaults,
+    /// and so does stored data that no longer parses: falling back to an empty
+    /// table would silently switch off the stand-aside protection.
+    public var appRules: AppRuleTable {
+        didSet {
+            if let data = try? appRules.encoded() {
+                defaults.set(data, forKey: Key.appRules)
+            }
+        }
+    }
+
     public init(defaults: UserDefaults = .standard) {
         self.defaults = defaults
         defaults.register(defaults: [
@@ -180,6 +192,7 @@ public final class PreferencesStore {
         tileWidth = defaults.double(forKey: Key.tileWidth)
         showCloseButton = defaults.bool(forKey: Key.showCloseButton)
         fitTilesToWindowCount = defaults.bool(forKey: Key.fitTilesToWindowCount)
+        appRules = AppRuleTable.decode(from: defaults.data(forKey: Key.appRules))
         tilePreference = TilePreference(
             rawValue: defaults.string(forKey: Key.tilePreference) ?? ""
         ) ?? Default.tilePreference

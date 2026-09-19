@@ -25,7 +25,7 @@ public struct AppRule: Equatable, Sendable {
     /// of its windows covers its screen's full frame.
     ///
     /// Decided on the event tap path, which `AGENTS.md` requires to stay
-    /// trivial: see `AppRuleTable.standAsideBundleIDPrefixes`.
+    /// trivial: see `AppRuleTable.shouldStandAside`.
     public var standAsideWhenFullScreen: Bool
 
     public init(
@@ -119,4 +119,85 @@ public struct AppRuleTable: Equatable, Sendable {
         // and remote Mac management.
         AppRule(bundleIDPrefix: "com.apple.ScreenSharing", standAsideWhenFullScreen: true)
     ])
+}
+
+// MARK: - Persistence and counts
+
+public extension AppRuleTable {
+
+    /// The stored shape: plain strings and a flag, so a hide policy added later
+    /// does not make an older stored table unreadable. Kept apart from the
+    /// in-memory types on purpose; those can change shape without touching
+    /// what is on disk.
+    private struct Stored: Codable {
+        var rules: [StoredRule]
+    }
+
+    private struct StoredRule: Codable {
+        var bundleIDPrefix: String
+        var hideKind: String
+        var hideText: String
+        var standAside: Bool
+    }
+
+    func encoded() throws -> Data {
+        let stored = Stored(rules: rules.map { rule in
+            let kind: String
+            var text = ""
+            switch rule.hide {
+            case .never: kind = "never"
+            case .always: kind = "always"
+            case .whenTitleContains(let substring):
+                kind = "titleContains"
+                text = substring
+            }
+            return StoredRule(
+                bundleIDPrefix: rule.bundleIDPrefix,
+                hideKind: kind,
+                hideText: text,
+                standAside: rule.standAsideWhenFullScreen
+            )
+        })
+        return try JSONEncoder().encode(stored)
+    }
+
+    /// Reads a stored table.
+    ///
+    /// Nothing stored, or data that no longer parses, yields the shipped
+    /// defaults rather than an empty table: an empty one would silently switch
+    /// off the stand-aside protection for a remote session, which is the
+    /// correctness half of the whole feature. A table the user emptied *on
+    /// purpose* is stored as an empty list and stays empty. An unknown hide kind
+    /// is read as "never hide", the harmless direction.
+    static func decode(from data: Data?) -> AppRuleTable {
+        guard let data, let stored = try? JSONDecoder().decode(Stored.self, from: data) else {
+            return .defaults
+        }
+        return AppRuleTable(rules: stored.rules.map { entry in
+            let hide: AppRule.HidePolicy
+            switch entry.hideKind {
+            case "always": hide = .always
+            case "titleContains": hide = .whenTitleContains(entry.hideText)
+            default: hide = .never
+            }
+            return AppRule(
+                bundleIDPrefix: entry.bundleIDPrefix,
+                hide: hide,
+                standAsideWhenFullScreen: entry.standAside
+            )
+        })
+    }
+
+    /// How many of `windows` this rule is currently hiding, so a settings row
+    /// can say what a rule costs. A rule that hides everything becomes a bug
+    /// report reading "the switcher is empty"; showing the number is how it
+    /// gets noticed first.
+    ///
+    /// Counted against the rule that actually governs each window, so a general
+    /// rule is not credited with windows a more specific one claimed.
+    func hiddenCount(by rule: AppRule, in windows: [WindowInfo]) -> Int {
+        windows.filter { window in
+            self.rule(forBundleID: window.bundleID) == rule && hides(window)
+        }.count
+    }
 }

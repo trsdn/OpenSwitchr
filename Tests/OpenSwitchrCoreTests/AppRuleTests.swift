@@ -1,3 +1,4 @@
+import Foundation
 import CoreGraphics
 import Testing
 
@@ -125,5 +126,79 @@ struct AppRuleTests {
             #expect(rule.standAsideWhenFullScreen == true)
             #expect(rule.hide == .never)
         }
+    }
+}
+
+@Suite("AppRule persistence and counts")
+struct AppRulePersistenceTests {
+
+    private func window(bundleID: String?, title: String = "Window", id: UInt32 = 1) -> WindowInfo {
+        WindowInfo(
+            id: id, pid: 1, bundleID: bundleID, appName: "App", title: title,
+            frame: .zero, isMinimized: false, isOnScreen: true, element: nil
+        )
+    }
+
+    @Test("A table survives being stored and read back, with every hide policy")
+    func roundTrip() throws {
+        let table = AppRuleTable(rules: [
+            AppRule(bundleIDPrefix: "com.a", hide: .never, standAsideWhenFullScreen: true),
+            AppRule(bundleIDPrefix: "com.b", hide: .always),
+            AppRule(bundleIDPrefix: "com.c", hide: .whenTitleContains("status"), standAsideWhenFullScreen: true)
+        ])
+        let decoded = AppRuleTable.decode(from: try table.encoded())
+        #expect(decoded == table)
+    }
+
+    @Test("Nothing stored yet means the shipped defaults")
+    func missingIsDefaults() {
+        #expect(AppRuleTable.decode(from: nil) == .defaults)
+    }
+
+    @Test("Stored data that no longer parses falls back to the defaults rather than an empty table")
+    func corruptIsDefaults() {
+        #expect(AppRuleTable.decode(from: Data("not json".utf8)) == .defaults)
+    }
+
+    @Test("A table the user emptied on purpose stays empty")
+    func emptyStaysEmpty() throws {
+        let empty = AppRuleTable(rules: [])
+        #expect(AppRuleTable.decode(from: try empty.encoded()) == empty)
+    }
+
+    @Test("An unknown hide kind in stored data is read as never hide, not a crash")
+    func unknownHideKind() {
+        let json = #"{"rules":[{"bundleIDPrefix":"com.x","hideKind":"future","hideText":"","standAside":false}]}"#
+        let decoded = AppRuleTable.decode(from: Data(json.utf8))
+        #expect(decoded.rules.first?.hide == .never)
+    }
+
+    @Test("A rule reports how many of the given windows it currently hides")
+    func hiddenCount() {
+        let rule = AppRule(bundleIDPrefix: "com.helper", hide: .always)
+        let table = AppRuleTable(rules: [rule])
+        let windows = [
+            window(bundleID: "com.helper.one", id: 1),
+            window(bundleID: "com.helper.two", id: 2),
+            window(bundleID: "com.other", id: 3)
+        ]
+        #expect(table.hiddenCount(by: rule, in: windows) == 2)
+    }
+
+    @Test("A rule that hides nothing counts zero, so a settings row can say so")
+    func hiddenCountZero() {
+        let rule = AppRule(bundleIDPrefix: "com.helper", standAsideWhenFullScreen: true)
+        let table = AppRuleTable(rules: [rule])
+        #expect(table.hiddenCount(by: rule, in: [window(bundleID: "com.helper")]) == 0)
+    }
+
+    @Test("The more specific rule takes the windows, so the general one does not count them")
+    func hiddenCountRespectsSpecificity() {
+        let general = AppRule(bundleIDPrefix: "com.vendor", hide: .always)
+        let specific = AppRule(bundleIDPrefix: "com.vendor.keep", hide: .never)
+        let table = AppRuleTable(rules: [general, specific])
+        let windows = [window(bundleID: "com.vendor.keep.app"), window(bundleID: "com.vendor.other", id: 2)]
+        #expect(table.hiddenCount(by: general, in: windows) == 1)
+        #expect(table.hiddenCount(by: specific, in: windows) == 0)
     }
 }
