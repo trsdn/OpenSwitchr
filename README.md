@@ -30,6 +30,9 @@ overlay are thin readers on top.
 - **Type to filter** — start typing to narrow by app name or window title.
 - **Choose what the switcher lists** — by application, by display, how
   minimized windows are treated, and in what order.
+- **Icons instead of previews** — pick icons and titles only in Settings, or
+  let it happen on its own when Screen Recording is not granted or a panel has
+  more than twelve windows. Icon mode captures nothing.
 - **Dock hover previews** — hover a Dock icon to see that app's windows; click
   one to jump straight to it. The open delay applies to the first preview only,
   so moving along the Dock does not wait again.

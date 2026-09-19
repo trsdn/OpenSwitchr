@@ -14,6 +14,10 @@ public final class DockPreviewController {
 
     private var windows: [WindowInfo] = []
     private var hoveredIndex: Int?
+
+    /// Decided when a row is shown and kept until it is hidden, so hovering
+    /// tiles never flips the layout.
+    private var tileMode: TileMode = .previews
     private var currentItem: DockHoverMonitor.DockItem?
     private var showTask: Task<Void, Never>?
     private var hideTask: Task<Void, Never>?
@@ -130,9 +134,20 @@ public final class DockPreviewController {
         windows = matches
         hoveredIndex = nil
 
+        tileMode = TileModePolicy.resolve(
+            preference: preferences.tilePreference,
+            screenRecordingGranted: CGPreflightScreenCaptureAccess(),
+            windowCount: matches.count,
+            threshold: TileModePolicy.dockPreviewWindowThreshold
+        )
+
         let tile = tileSize()
         // Once per shown row, not from `render()`, which also runs on hover.
-        thumbnails.prefetch(matches.map(\.id), maxPixelSize: tile.width * 2)
+        // Skipped entirely in icon mode: nothing is captured, so this has to
+        // consult the mode and not only the tile that draws.
+        if tileMode == .previews {
+            thumbnails.prefetch(matches.map(\.id), maxPixelSize: tile.width * 2)
+        }
 
         let size = DockPreviewView.panelSize(windowCount: matches.count, tileSize: tile)
         let clamped = NSSize(
@@ -155,6 +170,7 @@ public final class DockPreviewController {
                 thumbnails: thumbnails,
                 tileSize: tileSize(),
                 showsCloseButtons: preferences.showCloseButton,
+                usesPreviews: tileMode == .previews,
                 onActivate: { [weak self] index in
                     guard let self, self.windows.indices.contains(index) else { return }
                     let window = self.windows[index]
@@ -224,8 +240,7 @@ public final class DockPreviewController {
     }
 
     private func tileSize() -> CGSize {
-        let width = max(120, preferences.tileWidth * 0.9)
-        return CGSize(width: width, height: (width * 9 / 16).rounded())
+        TileModePolicy.tileSize(for: tileMode, previewWidth: preferences.tileWidth * 0.9)
     }
 
     /// Places the panel next to the Dock item, on whichever edge the Dock is.

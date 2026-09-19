@@ -70,6 +70,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   satisfy), evicts it after every live entry when the byte budget is exceeded,
   and drops it when the window is restored so the first frame after restoring
   is not stale. The tile already dims a minimized preview and marks it as such.
+- Icon-and-title tile mode, chosen deliberately instead of by accident. A
+  "Tiles show" setting picks previews or icons only, and previews switch to
+  icons on their own when Screen Recording is not granted (every capture would
+  fail) or when a surface has more than twelve windows (each preview too small
+  to identify). The threshold is a named constant per surface. In icon mode
+  nothing calls `ThumbnailProvider.prefetch`, so a busy Space costs zero
+  captures; the mode is decided when a panel opens and kept for that session,
+  and the cache is left valid rather than cleared. For scale, eight cold
+  parallel captures measured ~340 ms with `openswitchr-diag --bench --capture`.
 
 ### Changed
 

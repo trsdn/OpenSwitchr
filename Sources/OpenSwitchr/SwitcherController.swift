@@ -20,6 +20,11 @@ public final class SwitcherController {
     private var query = ""
     private var columnCount = 1
 
+    /// Previews or icons for this whole session, decided once when the overlay
+    /// opens for the same reason `sessionContext` is: narrowing the query
+    /// must not flip the layout out from under the user.
+    private var tileMode: TileMode = .previews
+
     /// The screen this overlay is appearing on, decided once when it opens.
     ///
     /// It is both a layout input and a filter input, and the two have to agree:
@@ -100,6 +105,12 @@ public final class SwitcherController {
         let currentWindowID = currentWindow()?.id
 
         visibleWindows = baseWindows()
+        tileMode = TileModePolicy.resolve(
+            preference: preferences.tilePreference,
+            screenRecordingGranted: CGPreflightScreenCaptureAccess(),
+            windowCount: visibleWindows.count,
+            threshold: TileModePolicy.switcherWindowThreshold
+        )
 
         selectedIndex = SwitcherSelection.initialIndex(
             count: visibleWindows.count,
@@ -182,6 +193,10 @@ public final class SwitcherController {
     /// Deliberately not in `render()`, which also runs on every hover: one pass
     /// per shown list is enough, and per mouse move is not free.
     private func prefetchThumbnails() {
+        // The whole point of icon mode: nothing is captured, so a Space with
+        // forty windows costs zero captures. The mode has to be consulted
+        // here, not only where a tile draws.
+        guard tileMode == .previews else { return }
         thumbnails.prefetch(visibleWindows.map(\.id), maxPixelSize: tileSize().width * 2)
     }
 
@@ -194,6 +209,7 @@ public final class SwitcherController {
                 thumbnails: thumbnails,
                 tileSize: tileSize(),
                 showsCloseButtons: preferences.showCloseButton,
+                usesPreviews: tileMode == .previews,
                 isFiltered: filterRemovedWindows,
                 onActivate: { [weak self] index in
                     self?.selectedIndex = index
@@ -247,8 +263,7 @@ public final class SwitcherController {
     }
 
     private func tileSize() -> CGSize {
-        let width = max(120, preferences.tileWidth)
-        return CGSize(width: width, height: (width * 9 / 16).rounded())
+        TileModePolicy.tileSize(for: tileMode, previewWidth: preferences.tileWidth)
     }
 
     // MARK: - Selection

@@ -10,6 +10,7 @@ public struct SwitcherView: View {
     private let thumbnails: ThumbnailProvider
     private let tileSize: CGSize
     private let showsCloseButtons: Bool
+    private let usesPreviews: Bool
 
     /// Whether a non-default window filter is narrowing the list.
     ///
@@ -30,6 +31,7 @@ public struct SwitcherView: View {
         thumbnails: ThumbnailProvider,
         tileSize: CGSize,
         showsCloseButtons: Bool = false,
+        usesPreviews: Bool = true,
         isFiltered: Bool = false,
         onActivate: @escaping (Int) -> Void,
         onClose: @escaping (Int) -> Void = { _ in },
@@ -42,6 +44,7 @@ public struct SwitcherView: View {
         self.thumbnails = thumbnails
         self.tileSize = tileSize
         self.showsCloseButtons = showsCloseButtons
+        self.usesPreviews = usesPreviews
         self.isFiltered = isFiltered
         self.onActivate = onActivate
         self.onClose = onClose
@@ -129,6 +132,7 @@ public struct SwitcherView: View {
                             thumbnailSize: tileSize,
                             thumbnails: thumbnails,
                             showsCloseButton: showsCloseButtons,
+                            usesPreviews: usesPreviews,
                             onActivate: { onActivate(index) },
                             onClose: { onClose(index) },
                             onQuitApp: { onQuitApp(index) },

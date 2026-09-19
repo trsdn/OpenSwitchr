@@ -159,6 +159,19 @@ struct SettingsView: View {
                     }
                 }
 
+                Picker("Tiles show", selection: Binding(
+                    get: { model.preferences.tilePreference },
+                    set: { model.preferences.tilePreference = $0 }
+                )) {
+                    ForEach(TilePreference.allCases, id: \.self) { preference in
+                        Text(preference.title).tag(preference)
+                    }
+                }
+
+                Text("Icons and titles capture nothing, so they cost no CPU or memory for previews. Previews switch to icons on their own when Screen Recording is not granted, or when there are more than \(TileModePolicy.switcherWindowThreshold) windows. Takes effect the next time a panel opens.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+
                 Picker("Refresh thumbnails", selection: Binding(
                     get: { model.preferences.thumbnailRefreshRate },
                     set: { model.preferences.thumbnailRefreshRate = $0; model.applyPreferences() }
