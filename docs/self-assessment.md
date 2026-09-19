@@ -1,11 +1,9 @@
 # Self-assessment
 
-Evidence for `.github/conformance.yml`. Assessed against version **1.11.1** of
+Evidence for `.github/conformance.yml`. Assessed against version **1.13.0** of
 the [trsdn Repository Quality Standard](https://github.com/trsdn/.github/blob/main/docs/repository-quality-standard.md)
-on **2026-09-17**. Overall state: **Needs work** — four criteria fail, all for
-reasons named below, none of them a critical gap in the standard's sense
-(no committed secret, no write-capable exposure, no unrecoverable state), and
-the repository is otherwise usable and honest about itself.
+on **2026-09-19**. Overall state: **Healthy**: no criterion fails, and the three
+that are `partial` (`S02`, `I06`, `W09`) are minor gaps named below.
 
 Every line here is evidence from the GitHub API, a workflow run, a measurement,
 or a file in the tree. Nothing is assumed. Where a result is `partial` or
@@ -48,6 +46,21 @@ repository for the first time surfaced one real, previously unrecorded gap:
 mutable refs (`S12`), fixed in the same change that added this reassessment
 and recorded under Notable passes below.
 
+### 1.11.1 → 1.13.0
+
+Two changes to the standard, and a lot of work in the repository, moved results.
+
+- **The standard widened** `R01`, `R03`, `R05`, `R07` and `R08` for repositories
+  that release through a shared pipeline (this repository releases through the
+  notarization broker). Those were the criteria that failed or were partial *because
+  of that arrangement*, not because anything was missing. 1.12.0 retired `W05` and
+  `W06` (the mandatory design language) and added `W09`, assessed below.
+- **The repository moved**: releases v0.2.0 and v0.2.1 exist and were tested; the
+  activity card and badges are generated (`P09`, `P08`); the string catalogs are
+  checked for orphans (`L04`); Swift formatting is enforced (`S03`); the display
+  accessibility settings are honoured (`X03`); and the release path is covered in CI
+  (`S02`). Each is under Notable passes.
+
 ## Profiles
 
 | Profile | Applies | Why |
@@ -66,38 +79,6 @@ and recorded under Notable passes below.
 | Published Sites | Yes | `docs/index.html`, served by GitHub Pages at [trsdn.github.io/OpenSwitchr](https://trsdn.github.io/OpenSwitchr/) |
 | Archived | No | Actively developed |
 
-## Failures
-
-### `R07` — release notes generated from the changelog, gated automatically
-
-**Fail.** No release workflow exists yet — `R03` below is the reason — so
-there is nothing that could extract a changelog entry for a version, and
-nothing that could fail a release when that entry is missing. This criterion
-has no evidence to be partial about; it depends entirely on `R03` landing
-first.
-
-### `R08` — a consumer can verify a published artifact came from this repository
-
-**Fail.** Releases exist now (v0.2.0, v0.2.1, built by the notarization broker), but
-`gh attestation verify` finds no GitHub Artifact Attestation for the published DMG
-against this repository, the broker repository or the `trsdn` owner (the API answers
-404 for each), so a consumer has no way to check the artifact came from this source.
-The broker's `provenance.json` is attached to each release, which is a claim, not a
-verifiable attestation. Unmet, not not-applicable.
-
-### `R05` — built artifacts smoke-tested in a clean environment
-
-**Fail.** `openswitchr-diag --probe-app` is a real end-to-end check — it posts a
-synthetic hotkey, times the overlay against a window-ID baseline, confirms focus
-moved by reading the CoreGraphics z-order, and hovers a Dock icon twice — but it
-runs against the app installed on the development machine, where the toolchain,
-the permissions, and the previously granted TCC entries all already exist.
-
-Nothing yet takes a notarized artifact, installs it somewhere that has never
-seen it, and confirms it launches and is trusted by Gatekeeper. The most likely
-failure that hides here is a signing or notarization problem, which is invisible
-locally by construction: the local machine trusts its own developer certificate.
-
 ## Partials
 
 ### `S02` — automated test coverage
@@ -115,46 +96,17 @@ the Accessibility permission and real windows. Three release-blocking bugs have 
 through exactly that gap (the app never starting, settings that could not be changed,
 a Dock hover that worked only the first time) while every test stayed green.
 
-### `R01` — package metadata
+### `W09` — the site's visual design is made for this project
 
-`Info.plist` now carries the product name, both version strings, the repository
-URL, the issue tracker URL, the licence identifier, and the copyright holder,
-and `scripts/check.sh` asserts every one of those keys is present.
-
-`Package.swift` carries none of it, because SwiftPM has no field for a licence,
-a repository, or a description. That is a limitation of the manifest format
-rather than an omission, but the criterion asks for complete package metadata
-and half of it lives somewhere SwiftPM cannot see.
-
-### `R03` — a tag produces installable artifacts through automation
-
-Automation exists and is real: `trsdn/macos-notarization-broker` builds from a
-pinned commit, signs, and notarizes, without any Apple credential reaching this
-repository. That is a better arrangement than a release workflow here would be.
-
-It is not triggered by a tag. Someone runs `scripts/request.sh openswitchr
-vX.Y.Z` from a broker checkout, after tagging. Pushing a tag therefore publishes
-nothing on its own; v0.2.0 and v0.2.1 both exist because that command was run.
-
-### `R04` — tag, package version, and release title agree
-
-For v0.2.1 all of them are `0.2.1`: the tag `v0.2.1`, `CFBundleShortVersionString`
-and `CFBundleVersion` in `Info.plist`, the newest `CHANGELOG.md` heading, and the
-GitHub Release title `v0.2.1`. `scripts/check.sh` fails in CI when the plist and the
-changelog disagree, and the broker refuses to publish for a tag without a matching
-changelog entry.
-
-One caveat: the broker used to create releases with an empty title, so v0.2.0 and
-v0.2.1 were titled by hand afterwards. The broker now passes `--title "$tag"`
-(macos-notarization-broker#62), so later releases get it without a manual step.
-
-### `R06` — release notes
-
-`CHANGELOG.md` follows Keep a Changelog, states the versioning policy, and its
-entries describe the measurement or the trap behind each change rather than
-listing files. The broker publishes the entry for the tag as the release notes, so
-the notes on the Releases page are the changelog entry for that version, including
-the upgrade-relevant items (v0.2.1 states that 0.2.0 shipped without German and why).
+**Partial.** Looking at the published page: it is a clean, readable, accessible
+single page, but its styling is the vendored Instrument Workshop framework, used
+unchanged, in its default dark theme. The only thing made for this project is the
+switcher illustration (labelled as an illustration, not a screenshot). Nothing in the
+colour, type or layout says "window switcher", and the hero carries neither the app
+icon nor a real screenshot. The standard allows Instrument Workshop where it fits but
+asks whether a visitor can tell the page was built for what it describes, and here
+they mostly cannot. Moving it means choosing colour and type from the product's own
+icon and adding a real screenshot; nothing on the page is inaccurate.
 
 ### `I06` — identity metadata produced by the build
 
@@ -253,6 +205,46 @@ These are recorded because they took work, not because they were free.
   protected branches. The card is served from `raw.githubusercontent.com` for this
   repository, not from a third-party image service. Caveat: a branch that only a
   workflow writes is not reviewed the way a pull request is.
+- **`R01`** — package metadata. SwiftPM has no field for a licence, a repository URL
+  or a description, so under `R01` as of 1.13.0 they live in the artifact's own
+  metadata: `Info.plist` carries the product name, both version strings, the repository
+  and issue-tracker URLs, the licence identifier and the copyright holder, and
+  `scripts/check.sh` asserts every one of those keys. `Package.swift` carries none of
+  it, by the limits of the format.
+- **`R03`** — a tag produces installable artifacts through automation. The
+  notarization broker builds from the tag's pinned commit (refusing if the tag moved),
+  signs, notarizes and publishes, without any Apple credential reaching this
+  repository. A maintainer starts it for a specific tag with `scripts/request.sh`,
+  documented in the README; v0.2.0 and v0.2.1 were produced that way. As of 1.13.0 a
+  shared pipeline run for a tag qualifies.
+- **`R04`** — tag, package version and release title agree. For v0.2.1 the tag,
+  `CFBundleShortVersionString` and `CFBundleVersion`, the newest `CHANGELOG.md`
+  heading and the GitHub Release title are all `0.2.1`. `scripts/check.sh` fails in CI
+  when the plist and changelog disagree, and the broker now titles releases with the
+  tag (macos-notarization-broker#62).
+- **`R05`** — built artifacts smoke-tested. The published v0.2.1 DMG was verified with
+  `codesign`, `spctl` and `stapler`, and v0.2.0 was updated to v0.2.1 through the
+  in-app updater on a real Mac. The dated record, including what was not exercised
+  (a machine that had never run the app, the hotkey and Dock hover paths), is in
+  `docs/release-verification.md`. As of 1.13.0 one recorded test of the published
+  artifact suffices.
+- **`R06`** — release notes. `CHANGELOG.md` follows Keep a Changelog, and the broker
+  publishes the entry for the tag as the release notes, so the Releases page carries
+  the maintained entry, including upgrade-relevant items (v0.2.1 says 0.2.0 shipped
+  without German and why).
+- **`R07`** — release notes come from the changelog, gated. The gate is in the shared
+  pipeline: the broker refuses `--publish` for a tag whose version has no entry in the
+  source repository's `CHANGELOG.md` (macos-notarization-broker#53), and uses that
+  entry as the notes. `docs/release-verification.md` documents this, and
+  `## [Unreleased]` is empty, so no entry can be stranded. As of 1.13.0 a documented
+  shared-pipeline gate qualifies.
+- **`R08`** — a consumer can verify origin. `docs/release-verification.md` gives the
+  commands (`shasum`, `codesign`, `spctl`, `stapler`) and says what they establish:
+  the Developer ID signature (Team `G69Z5BNY97`) and Apple's notarization, plus
+  `provenance.json` naming the source commit, the tag and the broker run. It also says
+  what they do not: `provenance.json` is an attached file, not a signed GitHub
+  Artifact Attestation. As of 1.13.0 the shared pipeline's verifiable record is
+  sufficient evidence of origin.
 - **`B13`** — each fact has one home. A paragraph-similarity scan of `README.md`
   against `AGENTS.md` found four overlaps; three were the same fact written twice
   (what `scripts/check.sh` checks, why one shared foundation, the name rationale) and
@@ -315,9 +307,10 @@ These are recorded because they took work, not because they were free.
     switch between many windows on a Mac, and its status and version, with the
     build instructions, the one-sentence `Y01` disclosure, the repository,
     license, security policy and support links, and a last-reviewed date.
-  - `W05`, `W06` — styled with Instrument Workshop **v1.5.1**, two stylesheets
-    vendored unmodified into `docs/assets`, with the tag, commit and SHA-256 of
-    each recorded in `docs/assets/VERSION`.
+  - `W05`, `W06` — retired in 1.12.0. The site is styled with Instrument Workshop
+    **v1.5.1**, two stylesheets vendored unmodified into `docs/assets`, with the tag,
+    commit and SHA-256 of each recorded in `docs/assets/VERSION`; whether that is
+    enough is now `W09`, above.
   - `W07` — network review, done by reading the page and both stylesheets
     rather than trusting the claim: `docs/index.html` references no host other
     than `github.com` links a visitor has to click, and neither stylesheet
@@ -335,13 +328,11 @@ These are recorded because they took work, not because they were free.
 
 In order of how much each one moves:
 
-1. **Pin the record to standard 1.13.0 once it is tagged**, and reassess `R05`,
-   `R07` and `R08` under it. The releases through the broker (v0.2.0, v0.2.1)
-   are the evidence: the published DMG was installed and updated from 0.2.0 to
-   0.2.1 on a real Mac, the broker refuses to publish without a changelog entry,
-   and the Developer ID signature and notarization are the record of origin.
-2. **Add a Swift formatter or linter** to close `S03`.
-3. **Verify the app under enlarged accessibility text sizes** and either fix the
-   clipping or keep the limitation documented. Moves `X03`.
-4. **Resolve the version derivation** with the broker so `I06` stops depending
-   on a human typing the same number in two files.
+1. **Give the site its own design (`W09`)**: colours and type from the app icon, and a
+   real screenshot in the hero.
+2. **Resolve the version derivation** with the broker so `I06` stops depending on a
+   human typing the same number in two files.
+3. **Reduce the untestable surface (`S02`)**: the event tap, ScreenCaptureKit and the
+   views are still covered only by `openswitchr-diag`, run by hand.
+4. **Ask the broker for a GitHub Artifact Attestation**, which would turn the
+   `provenance.json` claim into something a consumer can verify cryptographically.

@@ -136,7 +136,9 @@ scripts/request.sh openswitchr vX.Y.Z   # run from a broker checkout
 only. They produce a signed but **unnotarized** DMG, which would trip Gatekeeper
 on someone else's machine.
 
-See `RELEASE_CHECKLIST.md` for the full procedure.
+See `RELEASE_CHECKLIST.md` for the full procedure, and
+[docs/release-verification.md](docs/release-verification.md) for how to verify a
+download, what the pipeline guarantees, and the smoke-test record.
 
 ## Measured behaviour
 
