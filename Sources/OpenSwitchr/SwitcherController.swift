@@ -226,7 +226,8 @@ public final class SwitcherController {
         // forty windows costs zero captures. The mode has to be consulted
         // here, not only where a tile draws.
         guard tileMode == .previews else { return }
-        thumbnails.prefetch(visibleWindows.map(\.id), maxPixelSize: tileSize().width * 2)
+        let selected = visibleWindows.indices.contains(selectedIndex) ? visibleWindows[selectedIndex].id : nil
+        thumbnails.prefetch(visibleWindows.map(\.id), maxPixelSize: tileSize().width * 2, selected: selected)
     }
 
     private func render() {
@@ -360,6 +361,7 @@ public final class SwitcherController {
     public func close() {
         guard isVisible else { return }
         panel.hidePanel()
+        thumbnails.cancelOutstanding()
         query = ""
         setVisible(false)
     }

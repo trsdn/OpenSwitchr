@@ -42,7 +42,11 @@ public final class ThumbnailProvider {
     /// here on "an image is already loaded" made every loaded preview immortal
     /// and the setting a no-op. A cache hit inside the store costs an actor
     /// hop, which is nothing next to a capture.
-    public func request(_ windowID: CGWindowID, maxPixelSize: CGFloat = 640) {
+    public func request(
+        _ windowID: CGWindowID,
+        maxPixelSize: CGFloat = 640,
+        priority: CaptureLimiter.Priority = .normal
+    ) {
         guard !requested.contains(windowID) else { return }
 
         // Shrinking a tile reuses the larger capture; only growing needs a new
@@ -53,7 +57,7 @@ public final class ThumbnailProvider {
 
         Task { [weak self] in
             guard let self else { return }
-            let thumbnail = await self.store.thumbnail(for: windowID, maxPixelSize: target)
+            let thumbnail = await self.store.thumbnail(for: windowID, maxPixelSize: target, priority: priority)
             self.requested.remove(windowID)
             guard let thumbnail else { return }
             self.images[windowID] = thumbnail.cgImage
@@ -69,10 +73,28 @@ public final class ThumbnailProvider {
     /// drops an image — `clear()` on a Space change drops all of them — was
     /// therefore permanent: previews thinned out over a session until only
     /// icon tiles were left, and only relaunching brought them back.
-    public func prefetch(_ windowIDs: some Sequence<CGWindowID>, maxPixelSize: CGFloat) {
-        for id in windowIDs {
+    ///
+    /// The selected tile is asked for first and at high priority: on the
+    /// switcher the user is looking at exactly one tile, and that capture should
+    /// not queue behind the rest in list order.
+    public func prefetch(
+        _ windowIDs: some Sequence<CGWindowID>,
+        maxPixelSize: CGFloat,
+        selected: CGWindowID? = nil
+    ) {
+        if let selected {
+            request(selected, maxPixelSize: maxPixelSize, priority: .high)
+        }
+        for id in windowIDs where id != selected {
             request(id, maxPixelSize: maxPixelSize)
         }
+    }
+
+    /// Drops captures that have not started yet. Called when a panel is
+    /// dismissed, so they do not complete into a cache nobody will read.
+    public func cancelOutstanding() {
+        requested.removeAll()
+        Task { [store] in await store.cancelInFlight() }
     }
 
     /// Drops cached captures so the next request re-captures at the current

@@ -87,6 +87,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   thumbnail cache keeps hitting and the step is what is captured, and below the
   legible floor the switcher uses icon tiles instead of a smaller image. The
   layout maths is `TileSizing`, pure and unit tested.
+- Thumbnail captures are bounded, prioritised, and cancellable
+  (`CaptureLimiter`, unit tested). At most four run at once instead of one per
+  tile, the selected tile is asked for first and jumps the queue, and dismissing
+  a panel cancels every capture that has not started, so they do not complete
+  into a cache nobody will read. A cancelled request records nothing, so a later
+  one simply tries again.
 
 ### Changed
 

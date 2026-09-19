@@ -356,6 +356,7 @@ public final class DockPreviewController {
         onHidden?()
 
         guard isVisible else { return }
+        thumbnails.cancelOutstanding()
         panel.hidePanel()
         isVisible = false
         currentItem = nil
