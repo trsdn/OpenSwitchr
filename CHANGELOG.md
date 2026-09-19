@@ -64,6 +64,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   per rebuild, from the window's frame against the display it covers, and
   carried on `WindowInfo.isFullScreen` so the event tap never has to ask.
   `openswitchr-diag --filters` reports both against the windows actually open.
+- A minimized window keeps its last good thumbnail. ScreenCaptureKit cannot
+  capture a window in the Dock, so that image is the only preview there will
+  be; the store now exempts it from the refresh age limit (which it could never
+  satisfy), evicts it after every live entry when the byte budget is exceeded,
+  and drops it when the window is restored so the first frame after restoring
+  is not stale. The tile already dims a minimized preview and marks it as such.
 
 ### Changed
 
