@@ -23,6 +23,17 @@ public final class DockPreviewController {
     private var hideTask: Task<Void, Never>?
     private var mouseMonitor: Any?
 
+    /// The panel's lifetime. Every hide decision goes through it, so the
+    /// visible state and the app's idea of it cannot drift apart.
+    private var lifecycle = DockPanelLifecycle()
+
+    /// Exists only while a panel is on screen, and `hide()` — the single exit —
+    /// cancels it. If that could not be guaranteed this would be driven from the
+    /// mouse monitor instead.
+    private var inactivityTask: Task<Void, Never>?
+
+    private var now: TimeInterval { ProcessInfo.processInfo.systemUptime }
+
     /// An item whose hover resolved to no windows, kept so a later index
     /// rebuild can retry it. See ``indexDidRebuild()``.
     private var unresolvedItem: DockHoverMonitor.DockItem?
@@ -58,6 +69,10 @@ public final class DockPreviewController {
 
         hideTask?.cancel()
         hideTask = nil
+        // Arriving on an item is arriving on the hover region: a hide that was
+        // scheduled while the pointer crossed the gap is cancelled, and the
+        // machine has to hear about it or it would think one is still pending.
+        perform(lifecycle.pointerMoved(.onItem, at: now))
 
         guard item != currentItem || !isVisible else { return }
 
@@ -100,15 +115,55 @@ public final class DockPreviewController {
 
     private func scheduleHide() {
         guard isVisible else { return }
+        perform(lifecycle.pointerMoved(pointerRegion(), at: now))
+    }
+
+    /// Where the pointer is right now, relative to the panel and its Dock item.
+    private func pointerRegion() -> DockPointerRegion {
+        if isMouseInsidePanel() { return .onPanel }
+        if isMouseInsideCurrentDockItem() { return .onItem }
+        return .outside
+    }
+
+    private func perform(_ effects: [DockPanelLifecycle.Effect]) {
+        for effect in effects {
+            switch effect {
+            case .scheduleHide:
+                startHideTimer()
+            case .cancelHide:
+                hideTask?.cancel()
+                hideTask = nil
+            case .hide:
+                hide()
+            }
+        }
+    }
+
+    private func startHideTimer() {
         let delay = preferences.dockHideDelay
         hideTask?.cancel()
         hideTask = Task { [weak self] in
             try? await Task.sleep(for: .seconds(delay))
             guard !Task.isCancelled, let self else { return }
-            // Keep the panel open while the pointer is inside it, so the user
-            // can actually move from the Dock icon onto a preview tile.
-            if self.isMouseInsidePanel() { return }
-            self.hide()
+            // Decided against where the pointer is *now*, so the panel stays
+            // open when the user reached it, and closes when they did not.
+            self.perform(self.lifecycle.hideTimerFired(pointer: self.pointerRegion()))
+        }
+    }
+
+    private func armInactivity(after seconds: TimeInterval) {
+        inactivityTask?.cancel()
+        inactivityTask = Task { [weak self] in
+            try? await Task.sleep(for: .seconds(seconds))
+            guard !Task.isCancelled, let self else { return }
+            switch self.lifecycle.inactivityTimerFired(at: self.now) {
+            case .none:
+                break
+            case .rearm(let after):
+                self.armInactivity(after: after)
+            case .hide:
+                self.hide()
+            }
         }
     }
 
@@ -159,6 +214,8 @@ public final class DockPreviewController {
         panel.setFrame(NSRect(origin: panelOrigin(for: item, size: clamped), size: clamped), display: true)
         panel.orderFrontRegardless()
         isVisible = true
+        _ = lifecycle.panelShown(at: now)
+        armInactivity(after: DockPanelLifecycle.inactivityBound)
         startMouseTracking()
     }
 
@@ -185,7 +242,9 @@ public final class DockPreviewController {
                     self?.quitApp(at: index)
                 },
                 onHover: { [weak self] index in
-                    guard let self, self.hoveredIndex != index else { return }
+                    guard let self else { return }
+                    self.lifecycle.interaction(at: self.now)
+                    guard self.hoveredIndex != index else { return }
                     self.hoveredIndex = index
                     self.render()
                 }
@@ -298,9 +357,7 @@ public final class DockPreviewController {
         mouseMonitor = NSEvent.addGlobalMonitorForEvents(matching: [.mouseMoved]) { _ in
             MainActor.assumeIsolated { [weak self] in
                 guard let self, self.isVisible else { return }
-                if !self.isMouseInsidePanel() && !self.isMouseInsideCurrentDockItem() {
-                    self.scheduleHide()
-                }
+                self.perform(self.lifecycle.pointerMoved(self.pointerRegion(), at: self.now))
             }
         }
     }
@@ -347,8 +404,11 @@ public final class DockPreviewController {
     public func hide() {
         showTask?.cancel()
         hideTask?.cancel()
+        inactivityTask?.cancel()
         showTask = nil
         hideTask = nil
+        inactivityTask = nil
+        lifecycle.panelHidden()
         unresolvedItem = nil
         stopMouseTracking()
         // Fires even when no panel was on screen: hovering an icon without

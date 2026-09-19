@@ -118,6 +118,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- The Dock preview's lifetime is one state machine (`DockPanelLifecycle`, unit
+  tested) instead of a scheduled hide plus a fire-time check. The Dock item and
+  the panel are one hover region: moving between them cancels a pending hide,
+  and a stale timer does nothing. A panel with no pointer movement and no
+  interaction for ten seconds now closes itself; the timer exists only while a
+  panel is on screen and `hide()` cancels it on every exit.
 - `openswitchr-diag --probe-app` decides whether focus moved by the frontmost
   window's `CGWindowID` instead of by a rendered "app — title" string, which
   read a correct switch as a failure whenever two windows shared a title. The
