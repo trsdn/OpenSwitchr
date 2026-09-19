@@ -90,15 +90,15 @@ criteria:
   T04: na
   T05: na
 
-  # --- Published Sites (there is no site) ----------------------------------
-  W01: na
-  W02: na
-  W03: na
-  W04: na
-  W05: na
-  W06: na
-  W07: na
-  W08: na
+  # --- Published Sites (docs/index.html, served by GitHub Pages) ----------
+  W01: pass
+  W02: pass
+  W03: pass
+  W04: pass
+  W05: pass
+  W06: pass
+  W07: pass
+  W08: pass
 
   # --- Agent Readiness ---------------------------------------------------
   G01: pass

@@ -118,6 +118,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- A project page at `docs/index.html`, served by GitHub Pages: what it is, who it
+  is for, status and version, how to get it, the privacy statement, and the
+  repository, license, security and support links. One page, no scripts, no
+  third-party resources, no cookies, styled with Instrument Workshop v1.5.1
+  vendored unmodified with its version recorded in `docs/assets/VERSION`. The
+  Published Sites criteria (`W01`-`W08`) are now assessed and pass; the network
+  review behind `W07` is in `docs/self-assessment.md`.
 - `openswitchr-diag --check-budgets` turns the measured performance numbers
   into thresholds that can fail: cold and warm index rebuild, cold thumbnails,
   and cache hits, checked against budgets kept in one file next to the harness.

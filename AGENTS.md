@@ -390,6 +390,27 @@ stays anchored where it was placed, and the Dock is **not** held open. Holding i
 open means driving state that is not ours and restoring it on every exit path,
 including a crash. Do not add that.
 
+### The published site
+
+`docs/index.html` is the project page, served by GitHub Pages' branch build from
+`main` / `docs` (the repository `homepage` field points at it). Publishing is a
+merge to `main`; there is deliberately no deployment workflow, because one needs
+`pages: write` and an environment, which no workflow here may have.
+
+- **It is one page for readers, not contributors.** Contribution notes,
+  architecture and decision records stay in the repository; the page states each
+  fact once and links back (`W08`). Do not grow a contributor section on it.
+- **No third-party resources, cookies or analytics** (`W07`). No web font, no
+  script, no image from another host. Check with
+  `grep -o -E '(src|href)="https?://[^"]+' docs/index.html`: only links a visitor
+  clicks should remain.
+- **`docs/assets/core.tokens.css` and `instrument-workshop.css` are vendored
+  and unmodified.** `docs/assets/VERSION` records the tag, commit and SHA-256;
+  update it when the copy is refreshed, never edit the stylesheets by hand.
+- `docs/.nojekyll` keeps the Jekyll pass off so the markdown in `docs/` is not
+  rendered as pages.
+- Update the "last reviewed" date on the page when its content is reviewed.
+
 ## Three window-server facts that are easy to get wrong
 
 `CGWindowListCopyWindowInfo` documents front-to-back ordering **only** for

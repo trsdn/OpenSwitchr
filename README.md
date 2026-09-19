@@ -45,7 +45,9 @@ overlay are thin readers on top.
 
 Early, and actively developed. The core is implemented and measured, `v0.1.0`
 is tagged, and releases run through the notarization broker. There is no
-published binary yet, so installing means building from source.
+published binary yet, so installing means building from source. There is a
+[project page](https://trsdn.github.io/OpenSwitchr/) for readers who want the
+product rather than the source.
 
 ## Requirements
 
