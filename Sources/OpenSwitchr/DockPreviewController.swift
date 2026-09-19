@@ -18,6 +18,9 @@ public final class DockPreviewController {
     /// Decided when a row is shown and kept until it is hidden, so hovering
     /// tiles never flips the layout.
     private var tileMode: TileMode = .previews
+
+    /// The edge the Dock is on for the row currently shown; sets row or column.
+    private var dockEdge: DockEdge = .bottom
     private var currentItem: DockHoverMonitor.DockItem?
     private var showTask: Task<Void, Never>?
     private var hideTask: Task<Void, Never>?
@@ -204,14 +207,11 @@ public final class DockPreviewController {
             thumbnails.prefetch(matches.map(\.id), maxPixelSize: tile.width * 2)
         }
 
-        let size = DockPreviewView.panelSize(windowCount: matches.count, tileSize: tile)
-        let clamped = NSSize(
-            width: min(size.width, (NSScreen.main?.visibleFrame.width ?? 1200) * 0.9),
-            height: size.height
-        )
+        let placement = placement(for: item, windowCount: matches.count, tileSize: tile)
+        dockEdge = placement.edge
 
         render()
-        panel.setFrame(NSRect(origin: panelOrigin(for: item, size: clamped), size: clamped), display: true)
+        panel.setFrame(NSRect(origin: placement.origin, size: placement.size), display: true)
         panel.orderFrontRegardless()
         isVisible = true
         _ = lifecycle.panelShown(at: now)
@@ -228,6 +228,7 @@ public final class DockPreviewController {
                 tileSize: tileSize(),
                 showsCloseButtons: preferences.showCloseButton,
                 usesPreviews: tileMode == .previews,
+                edge: dockEdge,
                 onActivate: { [weak self] index in
                     guard let self, self.windows.indices.contains(index) else { return }
                     let window = self.windows[index]
@@ -274,13 +275,10 @@ public final class DockPreviewController {
         }
 
         let tile = tileSize()
-        let size = DockPreviewView.panelSize(windowCount: windows.count, tileSize: tile)
-        let clamped = NSSize(
-            width: min(size.width, (NSScreen.main?.visibleFrame.width ?? 1200) * 0.9),
-            height: size.height
-        )
+        let placement = placement(for: item, windowCount: windows.count, tileSize: tile)
+        dockEdge = placement.edge
         render()
-        panel.setFrame(NSRect(origin: panelOrigin(for: item, size: clamped), size: clamped), display: true)
+        panel.setFrame(NSRect(origin: placement.origin, size: placement.size), display: true)
     }
 
     /// Asks a previewed window's app to quit, then dismisses the panel.
@@ -302,37 +300,39 @@ public final class DockPreviewController {
         TileModePolicy.tileSize(for: tileMode, previewWidth: preferences.tileWidth * 0.9)
     }
 
-    /// Places the panel next to the Dock item, on whichever edge the Dock is.
-    private func panelOrigin(for item: DockHoverMonitor.DockItem, size: NSSize) -> NSPoint {
+    /// Where the panel goes and how big it is, from where the Dock item
+    /// actually is.
+    ///
+    /// The screen is whichever one contains the item's centre — never
+    /// `NSScreen.main`, which is the screen with the key window and not
+    /// necessarily the one the pointer is on. Read when a panel is about to be
+    /// shown, not on a schedule.
+    ///
+    /// With an auto-hiding Dock the item's frame is only valid while the Dock is
+    /// shown, and it can slide away under an open panel. The behaviour is
+    /// deliberately one thing: the panel stays where it was anchored, and the
+    /// Dock is *not* held open, because that would mean driving state that is
+    /// not ours and restoring it on every exit path, including a crash.
+    private func placement(
+        for item: DockHoverMonitor.DockItem,
+        windowCount: Int,
+        tileSize: CGSize
+    ) -> (edge: DockEdge, size: NSSize, origin: NSPoint) {
         let itemRect = Self.screenRect(of: item)
+        let screens = NSScreen.screens
+        let screenIndex = DockPanelPlacement.screenIndex(containing: itemRect, in: screens.map(\.frame))
+        let screen = screenIndex.map { screens[$0] } ?? NSScreen.main
+        let frame = screen?.frame ?? NSRect(x: 0, y: 0, width: 1440, height: 900)
+        let visible = screen?.visibleFrame ?? frame
 
-        let screen = NSScreen.screens.first { $0.frame.intersects(itemRect) } ?? NSScreen.main
-        let visible = screen?.visibleFrame ?? NSRect(x: 0, y: 0, width: 1440, height: 900)
-        let gap: CGFloat = 8
-
-        let edge = dockEdge(itemRect: itemRect, screenFrame: screen?.frame ?? visible)
-
-        var origin: NSPoint
-        switch edge {
-        case .bottom:
-            origin = NSPoint(x: itemRect.midX - size.width / 2, y: itemRect.maxY + gap)
-        case .left:
-            origin = NSPoint(x: itemRect.maxX + gap, y: itemRect.midY - size.height / 2)
-        case .right:
-            origin = NSPoint(x: itemRect.minX - size.width - gap, y: itemRect.midY - size.height / 2)
-        }
-
-        origin.x = min(max(origin.x, visible.minX + 4), visible.maxX - size.width - 4)
-        origin.y = min(max(origin.y, visible.minY + 4), visible.maxY - size.height - 4)
-        return origin
-    }
-
-    private enum DockEdge { case bottom, left, right }
-
-    private func dockEdge(itemRect: NSRect, screenFrame: NSRect) -> DockEdge {
-        if itemRect.minX <= screenFrame.minX + 4 { return .left }
-        if itemRect.maxX >= screenFrame.maxX - 4 { return .right }
-        return .bottom
+        let edge = DockPanelPlacement.edge(itemRect: itemRect, screenFrame: frame)
+        let natural = DockPreviewView.panelSize(windowCount: windowCount, tileSize: tileSize, edge: edge)
+        let size = NSSize(
+            width: min(natural.width, visible.width * 0.9),
+            height: min(natural.height, visible.height * 0.9)
+        )
+        let origin = DockPanelPlacement.origin(itemRect: itemRect, panelSize: size, edge: edge, visibleFrame: visible)
+        return (edge, size, origin)
     }
 
     private func resolveWindows(for item: DockHoverMonitor.DockItem) -> [WindowInfo] {

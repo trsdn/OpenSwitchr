@@ -118,6 +118,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- The Dock preview is placed from where the Dock item actually is
+  (`DockPanelPlacement`, unit tested). A left or right Dock was misdetected as a
+  bottom one, because the edge check required the icon to be within 4 pt of the
+  screen edge and a Dock icon sits inside the Dock's own padding; the edge is now
+  the nearest one. The screen is the one containing the item's centre instead of
+  `NSScreen.main`, the panel is clamped inside that screen's visible frame, and a
+  side Dock gets a scrolling column rather than a row that runs off the screen.
 - The Dock preview's lifetime is one state machine (`DockPanelLifecycle`, unit
   tested) instead of a scheduled hide plus a fire-time check. The Dock item and
   the panel are one hover region: moving between them cancels a pending hide,
