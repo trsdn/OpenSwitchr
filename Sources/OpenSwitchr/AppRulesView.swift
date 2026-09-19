@@ -53,8 +53,16 @@ struct AppRulesView: View {
 
             Section("Add a rule") {
                 HStack {
-                    TextField("Bundle identifier prefix", text: $newPrefix)
-                        .textFieldStyle(.roundedBorder)
+                    // The label is the field's own prompt rather than a leading label:
+                    // beside the field it wrapped onto two lines in German and
+                    // squeezed the field it names.
+                    TextField(
+                        "Bundle identifier prefix",
+                        text: $newPrefix,
+                        prompt: Text("Bundle identifier prefix")
+                    )
+                    .labelsHidden()
+                    .textFieldStyle(.roundedBorder)
                         .font(.system(.body, design: .monospaced))
                         .onSubmit(addTypedPrefix)
                     Button("Add", action: addTypedPrefix)

@@ -608,7 +608,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Einmal am Tag fragt OpenSwitchr bei GitHub nach, ob eine neuere Version vorliegt, und lädt sie herunter, damit die Installation ein Klick ist. Das ist die einzige Netzwerkverbindung der App, und sie geht nur zu GitHub. Ist die Option aus, wird nichts kontaktiert, es sei denn, du wählst selbst „Nach Updates suchen …“."
+            "value": "Einmal am Tag fragt OpenSwitchr bei GitHub nach, ob eine neuere Version vorliegt, und lädt sie herunter, damit die Installation ein Klick ist. Das ist die einzige Netzwerkverbindung der App, und sie geht nur zu GitHub. Ist die Option aus, wird nichts kontaktiert, außer über „Nach Updates suchen …“ im Menü."
           }
         }
       }
