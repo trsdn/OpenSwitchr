@@ -51,8 +51,10 @@ struct WindowIndexFocusTests {
 
     @Test("Without an element the app's most recent window is the best guess")
     func fallsBackToTheAppsMostRecentWindow() {
-        let windows = [window(id: 10, element: distinctElement(1)),
-                       window(id: 11, element: distinctElement(2))]
+        let windows = [
+            window(id: 10, element: distinctElement(1)),
+            window(id: 11, element: distinctElement(2)),
+        ]
 
         let target = WindowIndex.focusTarget(pid: 42, element: nil, in: windows)
 
@@ -73,8 +75,10 @@ struct WindowIndexFocusTests {
     @Test("A matched element still wins when the index still thinks it is minimized")
     func matchedElementWinsOverStaleMinimizedFlag() {
         let restored = distinctElement(2)
-        let windows = [window(id: 10, element: distinctElement(1)),
-                       window(id: 11, element: restored, minimized: true)]
+        let windows = [
+            window(id: 10, element: distinctElement(1)),
+            window(id: 11, element: restored, minimized: true),
+        ]
 
         let target = WindowIndex.focusTarget(pid: 42, element: restored, in: windows)
 
@@ -83,8 +87,10 @@ struct WindowIndexFocusTests {
 
     @Test("The fallback never picks a minimized window")
     func fallbackSkipsMinimizedWindows() {
-        let windows = [window(id: 10, element: distinctElement(1), minimized: true),
-                       window(id: 11, element: distinctElement(2))]
+        let windows = [
+            window(id: 10, element: distinctElement(1), minimized: true),
+            window(id: 11, element: distinctElement(2)),
+        ]
 
         let target = WindowIndex.focusTarget(pid: 42, element: nil, in: windows)
 

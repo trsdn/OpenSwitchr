@@ -28,6 +28,6 @@ enum Budgets {
         // README: ~340-540 ms, streamed into the UI.
         PerformanceBudget(name: coldThumbnails, limitMilliseconds: 2_000),
         // README: < 0.1 ms each.
-        PerformanceBudget(name: cacheHits, limitMilliseconds: 5)
+        PerformanceBudget(name: cacheHits, limitMilliseconds: 5),
     ]
 }

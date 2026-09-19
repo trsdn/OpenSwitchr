@@ -83,7 +83,8 @@ public enum AXBridge {
     /// what `CGWindowListCopyWindowInfo` reports.
     public static func frame(_ element: AXUIElement) -> CGRect? {
         guard let origin = point(element, kAXPositionAttribute as String),
-              let size = size(element, kAXSizeAttribute as String) else { return nil }
+            let size = size(element, kAXSizeAttribute as String)
+        else { return nil }
         return CGRect(origin: origin, size: size)
     }
 

@@ -91,12 +91,13 @@ struct CaptureLimiterTests {
 
         var tasks: [Task<Void?, Never>] = []
         for (name, priority) in [("a", CaptureLimiter.Priority.normal), ("b", .normal), ("selected", .high)] {
-            tasks.append(Task {
-                await limiter.run(priority: priority) {
-                    await recorder.began(name)
-                    await recorder.ended()
-                }
-            })
+            tasks.append(
+                Task {
+                    await limiter.run(priority: priority) {
+                        await recorder.began(name)
+                        await recorder.ended()
+                    }
+                })
             await waitUntilQueued(limiter, tasks.count)
         }
 

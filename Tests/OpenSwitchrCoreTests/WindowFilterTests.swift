@@ -50,7 +50,7 @@ struct WindowFilterTests {
         let windows = [
             window(id: 1, app: "Safari", pid: 10),
             window(id: 2, app: "Xcode", pid: 20),
-            window(id: 3, app: "Safari", pid: 10)
+            window(id: 3, app: "Safari", pid: 10),
         ]
         let filter = WindowFilter(applications: .frontmostOnly)
         let result = filter.apply(to: windows, context: .init(frontmostPID: 10))
@@ -62,7 +62,7 @@ struct WindowFilterTests {
     func excludingFrontmost() {
         let windows = [
             window(id: 1, app: "Safari", pid: 10),
-            window(id: 2, app: "Xcode", pid: 20)
+            window(id: 2, app: "Xcode", pid: 20),
         ]
         let filter = WindowFilter(applications: .excludingFrontmost)
 
@@ -73,7 +73,7 @@ struct WindowFilterTests {
     func unknownFrontmostShowsEverything() {
         let windows = [
             window(id: 1, app: "Safari", pid: 10),
-            window(id: 2, app: "Xcode", pid: 20)
+            window(id: 2, app: "Xcode", pid: 20),
         ]
 
         // Both scopes would otherwise be free to remove every window, which is
@@ -96,7 +96,7 @@ struct WindowFilterTests {
             window(id: 1, minimized: true),
             window(id: 2),
             window(id: 3, minimized: true),
-            window(id: 4)
+            window(id: 4),
         ]
 
         #expect(WindowFilter(minimized: .showAfterOthers).apply(to: windows).map(\.id) == [2, 4, 1, 3])
@@ -108,7 +108,7 @@ struct WindowFilterTests {
             window(id: 1, app: "Zed", minimized: true),
             window(id: 2, app: "Safari"),
             window(id: 3, app: "Arc", minimized: true),
-            window(id: 4, app: "Xcode")
+            window(id: 4, app: "Xcode"),
         ]
 
         let filter = WindowFilter(minimized: .showAfterOthers, order: .alphabetical)
@@ -149,7 +149,7 @@ struct WindowFilterTests {
             window(id: 1, minimized: true),
             window(id: 2),
             window(id: 3, minimized: true),
-            window(id: 4)
+            window(id: 4),
         ]
 
         #expect(WindowFilter(minimized: .showAfterOthers).apply(to: windows).map(\.id) == [2, 4, 1, 3])
@@ -223,7 +223,8 @@ struct WindowFilterTests {
         let filter = WindowFilter(screens: .surfaceScreenOnly)
         let screen = CGRect(x: 0, y: 0, width: 1440, height: 900)
 
-        #expect(filter.apply(to: [onThisScreen, onAnotherScreen], context: .init(screenFrame: screen)).map(\.id) == [1])
+        #expect(
+            filter.apply(to: [onThisScreen, onAnotherScreen], context: .init(screenFrame: screen)).map(\.id) == [1])
     }
 
     @Test("A window straddling two displays belongs to both")
@@ -231,7 +232,9 @@ struct WindowFilterTests {
         let straddling = window(id: 1, frame: CGRect(x: 1300, y: 100, width: 400, height: 300))
         let filter = WindowFilter(screens: .surfaceScreenOnly)
 
-        #expect(filter.apply(to: [straddling], context: .init(screenFrame: CGRect(x: 0, y: 0, width: 1440, height: 900))).map(\.id) == [1])
+        #expect(
+            filter.apply(to: [straddling], context: .init(screenFrame: CGRect(x: 0, y: 0, width: 1440, height: 900)))
+                .map(\.id) == [1])
     }
 
     @Test("Minimized windows survive a display restriction, because they are on no display")
@@ -241,7 +244,9 @@ struct WindowFilterTests {
         let minimized = window(id: 1, minimized: true, frame: CGRect(x: 5000, y: 5000, width: 1, height: 1))
         let filter = WindowFilter(screens: .surfaceScreenOnly)
 
-        #expect(filter.apply(to: [minimized], context: .init(screenFrame: CGRect(x: 0, y: 0, width: 1440, height: 900))).map(\.id) == [1])
+        #expect(
+            filter.apply(to: [minimized], context: .init(screenFrame: CGRect(x: 0, y: 0, width: 1440, height: 900)))
+                .map(\.id) == [1])
     }
 
     @Test("Without a screen frame the display restriction does nothing")
@@ -263,7 +268,7 @@ struct WindowFilterTests {
         let windows = [
             window(id: 1, openedRank: 5),
             window(id: 2, openedRank: 9),
-            window(id: 3, openedRank: 7)
+            window(id: 3, openedRank: 7),
         ]
         #expect(WindowFilter(order: .recentlyOpened).apply(to: windows).map(\.id) == [2, 3, 1])
     }
@@ -273,7 +278,7 @@ struct WindowFilterTests {
         let windows = [
             window(id: 1, app: "Safari", title: "Zebra"),
             window(id: 2, app: "Arc", title: "Beta"),
-            window(id: 3, app: "Safari", title: "Alpha")
+            window(id: 3, app: "Safari", title: "Alpha"),
         ]
         #expect(WindowFilter(order: .alphabetical).apply(to: windows).map(\.id) == [2, 3, 1])
     }
@@ -282,7 +287,7 @@ struct WindowFilterTests {
     func alphabeticalIsCaseInsensitive() {
         let windows = [
             window(id: 1, app: "Safari", title: "beta"),
-            window(id: 2, app: "Safari", title: "Alpha")
+            window(id: 2, app: "Safari", title: "Alpha"),
         ]
         #expect(WindowFilter(order: .alphabetical).apply(to: windows).map(\.id) == [2, 1])
     }
@@ -294,7 +299,7 @@ struct WindowFilterTests {
         let windows = [
             window(id: 1, app: "Arc", pid: 20),
             window(id: 2, app: "Safari", pid: 10),
-            window(id: 3, app: "Zed", pid: 10)
+            window(id: 3, app: "Zed", pid: 10),
         ]
 
         let filter = WindowFilter(applications: .frontmostOnly, order: .alphabetical)

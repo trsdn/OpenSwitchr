@@ -63,7 +63,8 @@ public enum WindowMatcher {
             return (window, score, index)
         }
 
-        return scored
+        return
+            scored
             .sorted { lhs, rhs in
                 if lhs.score != rhs.score { return lhs.score > rhs.score }
                 return lhs.rank < rhs.rank

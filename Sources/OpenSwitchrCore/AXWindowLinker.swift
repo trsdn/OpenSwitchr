@@ -65,17 +65,19 @@ enum AXWindowLinker {
             kAXTitleAttribute as String,
             kAXPositionAttribute as String,
             kAXSizeAttribute as String,
-            kAXMinimizedAttribute as String
+            kAXMinimizedAttribute as String,
         ]
 
         return AXBridge.elements(app, kAXWindowsAttribute as String).compactMap { element in
             let values = AXBridge.values(element, attributes)
             let isMinimized = AXBridge.bool(values[5]) ?? false
-            guard isSwitchable(
-                role: AXBridge.string(values[0]),
-                subrole: AXBridge.string(values[1]),
-                isMinimized: isMinimized
-            ) else {
+            guard
+                isSwitchable(
+                    role: AXBridge.string(values[0]),
+                    subrole: AXBridge.string(values[1]),
+                    isMinimized: isMinimized
+                )
+            else {
                 return nil
             }
 
@@ -188,7 +190,8 @@ enum AXWindowLinker {
         // minimized veto still applies: it is a hard contradiction, not a weak
         // signal.
         if result.isEmpty, axWindows.count == 1, entries.count == 1,
-           isCompatible(ax: axWindows[0], entry: entries[0]) {
+            isCompatible(ax: axWindows[0], entry: entries[0])
+        {
             result[entries[0].id] = axWindows[0]
         }
 

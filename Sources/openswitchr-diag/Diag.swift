@@ -24,13 +24,15 @@ enum Diag {
         let arguments = Set(CommandLine.arguments.dropFirst())
 
         guard AXBridge.isTrusted else {
-            FileHandle.standardError.write(Data("""
-            Accessibility permission missing for this process.
+            FileHandle.standardError.write(
+                Data(
+                    """
+                    Accessibility permission missing for this process.
 
-            Grant it to the terminal you are running from:
-              System Settings > Privacy & Security > Accessibility
+                    Grant it to the terminal you are running from:
+                      System Settings > Privacy & Security > Accessibility
 
-            """.utf8))
+                    """.utf8))
             exit(1)
         }
 
@@ -151,9 +153,10 @@ enum Diag {
             print("Claimed by no display: \(unreachable.count)")
             for window in unreachable {
                 let frame = window.frame
-                print("  " + pad(short(window.appName, 20), 22)
-                      + pad(window.isMinimized ? "minimized" : "on screen", 12)
-                      + "\(Int(frame.width))×\(Int(frame.height)) at \(Int(frame.minX)),\(Int(frame.minY))")
+                print(
+                    "  " + pad(short(window.appName, 20), 22)
+                        + pad(window.isMinimized ? "minimized" : "on screen", 12)
+                        + "\(Int(frame.width))×\(Int(frame.height)) at \(Int(frame.minX)),\(Int(frame.minY))")
             }
         }
 
@@ -167,19 +170,25 @@ enum Diag {
         let readStarted = CFAbsoluteTimeGetCurrent()
         let running = NSWorkspace.shared.runningApplications
             .filter { $0.activationPolicy == .regular && !$0.isTerminated }
-            .map { RunningApplication(pid: $0.processIdentifier, bundleID: $0.bundleIdentifier, name: $0.localizedName ?? "?") }
+            .map {
+                RunningApplication(
+                    pid: $0.processIdentifier, bundleID: $0.bundleIdentifier, name: $0.localizedName ?? "?")
+            }
         let windowless = WindowlessApplications.entries(
             running: running,
             windowedPIDs: Set(windows.map(\.pid)),
             ownPID: ProcessInfo.processInfo.processIdentifier
         )
         print("")
-        print("Applications with no windows: \(windowless.count) of \(running.count) running, read in \(ms(CFAbsoluteTimeGetCurrent() - readStarted))")
+        print(
+            "Applications with no windows: \(windowless.count) of \(running.count) running, read in \(ms(CFAbsoluteTimeGetCurrent() - readStarted))"
+        )
         for entry in windowless.prefix(12) {
             print("  " + pad(short(entry.appName, 30), 32) + (entry.bundleID ?? "-"))
         }
         let shown = WindowFilter(windowless: .show).apply(to: windows + windowless)
-        print("  Switcher list with them shown: \(shown.count) entries (\(windows.count) windows + \(windowless.count))")
+        print(
+            "  Switcher list with them shown: \(shown.count) entries (\(windows.count) windows + \(windowless.count))")
 
         print("")
         print("Full screen detection, against the attached displays")
@@ -218,8 +227,9 @@ enum Diag {
 
         print("")
         print("Link audit")
-        print(pad("ID", 8) + pad("APP", 16) + pad("CG FRAME", 22) + pad("AX FRAME", 22)
-              + pad("TITLES", 10) + "AX TITLE")
+        print(
+            pad("ID", 8) + pad("APP", 16) + pad("CG FRAME", 22) + pad("AX FRAME", 22)
+                + pad("TITLES", 10) + "AX TITLE")
 
         var titleMismatches = 0
         var frameMismatches = 0
@@ -248,7 +258,8 @@ enum Diag {
                 titleMismatches += 1
             }
 
-            let framesEqual = abs(axFrame.origin.x - entry.frame.origin.x) <= 2
+            let framesEqual =
+                abs(axFrame.origin.x - entry.frame.origin.x) <= 2
                 && abs(axFrame.origin.y - entry.frame.origin.y) <= 2
                 && abs(axFrame.width - entry.frame.width) <= 2
                 && abs(axFrame.height - entry.frame.height) <= 2
@@ -300,7 +311,9 @@ enum Diag {
             // comes from --probe-focus, which raises them and looks.
             var axOrder: [String: Int] = [:]
             for (position, element) in axElements.enumerated() {
-                guard let title = AXBridge.string(element, kAXTitleAttribute as String), !title.isEmpty else { continue }
+                guard let title = AXBridge.string(element, kAXTitleAttribute as String), !title.isEmpty else {
+                    continue
+                }
                 if axOrder[title] == nil { axOrder[title] = position }
             }
 
@@ -337,7 +350,8 @@ enum Diag {
             for a in group {
                 let clashes = group.contains { b in
                     guard b.id != a.id,
-                          let fa = byID[a.id]?.frame, let fb = byID[b.id]?.frame else { return false }
+                        let fa = byID[a.id]?.frame, let fb = byID[b.id]?.frame
+                    else { return false }
                     return abs(fa.origin.x - fb.origin.x) <= 2 && abs(fa.origin.y - fb.origin.y) <= 2
                         && abs(fa.width - fb.width) <= 2 && abs(fa.height - fb.height) <= 2
                 }
@@ -437,7 +451,7 @@ enum Diag {
         print("Capture, cache hits:        \(ms(cachedSeconds))")
         return [
             Budgets.coldThumbnails: coldSeconds * 1000,
-            Budgets.cacheHits: cachedSeconds * 1000
+            Budgets.cacheHits: cachedSeconds * 1000,
         ]
     }
 
@@ -451,8 +465,9 @@ enum Diag {
         for budget in Budgets.all {
             let status: String
             if let measured = measurements[budget.name] {
-                status = String(format: "%8.1f ms  budget %6.0f ms  %@", measured, budget.limitMilliseconds,
-                                measured > budget.limitMilliseconds ? "EXCEEDED" : "ok")
+                status = String(
+                    format: "%8.1f ms  budget %6.0f ms  %@", measured, budget.limitMilliseconds,
+                    measured > budget.limitMilliseconds ? "EXCEEDED" : "ok")
             } else {
                 status = "not measured  budget \(Int(budget.limitMilliseconds)) ms  MISSING"
             }

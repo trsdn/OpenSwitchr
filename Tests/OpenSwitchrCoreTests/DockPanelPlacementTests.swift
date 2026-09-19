@@ -52,7 +52,9 @@ struct DockPanelPlacementTests {
 
     @Test("An item on no screen at all has no screen")
     func noScreen() {
-        #expect(DockPanelPlacement.screenIndex(containing: CGRect(x: 9000, y: 9000, width: 10, height: 10), in: [screen]) == nil)
+        #expect(
+            DockPanelPlacement.screenIndex(containing: CGRect(x: 9000, y: 9000, width: 10, height: 10), in: [screen])
+                == nil)
     }
 
     // MARK: - Origin
@@ -88,7 +90,8 @@ struct DockPanelPlacementTests {
     func clamped() {
         let visible = CGRect(x: 0, y: 0, width: 1440, height: 875)
         let farLeft = CGRect(x: 2, y: 5, width: 60, height: 60)
-        let origin = DockPanelPlacement.origin(itemRect: farLeft, panelSize: panel, edge: .bottom, visibleFrame: visible)
+        let origin = DockPanelPlacement.origin(
+            itemRect: farLeft, panelSize: panel, edge: .bottom, visibleFrame: visible)
         #expect(origin.x >= visible.minX)
     }
 

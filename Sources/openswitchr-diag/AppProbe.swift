@@ -21,7 +21,8 @@ enum AppProbe {
         // The fallback must mirror `PreferencesStore`, which registers
         // `command`. A divergence here would press the wrong key on a fresh
         // install and report an app failure that does not exist.
-        let stored = UserDefaults(suiteName: "com.openswitchr.app")?
+        let stored =
+            UserDefaults(suiteName: "com.openswitchr.app")?
             .string(forKey: "holdModifier") ?? "command"
         switch stored {
         case "control": return ("⌃", 0x3B, .maskControl)
@@ -31,9 +32,11 @@ enum AppProbe {
     }
 
     static func run() {
-        guard let app = NSRunningApplication
-            .runningApplications(withBundleIdentifier: "com.openswitchr.app")
-            .first
+        guard
+            let app =
+                NSRunningApplication
+                .runningApplications(withBundleIdentifier: "com.openswitchr.app")
+                .first
         else {
             print("OpenSwitchr is not running. Launch it, then run this again.")
             exit(1)
@@ -83,9 +86,10 @@ enum AppProbe {
         // window that appeared since the keystroke can be the system switcher.
         let newDockWindows = dockWindowIDs().subtracting(dockBefore)
         if modifier.name == "⌘" {
-            print(newDockWindows.isEmpty
-                ? "  System app switcher: suppressed."
-                : "  FAILED: the macOS app switcher appeared as well.")
+            print(
+                newDockWindows.isEmpty
+                    ? "  System app switcher: suppressed."
+                    : "  FAILED: the macOS app switcher appeared as well.")
         }
 
         usleep(250_000)
@@ -95,7 +99,10 @@ enum AppProbe {
         // they want was invisible to it.
         if appearance != nil {
             if let vanished = timeUntilPanelVanishes(within: 4.0, ignoring: panelsBefore) {
-                print(String(format: "  FAILED: overlay vanished %.1f s into the hold, with the modifier still down.", vanished))
+                print(
+                    String(
+                        format: "  FAILED: overlay vanished %.1f s into the hold, with the modifier still down.",
+                        vanished))
             } else {
                 print("  Held for 4 s: still on screen.")
             }
@@ -104,7 +111,8 @@ enum AppProbe {
         key(modifier.key, down: false, flags: [])
         usleep(700_000)
 
-        print("  On release: \(panels().keys.contains(where: { !panelsBefore.contains($0) }) ? "STILL OPEN" : "closed")")
+        print(
+            "  On release: \(panels().keys.contains(where: { !panelsBefore.contains($0) }) ? "STILL OPEN" : "closed")")
 
         let after = frontmostWindow()
         print("  Focus: \(before.description) -> \(after.description)")
@@ -125,9 +133,11 @@ enum AppProbe {
     private static func probeDockInterference(panelsBefore: Set<Int>) {
         let switcherPanels = Set(panels().keys).subtracting(panelsBefore)
         guard !switcherPanels.isEmpty else { return }
-        guard let item = dockItems().first(where: {
-            ["Safari", "Google Chrome", "Microsoft Edge", "Finder"].contains($0.title)
-        }) else { return }
+        guard
+            let item = dockItems().first(where: {
+                ["Safari", "Google Chrome", "Microsoft Edge", "Finder"].contains($0.title)
+            })
+        else { return }
 
         move(to: item.point)
         usleep(150_000)
@@ -137,9 +147,10 @@ enum AppProbe {
         usleep(900_000)
 
         let survived = !Set(panels().keys).isDisjoint(with: switcherPanels)
-        print(survived
-            ? "  Survived the pointer reaching the Dock during the hold."
-            : "  FAILED: the overlay vanished when the pointer reached the Dock.")
+        print(
+            survived
+                ? "  Survived the pointer reaching the Dock during the hold."
+                : "  FAILED: the overlay vanished when the pointer reached the Dock.")
 
         parkPointer()
     }
@@ -149,15 +160,18 @@ enum AppProbe {
 
         let items = dockItems()
         print("  Dock exposes \(items.count) accessibility items.")
-        guard let target = items.first(where: {
-            ["Safari", "Google Chrome", "Microsoft Edge", "Finder"].contains($0.title)
-        }) else {
+        guard
+            let target = items.first(where: {
+                ["Safari", "Google Chrome", "Microsoft Edge", "Finder"].contains($0.title)
+            })
+        else {
             print("  SKIPPED: no known windowed app found in the Dock.")
             return
         }
 
         let restore = NSEvent.mouseLocation
-        let height = NSScreen.screens.first(where: { $0.frame.origin == .zero })?.frame.height
+        let height =
+            NSScreen.screens.first(where: { $0.frame.origin == .zero })?.frame.height
             ?? NSScreen.main?.frame.height
             ?? 0
         let parked = CGPoint(
@@ -205,10 +219,11 @@ enum AppProbe {
     private static func dockWindowIDs() -> Set<Int> {
         let options: CGWindowListOption = [.optionOnScreenOnly, .excludeDesktopElements]
         let list = CGWindowListCopyWindowInfo(options, kCGNullWindowID) as? [[String: Any]] ?? []
-        return Set(list.compactMap { window -> Int? in
-            guard (window[kCGWindowOwnerName as String] as? String) == "Dock" else { return nil }
-            return window[kCGWindowNumber as String] as? Int
-        })
+        return Set(
+            list.compactMap { window -> Int? in
+                guard (window[kCGWindowOwnerName as String] as? String) == "Dock" else { return nil }
+                return window[kCGWindowNumber as String] as? Int
+            })
     }
 
     /// Panels keyed by window ID, so a caller can ignore whatever was already
@@ -330,9 +345,11 @@ enum AppProbe {
     // MARK: - Dock geometry
 
     private static func dockItems() -> [(title: String, point: CGPoint)] {
-        guard let dock = NSRunningApplication
-            .runningApplications(withBundleIdentifier: "com.apple.dock")
-            .first
+        guard
+            let dock =
+                NSRunningApplication
+                .runningApplications(withBundleIdentifier: "com.apple.dock")
+                .first
         else { return [] }
 
         let app = AXUIElementCreateApplication(dock.processIdentifier)
@@ -341,7 +358,8 @@ enum AppProbe {
         for list in children(of: app) {
             for item in children(of: list) {
                 guard let title = string(item, kAXTitleAttribute as String),
-                      let point = center(of: item) else { continue }
+                    let point = center(of: item)
+                else { continue }
                 result.append((title, point))
             }
         }
@@ -366,14 +384,14 @@ enum AppProbe {
         var positionValue: CFTypeRef?
         var sizeValue: CFTypeRef?
         guard AXUIElementCopyAttributeValue(element, kAXPositionAttribute as CFString, &positionValue) == .success,
-              AXUIElementCopyAttributeValue(element, kAXSizeAttribute as CFString, &sizeValue) == .success,
-              let position = positionValue, let size = sizeValue
+            AXUIElementCopyAttributeValue(element, kAXSizeAttribute as CFString, &sizeValue) == .success,
+            let position = positionValue, let size = sizeValue
         else { return nil }
 
         var origin = CGPoint.zero
         var extent = CGSize.zero
         guard AXValueGetValue(position as! AXValue, .cgPoint, &origin),
-              AXValueGetValue(size as! AXValue, .cgSize, &extent)
+            AXValueGetValue(size as! AXValue, .cgSize, &extent)
         else { return nil }
 
         return CGPoint(x: origin.x + extent.width / 2, y: origin.y + extent.height / 2)

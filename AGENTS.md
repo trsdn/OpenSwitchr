@@ -10,7 +10,9 @@ Guidance for AI coding agents working in this repository.
 bash scripts/check.sh
 ```
 
-That is the authoritative gate. It builds with warnings as errors, runs the
+That is the authoritative gate. It builds with warnings as errors, checks Swift
+formatting with `swift format lint --strict` (fix with `swift format -i --recursive
+Sources Tests`; the style is `.swift-format`), runs the
 tests, lints the markdown, and asserts that the version in `Info.plist` still
 agrees with `CHANGELOG.md` and that the minimum macOS version agrees across
 `Package.swift`, `scripts/build-app.sh`, and the README badge. It needs no

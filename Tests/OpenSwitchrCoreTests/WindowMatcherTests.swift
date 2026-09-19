@@ -24,7 +24,7 @@ struct WindowMatcherTests {
     func emptyQueryPreservesOrder() {
         let windows = [
             window(app: "Safari", title: "GitHub", id: 1),
-            window(app: "Xcode", title: "Package.swift", id: 2)
+            window(app: "Xcode", title: "Package.swift", id: 2),
         ]
 
         #expect(WindowMatcher.filter(windows, query: "   ").map(\.id) == [1, 2])
@@ -69,7 +69,7 @@ struct WindowMatcherTests {
     func nonMatchesAreDropped() {
         let windows = [
             window(app: "Safari", title: "GitHub", id: 1),
-            window(app: "Xcode", title: "Package.swift", id: 2)
+            window(app: "Xcode", title: "Package.swift", id: 2),
         ]
 
         #expect(WindowMatcher.filter(windows, query: "zzz").isEmpty)
@@ -80,7 +80,7 @@ struct WindowMatcherTests {
     func tiesFallBackToMRUOrder() {
         let windows = [
             window(app: "Notes", title: "Report", id: 7),
-            window(app: "Notes", title: "Report", id: 8)
+            window(app: "Notes", title: "Report", id: 8),
         ]
 
         #expect(WindowMatcher.filter(windows, query: "report").map(\.id) == [7, 8])

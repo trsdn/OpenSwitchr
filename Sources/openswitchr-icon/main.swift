@@ -48,18 +48,20 @@ func drawPlate(size: Double) -> NSRect {
 }
 
 func renderIcon(pixels: Int) -> NSBitmapImageRep {
-    guard let rep = NSBitmapImageRep(
-        bitmapDataPlanes: nil,
-        pixelsWide: pixels,
-        pixelsHigh: pixels,
-        bitsPerSample: 8,
-        samplesPerPixel: 4,
-        hasAlpha: true,
-        isPlanar: false,
-        colorSpaceName: .calibratedRGB,
-        bytesPerRow: 0,
-        bitsPerPixel: 0
-    ) else {
+    guard
+        let rep = NSBitmapImageRep(
+            bitmapDataPlanes: nil,
+            pixelsWide: pixels,
+            pixelsHigh: pixels,
+            bitsPerSample: 8,
+            samplesPerPixel: 4,
+            hasAlpha: true,
+            isPlanar: false,
+            colorSpaceName: .calibratedRGB,
+            bytesPerRow: 0,
+            bitsPerPixel: 0
+        )
+    else {
         fatalError("could not allocate a \(pixels)x\(pixels) bitmap")
     }
     rep.size = NSSize(width: Double(pixels), height: Double(pixels))
@@ -100,7 +102,8 @@ let slots: [(name: String, pixels: Int)] = [
 
 // `swift run` starts in the package directory, and `build-app.sh` runs it from
 // there too. An explicit argument stays available for anything that does not.
-let projectDirectory = CommandLine.arguments.count > 1
+let projectDirectory =
+    CommandLine.arguments.count > 1
     ? URL(fileURLWithPath: CommandLine.arguments[1])
     : URL(fileURLWithPath: FileManager.default.currentDirectoryPath)
 

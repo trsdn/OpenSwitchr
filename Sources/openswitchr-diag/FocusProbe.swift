@@ -144,11 +144,14 @@ enum FocusProbe {
     private static func dumpState(pid: pid_t, wanted: WindowInfo) {
         print("    --- state after failing to raise \(wanted.id) (\(wanted.title)) ---")
         for entry in CGWindowSnapshot.current().filter({ $0.pid == pid }) {
-            print("    cg  id=\(entry.id) z=\(entry.zOrder) onScreen=\(entry.isOnScreen) "
-                  + "frame=\(Int(entry.frame.origin.x)),\(Int(entry.frame.origin.y)) "
-                  + "title=\(entry.title ?? "-")")
+            print(
+                "    cg  id=\(entry.id) z=\(entry.zOrder) onScreen=\(entry.isOnScreen) "
+                    + "frame=\(Int(entry.frame.origin.x)),\(Int(entry.frame.origin.y)) "
+                    + "title=\(entry.title ?? "-")")
         }
-        for (position, element) in AXBridge.elements(AXBridge.application(pid: pid), kAXWindowsAttribute as String).enumerated() {
+        for (position, element) in AXBridge.elements(AXBridge.application(pid: pid), kAXWindowsAttribute as String)
+            .enumerated()
+        {
             let title = AXBridge.string(element, kAXTitleAttribute as String) ?? "-"
             let main = AXBridge.bool(element, kAXMainAttribute as String) ?? false
             let origin = AXBridge.point(element, kAXPositionAttribute as String) ?? .zero
