@@ -234,6 +234,14 @@ deliberately does *not* prune tiles: `terminate()` is a request, and an app with
 unsaved work may put up a dialog and stay. The panel dismisses instead, which
 also stops it covering that dialog.
 
+Hovering the Dock icon of an application with no windows shows **no panel**. A
+panel announcing "no windows" is one the user has to get past to reach the icon
+underneath, and it would appear precisely when they were reaching for a click.
+It also could not be truthful: the index only describes the current Space, so an
+application whose only window is on another Space looks exactly like one with no
+windows, and the honest answer to both is "nothing here", not a claim. The Dock
+click is unaffected.
+
 ## What the switcher shows
 
 Both frontends read the same index, but they do not want the same set, so each
