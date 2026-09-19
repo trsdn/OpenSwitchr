@@ -118,6 +118,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- An optional second switcher hotkey (off by default): the hold modifier with the
+  backtick key opens the switcher for the current application's windows only, the
+  question that is awkward to express as a search. The profile is fixed and
+  inherits every other axis from the configured filter (`SwitcherProfile`, unit
+  tested), so it is one toggle rather than a second copy of the settings, and
+  which key opens which profile is a tested lookup, so the tap callback stays
+  trivial. The tap now remembers the key code it swallowed rather than assuming
+  Tab.
 - The per-application rules are editable: a new **Apps** tab lists them, adds one
   by bundle identifier prefix or from a running application, and restores the
   shipped defaults. Each hiding rule shows how many windows it removes right now

@@ -47,7 +47,7 @@ public final class HotkeyMonitor {
     }
 
     public enum Action: Equatable, Sendable {
-        case open(reverse: Bool)
+        case open(reverse: Bool, profile: SwitcherProfile)
         case advance(reverse: Bool)
         case move(Direction)
         case commit
@@ -64,6 +64,13 @@ public final class HotkeyMonitor {
     /// so typing filters the overlay instead of leaking into the focused app.
     public var isOverlayVisible = false {
         didSet { core.isOverlayVisible = isOverlayVisible }
+    }
+
+    /// Whether the backtick key also opens the switcher, with the
+    /// current-application profile. Off by default: it replaces the macOS
+    /// shortcut for cycling an application's own windows.
+    public var secondHotkeyEnabled = false {
+        didSet { core.secondHotkeyEnabled = secondHotkeyEnabled }
     }
 
     /// Set by `AppModel` from `AppRuleTable.shouldStandAside`, recomputed
@@ -187,9 +194,10 @@ private final class TapCore: @unchecked Sendable {
     private var _isOverlayVisible = false
     private var _standAsideActive = false
     private var _holdModifier: HotkeyMonitor.HoldModifier = .command
-    /// Tracks whether the last Tab key-down was swallowed, so the matching
-    /// key-up can be swallowed too and nothing else.
-    private var _swallowedTabKeyDown = false
+    /// The key code of the last switcher key-down that was swallowed, so its
+    /// matching key-up can be swallowed too and nothing else.
+    private var _swallowedKeyCode: Int?
+    private var _secondHotkeyEnabled = false
     /// Covers the gap between `.open` being emitted and the controller
     /// reporting the overlay visible — see `HotkeySessionGate`.
     private var _sessionGate = HotkeySessionGate()
@@ -205,6 +213,11 @@ private final class TapCore: @unchecked Sendable {
                 _sessionGate.visibilityReported()
             }
         }
+    }
+
+    var secondHotkeyEnabled: Bool {
+        get { lock.withLock { _secondHotkeyEnabled } }
+        set { lock.withLock { _secondHotkeyEnabled = newValue } }
     }
 
     var standAsideActive: Bool {
@@ -234,7 +247,7 @@ private final class TapCore: @unchecked Sendable {
 
     func reset() {
         lock.withLock {
-            _swallowedTabKeyDown = false
+            _swallowedKeyCode = nil
             _sessionGate.visibilityReported()
         }
     }
@@ -260,13 +273,14 @@ private final class TapCore: @unchecked Sendable {
             return false
         }
 
-        let (overlayVisible, modifier, swallowedTab, shouldCommitOnRelease, standAsideActive) = lock.withLock {
+        let (overlayVisible, modifier, swallowedKey, shouldCommitOnRelease, standAsideActive, secondHotkey) = lock.withLock {
             (
                 _isOverlayVisible,
                 _holdModifier,
-                _swallowedTabKeyDown,
+                _swallowedKeyCode,
                 _sessionGate.shouldCommitOnRelease(overlayVisible: _isOverlayVisible),
-                _standAsideActive
+                _standAsideActive,
+                _secondHotkeyEnabled
             )
         }
 
@@ -284,15 +298,15 @@ private final class TapCore: @unchecked Sendable {
             return false
 
         case .keyDown:
-            return handleKeyDown(event, overlayVisible: overlayVisible, modifier: modifier)
+            return handleKeyDown(event, overlayVisible: overlayVisible, modifier: modifier, secondHotkey: secondHotkey)
 
         case .keyUp:
-            // Only swallow the key-up of a Tab we actually swallowed on the
-            // way down. Swallowing every Tab key-up would leak into apps that
-            // never saw the hotkey, where plain Tab still moves focus.
+            // Only swallow the key-up of a key we actually swallowed on the way
+            // down. Swallowing every Tab or backtick key-up would leak into apps
+            // that never saw the hotkey, where those keys still do their job.
             let keyCode = Int(event.getIntegerValueField(.keyboardEventKeycode))
-            if keyCode == kVK_Tab && swallowedTab {
-                lock.withLock { _swallowedTabKeyDown = false }
+            if let swallowedKey, keyCode == swallowedKey {
+                lock.withLock { _swallowedKeyCode = nil }
                 return true
             }
             return overlayVisible
@@ -305,20 +319,25 @@ private final class TapCore: @unchecked Sendable {
     private func handleKeyDown(
         _ event: CGEvent,
         overlayVisible: Bool,
-        modifier: HotkeyMonitor.HoldModifier
+        modifier: HotkeyMonitor.HoldModifier,
+        secondHotkey: Bool
     ) -> Bool {
         let keyCode = Int(event.getIntegerValueField(.keyboardEventKeycode))
         let flags = event.flags
         let reverse = flags.contains(.maskShift)
 
-        if keyCode == kVK_Tab && flags.contains(modifier.flag) {
+        // Which key opens which profile is a lookup in `SwitcherProfile`, where
+        // it is tested, so this stays a single call rather than a second chord
+        // to reason about in the callback.
+        if flags.contains(modifier.flag),
+           let profile = SwitcherProfile.profile(forKeyCode: keyCode, secondHotkeyEnabled: secondHotkey) {
             if overlayVisible {
                 emit?(.advance(reverse: reverse))
             } else {
                 lock.withLock { _sessionGate.opened() }
-                emit?(.open(reverse: reverse))
+                emit?(.open(reverse: reverse, profile: profile))
             }
-            lock.withLock { _swallowedTabKeyDown = true }
+            lock.withLock { _swallowedKeyCode = keyCode }
             return true
         }
 

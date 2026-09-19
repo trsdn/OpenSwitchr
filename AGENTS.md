@@ -411,6 +411,17 @@ merge to `main`; there is deliberately no deployment workflow, because one needs
   rendered as pages.
 - Update the "last reviewed" date on the page when its content is reviewed.
 
+### The second switcher hotkey
+
+The hold modifier plus backtick opens the switcher with the current-application
+profile when `secondHotkeyEnabled` is on. Which key opens which profile is
+`SwitcherProfile.profile(forKeyCode:secondHotkeyEnabled:)` in `OpenSwitchrCore`,
+so the tap callback does one lookup instead of reasoning about a second chord.
+The profile is deliberately **fixed** and only ever changes the application
+scope: do not add per-hotkey copies of the other filter axes, which is what made
+this expensive to consider. The tap remembers the key code it swallowed
+(`_swallowedKeyCode`) so the matching key-up is swallowed and nothing else.
+
 ## Three window-server facts that are easy to get wrong
 
 `CGWindowListCopyWindowInfo` documents front-to-back ordering **only** for

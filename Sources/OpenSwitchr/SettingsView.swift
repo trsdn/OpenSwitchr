@@ -45,6 +45,15 @@ struct SettingsView: View {
                     .font(.caption)
                     .foregroundStyle(.secondary)
 
+                Toggle("Second hotkey: this application's windows", isOn: Binding(
+                    get: { model.preferences.secondHotkeyEnabled },
+                    set: { model.preferences.secondHotkeyEnabled = $0; model.applyPreferences() }
+                ))
+
+                Text("The same modifier with the ` key opens the switcher for the current application's windows only, keeping your other list settings. It replaces the macOS shortcut for cycling an application's own windows.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+
                 if model.preferences.switcherEnabled && !model.switcherHotkeyActive {
                     Label(
                         "The keyboard hotkey is not installed. Check the Accessibility permission below.",
