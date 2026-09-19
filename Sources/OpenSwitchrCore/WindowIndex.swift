@@ -194,11 +194,11 @@ public final class WindowIndex {
 
             for entry in pidEntries {
                 let link = links[entry.id]
-                // Without an accessibility counterpart a CoreGraphics window is
-                // either on another Space, or one of the untitled helper and
-                // overlay surfaces apps keep around. Neither belongs in a
-                // switcher: a real window has a title, an AX element, or both.
-                if link == nil, !entry.isOnScreen || (entry.title ?? "").isEmpty { continue }
+                guard WindowAdmission.admits(
+                    hasAccessibilityLink: link != nil,
+                    isOnScreen: entry.isOnScreen,
+                    title: entry.title
+                ) else { continue }
 
                 result.append(
                     WindowInfo(

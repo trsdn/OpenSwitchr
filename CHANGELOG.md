@@ -54,6 +54,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   wait again. On by default. A hover that resolves before the index has caught
   up is retried once the rebuild lands, rather than leaving the pointer on an
   icon with nothing shown.
+- A per-application rule table (`AppRule`, `AppRuleTable`), keyed by
+  bundle-identifier prefix, with two independent axes: hide a window outright
+  (never / always / when its title matches), and stand aside for it — swallow
+  nothing, raise nothing — while it is frontmost and full screen. Ships with
+  verified defaults for the known correctness case: a remote desktop, screen
+  share, or virtual machine running full screen now gets the switcher hotkey
+  itself rather than an overlay raised over it. Full screen is detected once
+  per rebuild, from the window's frame against the display it covers, and
+  carried on `WindowInfo.isFullScreen` so the event tap never has to ask.
+  `openswitchr-diag --filters` reports both against the windows actually open.
 
 ### Changed
 
@@ -72,16 +82,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   gap, `S12`: `actions/checkout@v4` and the reusable conformance workflow
   pinned to `@main` can both change underneath the repository.
   `docs/self-assessment.md` and the badge are updated to match.
-- A per-application rule table (`AppRule`, `AppRuleTable`), keyed by
-  bundle-identifier prefix, with two independent axes: hide a window outright
-  (never / always / when its title matches), and stand aside for it — swallow
-  nothing, raise nothing — while it is frontmost and full screen. Ships with
-  verified defaults for the known correctness case: a remote desktop, screen
-  share, or virtual machine running full screen now gets the switcher hotkey
-  itself rather than an overlay raised over it. Full screen is detected once
-  per rebuild, from the window's frame against the display it covers, and
-  carried on `WindowInfo.isFullScreen` so the event tap never has to ask.
-  `openswitchr-diag --filters` reports both against the windows actually open.
+- The rule deciding whether a CoreGraphics window with no accessibility
+  counterpart belongs in the index moved out of `WindowIndex.apply` into
+  `WindowAdmission.admits`, where it is documented and unit tested. Behaviour
+  is unchanged.
 
 ### Fixed
 
