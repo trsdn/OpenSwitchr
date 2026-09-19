@@ -396,13 +396,20 @@ Known limitations, stated rather than left implicit:
 - **Dock hover previews are pointer-only.** They are triggered by the pointer
   entering a Dock icon, so there is no keyboard route to them. This is inherent
   to the gesture; the switcher overlay reaches every window without a pointer.
-- **Behaviour under enlarged platform text sizes is unverified.** Tiles size
-  themselves from the preview-size preference rather than from the text metrics,
-  so a large accessibility text size may clip a long window title.
-- **Reduced-motion and increased-contrast settings are not specifically
-  honoured.** The panels use the system material and standard SwiftUI controls,
-  so they inherit whatever those do, but nothing here was tested against those
-  settings.
+- **Text size does not follow a system setting, because macOS has none that
+  reaches third-party apps.** The panels use fixed point sizes (11–12 pt). A
+  render of Settings and the switcher with SwiftUI's largest text-size
+  environment (`accessibility3`) came out identical to the default, so nothing
+  scales and nothing clips; the trade-off is that the text does not grow either.
+  Long window titles are truncated in the middle rather than wrapped.
+- **Reduce Motion, Reduce Transparency and Increase Contrast are honoured in the
+  switcher and Dock preview** through `AccessibilityAppearance`: the selection
+  scroll stops animating, the blurred material becomes an opaque fill, and the
+  hairlines around the panel and tiles, the tile fill, the selection wash and the
+  small status marks step up. The decision logic is unit tested. Verified by
+  rendering: the High Contrast appearance. **Not verified:** the system toggles
+  themselves on a real desktop, and the Reduce Motion and Reduce Transparency
+  paths were checked by tests and reading only, not by rendering.
 
 `openswitchr-diag` emits plain text with no colour and no Unicode decoration, so
 its output survives any pipe, log, or screen reader.

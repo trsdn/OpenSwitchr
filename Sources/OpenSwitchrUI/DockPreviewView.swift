@@ -46,14 +46,21 @@ public struct DockPreviewView: View {
         self.onHover = onHover
     }
 
+    @Environment(\.colorSchemeContrast) private var contrast
+    @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
+
+    private var appearance: AccessibilityAppearance {
+        AccessibilityAppearance(reduceTransparency: reduceTransparency, increasedContrast: contrast == .increased)
+    }
+
     public var body: some View {
         tiles
         .padding(8)
-        .background(.ultraThinMaterial)
+        .background(appearance.usesTranslucency ? AnyShapeStyle(.ultraThinMaterial) : AnyShapeStyle(Color(nsColor: .windowBackgroundColor)))
         .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: 14, style: .continuous)
-                .strokeBorder(Color.primary.opacity(0.1), lineWidth: 1)
+                .strokeBorder(Color.primary.opacity(appearance.opacity(of: .panelBorder)), lineWidth: 1)
         )
     }
 

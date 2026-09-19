@@ -26,6 +26,17 @@ public struct WindowTile: View {
     private let onHover: (Bool) -> Void
 
     @State private var isPointerInside = false
+    @Environment(\.colorSchemeContrast) private var contrast
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
+
+    private var appearance: AccessibilityAppearance {
+        AccessibilityAppearance(
+            reduceMotion: reduceMotion,
+            reduceTransparency: reduceTransparency,
+            increasedContrast: contrast == .increased
+        )
+    }
 
     public init(
         window: WindowInfo,
@@ -57,12 +68,12 @@ public struct WindowTile: View {
                 .frame(width: thumbnailSize.width, height: thumbnailSize.height)
                 .background(
                     RoundedRectangle(cornerRadius: 8, style: .continuous)
-                        .fill(Color.primary.opacity(0.06))
+                        .fill(Color.primary.opacity(appearance.opacity(of: .tileFill)))
                 )
                 .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
                 .overlay(
                     RoundedRectangle(cornerRadius: 8, style: .continuous)
-                        .strokeBorder(isSelected ? Color.accentColor : Color.primary.opacity(0.12),
+                        .strokeBorder(isSelected ? Color.accentColor : Color.primary.opacity(appearance.opacity(of: .tileBorder)),
                                       lineWidth: isSelected ? 3 : 1)
                 )
                 .overlay(alignment: .topLeading) { closeButton }
@@ -73,7 +84,7 @@ public struct WindowTile: View {
         .padding(8)
         .background(
             RoundedRectangle(cornerRadius: 12, style: .continuous)
-                .fill(isSelected ? Color.accentColor.opacity(0.18) : Color.clear)
+                .fill(isSelected ? Color.accentColor.opacity(appearance.increasedContrast ? 0.32 : 0.18) : Color.clear)
         )
         .contentShape(Rectangle())
         .onTapGesture(perform: onActivate)
@@ -189,19 +200,19 @@ public struct WindowTile: View {
                 .font(.system(size: 11))
                 .lineLimit(1)
                 .truncationMode(.middle)
-                .foregroundStyle(isSelected ? .primary : .secondary)
+                .foregroundStyle(isSelected || appearance.increasedContrast ? AnyShapeStyle(.primary) : AnyShapeStyle(.secondary))
 
             if window.isMinimized {
                 Image(systemName: "minus.circle.fill")
                     .font(.system(size: 9))
-                    .foregroundStyle(.tertiary)
+                    .foregroundStyle(appearance.usesQuietMarks ? AnyShapeStyle(.tertiary) : AnyShapeStyle(.secondary))
                     .help(String(localized: "Minimized", table: "UI", bundle: .main))
             }
 
             if window.isApplicationOnly {
                 Image(systemName: "plus.circle")
                     .font(.system(size: 9))
-                    .foregroundStyle(.tertiary)
+                    .foregroundStyle(appearance.usesQuietMarks ? AnyShapeStyle(.tertiary) : AnyShapeStyle(.secondary))
                     .help(String(localized: "No open windows: choosing this activates the application and asks it to open one", table: "UI", bundle: .main))
             }
         }
