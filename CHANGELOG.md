@@ -222,6 +222,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   Dock preview's "hidden on exit" check now polls up to three seconds instead of
   sleeping a fixed 900 ms, which reported the preview still visible once and
   never again.
+- Dependabot now watches the Swift package as well as the workflows. AppUpdater is
+  pinned `exact:`, which does not move by itself, so an upstream fix would never
+  arrive; the code that downloads and installs updates should not age quietly.
 - The two sibling `### Added` headings under `0.1.0` in this file are merged
   into one, which is both a lint failure and genuinely confusing to read.
 - `actions/checkout` and the reusable `trsdn/.github` conformance workflow are
