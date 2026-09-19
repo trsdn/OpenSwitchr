@@ -1,0 +1,23 @@
+name: Repository stats
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "23 5 * * *"
+
+permissions:
+  contents: read
+
+jobs:
+  stats:
+    # The one workflow here with write access. It can only reach the generated
+    # `repo-stats` branch, never `main`, and holds no secret. See AGENTS.md.
+    permissions:
+      contents: write
+    uses: trsdn/.github/.github/workflows/repo-stats.yml@d99c090e092e4b4ef7f12fd58d191b3a33372860 # main after 1.13.0
+    with:
+      branch: repo-stats
+      output-dir: .github/stats
+      theme: both
+      cards: repo-card
+      generator-ref: d99c090e092e4b4ef7f12fd58d191b3a33372860
