@@ -84,11 +84,9 @@ cp -R .build/release/OpenSwitchr.app /Applications/
 open /Applications/OpenSwitchr.app
 ```
 
-`scripts/check.sh` is the single validation command: it builds with warnings as
-errors, runs the tests, lints the markdown, and asserts that the version in
-`Info.plist` still agrees with `CHANGELOG.md`. It needs no signing identity, no
-permissions, and no network, so it runs the same on a laptop, in CI, and for an
-agent.
+`scripts/check.sh` is the single validation command. It needs no signing
+identity, no permissions, and no network, so it runs the same on a laptop, in CI,
+and for an agent. What it checks is listed in [AGENTS.md](AGENTS.md).
 
 There is no Xcode project; the app bundle is assembled by the build script.
 The app icon is generated rather than checked in as an opaque binary —
@@ -443,9 +441,7 @@ OpenWritr. The dropped vowel is not only decoration: plain "OpenSwitch" is
 taken by the Linux Foundation's
 [OpenSwitch (OPX)](https://github.com/open-switch) network operating system.
 
-If the name ever needs to change again, `scripts/rename-product.sh` rewrites
-source directories, the entitlements file, the bundle identifier, and every
-reference in code, docs, and scripts in one step.
+Renaming is done with a script; see [AGENTS.md](AGENTS.md#the-name).
 
 ## License
 
