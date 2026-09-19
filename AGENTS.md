@@ -364,6 +364,19 @@ was in fact the same corrupt z-order being used to decide who was in front;
 `focus()` was correct all along. A suspiciously round number, or an outcome that
 does not change no matter what you vary, is evidence about the ruler.
 
+### A Dock hover on an application with no windows shows nothing
+
+`DockPreviewController.show(for:)` calls `hide()` when the item resolves to no
+windows, so there is no panel, no mouse monitor (`hide()` stops it, and it only
+starts after a panel is shown), and no pending open. That is a decision, not a
+gap: an empty panel must be clicked past to reach the icon, and the index is
+scoped to the current Space, so "no windows" and "windows on another Space" are
+indistinguishable and neither can be claimed. The one retry armed for a hover
+that resolved before the index caught up (`unresolvedItem`) is bounded: it is
+set once, only for a first attempt, and cleared when the pointer leaves. Do not
+add a panel for this case; if something must be shown, one small tile with no
+controls, never a second UI surface.
+
 ## Three window-server facts that are easy to get wrong
 
 `CGWindowListCopyWindowInfo` documents front-to-back ordering **only** for
