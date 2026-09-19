@@ -33,10 +33,14 @@ and the release fails until that lands.
 3. `swift build -Xswiftc -warnings-as-errors && swift test` — both must be
    clean. A warning in this project has repeatedly turned out to be a real bug,
    so it blocks the release.
-4. `swift run openswitchr-diag --bench --capture` from a terminal that holds
-   the Accessibility permission. Check that every accessibility window links to
-   a CoreGraphics entry (`AX == LINKED` per app) and that the timings are still
-   inside the budgets documented in `README.md`.
+4. `swift run openswitchr-diag --check-budgets` from a terminal that holds the
+   Accessibility and Screen Recording permissions, on a quiet machine. It exits
+   non-zero when a budget in `Sources/openswitchr-diag/Budgets.swift` is
+   exceeded or could not be measured. The budgets are wall-clock, so a failure
+   on a busy machine is worth one re-run before it is worth believing; raising
+   one is done in the commit that justifies it. Also run
+   `swift run openswitchr-diag --bench --capture` and check that every
+   accessibility window links to a CoreGraphics entry (`AX == LINKED` per app).
 5. Merge to `main`, then tag `v<version>` and push the tag.
 6. Request the notarized build from a checkout of the broker:
 

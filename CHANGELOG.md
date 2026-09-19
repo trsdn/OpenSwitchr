@@ -118,6 +118,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- `openswitchr-diag --check-budgets` turns the measured performance numbers
+  into thresholds that can fail: cold and warm index rebuild, cold thumbnails,
+  and cache hits, checked against budgets kept in one file next to the harness.
+  It exits non-zero when a budget is exceeded or could not be measured (a check
+  that skipped what it could not measure would go green the day the measurement
+  broke). Wall-clock and machine-dependent by nature, so it is a step in
+  `RELEASE_CHECKLIST.md`, not a hosted CI gate. The comparison is
+  `PerformanceBudget.evaluate`, pure and unit tested.
 - The Dock preview is placed from where the Dock item actually is
   (`DockPanelPlacement`, unit tested). A left or right Dock was misdetected as a
   bottom one, because the edge check required the icon to be within 4 pt of the

@@ -171,9 +171,17 @@ permission:
 ```bash
 swift run openswitchr-diag                    # window index and AX linking
 swift run openswitchr-diag --bench --capture  # plus timings
+swift run openswitchr-diag --check-budgets    # timings against budgets; exits 1 if exceeded
 swift run openswitchr-diag --filters          # filter profiles against real windows
 swift run openswitchr-diag --probe-app        # drive the *installed* app
 ```
+
+`--check-budgets` turns the measured numbers into thresholds that can fail. It is
+a pre-release check, not a CI gate: the measurements need the Accessibility grant,
+real windows, and a machine that is not sharing a core with other jobs, and a
+wall-clock budget on someone else's laptop is noise. The budgets live in one file,
+`Sources/openswitchr-diag/Budgets.swift`, and are raised only in the commit that
+justifies it.
 
 It reports per-app `CG` / `AX` / `LINKED` counts, which separates "the linking
 heuristic failed" from "this app exposes no accessibility windows at all".
