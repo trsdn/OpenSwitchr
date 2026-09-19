@@ -100,71 +100,20 @@ locally by construction: the local machine trusts its own developer certificate.
 
 ## Partials
 
-### `B13` — each fact has one home
-
-`README.md` and `AGENTS.md` still overlap. Both describe the shared-index
-architecture, both tell the `⌘-Tab` story, and both state the current-Space
-scope. The audiences differ — one is for a user deciding whether to install, the
-other for someone changing the code — but the same fact is written twice in
-places, and the two can drift.
-
-Moving the conformance assessment out of `AGENTS.md` removed the worst instance.
-The remaining overlap is smaller and has not yet caused a contradiction.
-
-### `P08` — status badges
-
-The required five badges are present, in the required order, and each links to
-what it reports. Values are not hand-maintained:
-
-| Badge | Where the value comes from |
-| --- | --- |
-| License | GitHub's own licence detection for this repository |
-| macOS 15+ | Hardcoded, but `scripts/check.sh` fails when it disagrees with `Package.swift` or `scripts/build-app.sh` |
-| CI | GitHub's first-party workflow badge for `main` |
-| Latest tag | The repository's tags |
-| Conformance | Rendered from `.github/conformance.yml` and committed as `.github/badges/conformance.svg`; the Conformance workflow fails when the two drift apart |
-
-What keeps this at `partial` is the image host. The conformance badge is served
-from this repository and the CI badge is first-party, but the licence, platform,
-and tag badges are rendered by `img.shields.io`, and the standard asks for
-images served from the repository or a first-party source *where practical*,
-because a third-party image host observes every reader. Serving those three
-from here would mean generating and committing more SVGs on a schedule. That is
-now possible with the same generated-branch arrangement `P09` uses, but it has
-not been done.
-
-The consequence is disclosed rather than hidden: the Privacy section of the
-README names `img.shields.io` as the one host that viewing the README contacts,
-and states that nothing in the app itself contacts it.
-
 ### `S02` — automated test coverage
 
-234 tests across 27 suites, all pure logic: the AX-to-`CGWindowID` linker, MRU
-ordering, the window matcher, filters and per-app rules, the selection and
-session logic, thumbnail retention and capture limiting, Dock panel lifecycle and
-placement, performance budgets, update scheduling, and a localization test that
-reads both String Catalogs and the views. They cover the parts where a subtle bug
-is invisible, and several encode a bug that actually shipped.
+241 tests across 28 suites, all pure logic, plus a CI step that builds the app
+bundle unsigned on both runners and fails when it lacks its German localization or
+notices. That step exists because 0.2.0 shipped English-only while every test was
+green (the runner's SwiftPM copies string catalogs instead of compiling them), so the
+release path is now covered as well as the logic.
 
-They cannot cover anything that talks to another process or draws: accessibility
-enumeration, ScreenCaptureKit, the event tap, and every SwiftUI view. That gap
-is filled by `openswitchr-diag`, which is run by hand and is not in CI, because
-it needs the Accessibility permission and real windows. Three release-blocking
-bugs have gone through exactly that gap — the app never starting, settings that
-could not be changed, and a Dock hover that worked only the first time — while
-every test stayed green. The release gap is the same kind: 0.2.0 shipped without
-its German localization while every test was green, and only mounting the
-published DMG showed it.
-
-### `S03` — automated static analysis
-
-`swift build -Xswiftc -warnings-as-errors` runs in CI on both runners, and this
-project has repeatedly found real bugs behind warnings, so that is genuine
-static analysis rather than a formality. Markdown is now linted in CI against
-the same `.markdownlint.jsonc` the standard publishes.
-
-No Swift formatter or linter is configured. There is no `swift-format`
-configuration and no SwiftLint, so formatting is consistent only by habit.
+What keeps this at `partial` is what tests still cannot reach: accessibility
+enumeration, ScreenCaptureKit, the event tap, and every SwiftUI view. That gap is
+filled by `openswitchr-diag`, which is run by hand and is not in CI, because it needs
+the Accessibility permission and real windows. Three release-blocking bugs have gone
+through exactly that gap (the app never starting, settings that could not be changed,
+a Dock hover that worked only the first time) while every test stayed green.
 
 ### `R01` — package metadata
 
@@ -222,57 +171,6 @@ Deriving the version properly means changing how the bundle is produced, and
 the release bundle is assembled by the broker's `openswitchr-swiftpm` adapter
 rather than by `scripts/build-app.sh`. Doing it in only one of the two would
 make them disagree, so this needs a broker-side change first.
-
-### `X01` — keyboard operability
-
-The switcher overlay is fully keyboard-driven: hold the modifier, `Tab` and
-`⇧-Tab` move the selection, typing filters by app name or window title, `Escape`
-cancels, releasing the modifier commits. The selection is visibly indicated.
-
-Dock hover previews have no keyboard route at all. They are triggered by the
-pointer entering a Dock icon, which is inherent to the gesture rather than an
-oversight — but it does mean one of the two frontends is pointer-only. The
-switcher reaches every window on the current Space without a pointer, so nothing
-is unreachable; it is the Dock-adjacent workflow specifically that is not.
-
-This is now stated in the Accessibility section of the README rather than left
-for a user to discover.
-
-### `X03` — contrast, text sizing, and colour
-
-Meaning never rests on colour alone. The quit control on a preview tile is red
-*and* a distinct glyph placed in the opposite corner from the close control, and
-a minimized window is dimmed *and* explicitly marked.
-
-Behaviour under enlarged platform text sizes is unverified. Tiles size
-themselves from the preview-size preference rather than from text metrics, so a
-large accessibility text size may clip a long window title. Reduced-motion and
-increased-contrast settings are not specifically honoured either; the panels use
-system materials and standard SwiftUI controls and inherit whatever those do.
-Both limitations are stated in the README under `X05`.
-
-### `L04` — catalogs kept complete, missing and orphaned keys detected
-
-The app has two String Catalogs (`Localizable.xcstrings`, `UI.xcstrings`), and
-`LocalizationCatalogTests` runs in CI and fails on the *missing* half: an entry
-with no German value, a translation that drops a placeholder, an incomplete
-plural, a lost product name or modifier symbol, and a plain literal in the views
-that never reached a catalog. It was mutation-tested by deleting an entry and
-confirming the test named it.
-
-What keeps this at `partial` is the *orphaned* half. Nothing notices a catalog
-entry that no code uses any more, so a removed string leaves a dead translation
-behind. Interpolated literals also have generated keys the scan does not
-reconstruct, so those are covered by the entries being present rather than by the
-code being scanned.
-
-### `L06` — translations traceable to their source and origin
-
-Each entry is keyed by its English source string, so the source is traceable by
-construction. The *origin* is not recorded per entry: the German was written by an
-AI assistant and has not been reviewed by a native speaker, and that is stated in
-the README's Language section rather than on each string. A catalog can carry a
-comment per entry, but not a reviewer or a review date.
 
 ## Results that are `na`, and why
 
@@ -355,6 +253,44 @@ These are recorded because they took work, not because they were free.
   protected branches. The card is served from `raw.githubusercontent.com` for this
   repository, not from a third-party image service. Caveat: a branch that only a
   workflow writes is not reviewed the way a pull request is.
+- **`B13`** — each fact has one home. A paragraph-similarity scan of `README.md`
+  against `AGENTS.md` found four overlaps; three were the same fact written twice
+  (what `scripts/check.sh` checks, why one shared foundation, the name rationale) and
+  each now lives in one file and is linked from the other. The fourth, the
+  diagnostics commands, serves two audiences and is not a duplicated fact. The scan is
+  not exhaustive.
+- **`P08`** — status badges. The licence, minimum-macOS and release badges are
+  generated by `scripts/badges.py` in `stats.yml` and committed to the generated
+  `repo-stats` branch; the CI badge is GitHub's own and the conformance badge is
+  committed from the record. Nothing in the README loads from a third-party image
+  host any more, and the README's Privacy section says so.
+- **`S03`** — static analysis. `swift build -Xswiftc -warnings-as-errors` and
+  `swift format lint --strict` (config in `.swift-format`) run in `scripts/check.sh`
+  and on both CI runners, and Markdown is linted against the standard's own config. The
+  formatter is checked, never run, by the gate, and the fix command is in its message.
+- **`L04`** — catalogs kept complete. `LocalizationCatalogTests` fails on a missing or
+  incomplete German value and, since 2026-09-19, on an *orphaned* entry that no code
+  refers to. The orphan test was mutation-tested: an injected dead key is reported by
+  name. Interpolated literals are matched with each format specifier standing for the
+  interpolation, which is generous by design.
+- **`L06`** — traceability. Each entry is keyed by its English source string, so the
+  source is traceable by construction. The origin is stated in the README's Language
+  section as translation notes: machine-translated by a large language model from the
+  English strings, not reviewed by a native speaker, with the date.
+- **`X01`** — keyboard operability. The switcher is fully keyboard-driven, and the
+  Dock preview's function, choosing among one application's windows, is reachable
+  without a pointer through the second hotkey (the switcher scoped to the current
+  application), which is documented in the README. The hover itself is a pointer
+  gesture on a pointer-native system surface, the Dock, and gives no window the
+  keyboard cannot also reach. This is a pass, not a not-applicable: the criterion
+  applies to this app and is met.
+- **`X03`** — contrast, motion and colour. The panels honour Reduce Motion, Reduce
+  Transparency and Increase Contrast through `AccessibilityAppearance` (pure, tested;
+  with every setting off the panels draw exactly as before). Meaning never rests on
+  colour alone. macOS has no system text size that reaches third-party apps: a render
+  at the largest SwiftUI text size came out identical to the default, so there is no
+  enlarged-text mode to clip. Verified by unit tests and by rendering the high-contrast
+  appearance; **not** verified by toggling the real system settings on a live desktop.
 - **`S13`** — no workflow here references a `secrets.*` context, and none
   triggers on `pull_request_target`, so there is no path from an untrusted
   fork's pull request to a secret this repository holds (it holds none).
@@ -409,5 +345,3 @@ In order of how much each one moves:
    clipping or keep the limitation documented. Moves `X03`.
 4. **Resolve the version derivation** with the broker so `I06` stops depending
    on a human typing the same number in two files.
-5. **Serve the remaining badges from the repository** using the `repo-stats`
-   branch pattern, which would close `P08`.
