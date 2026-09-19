@@ -1,5 +1,5 @@
-import Foundation
 import CoreGraphics
+import Foundation
 import Testing
 
 @testable import OpenSwitchrCore
@@ -144,7 +144,7 @@ struct AppRulePersistenceTests {
         let table = AppRuleTable(rules: [
             AppRule(bundleIDPrefix: "com.a", hide: .never, standAsideWhenFullScreen: true),
             AppRule(bundleIDPrefix: "com.b", hide: .always),
-            AppRule(bundleIDPrefix: "com.c", hide: .whenTitleContains("status"), standAsideWhenFullScreen: true)
+            AppRule(bundleIDPrefix: "com.c", hide: .whenTitleContains("status"), standAsideWhenFullScreen: true),
         ])
         let decoded = AppRuleTable.decode(from: try table.encoded())
         #expect(decoded == table)
@@ -180,7 +180,7 @@ struct AppRulePersistenceTests {
         let windows = [
             window(bundleID: "com.helper.one", id: 1),
             window(bundleID: "com.helper.two", id: 2),
-            window(bundleID: "com.other", id: 3)
+            window(bundleID: "com.other", id: 3),
         ]
         #expect(table.hiddenCount(by: rule, in: windows) == 2)
     }

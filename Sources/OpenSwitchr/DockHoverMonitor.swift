@@ -1,8 +1,8 @@
 import AppKit
 import ApplicationServices
 import Foundation
-import OpenSwitchrCore
 import OSLog
+import OpenSwitchrCore
 
 /// Detects which Dock icon the pointer is over.
 ///
@@ -38,9 +38,11 @@ public final class DockHoverMonitor {
         guard observer == nil else { return true }
         guard AXBridge.isTrusted else { return false }
 
-        guard let dockApp = NSRunningApplication
-            .runningApplications(withBundleIdentifier: "com.apple.dock")
-            .first
+        guard
+            let dockApp =
+                NSRunningApplication
+                .runningApplications(withBundleIdentifier: "com.apple.dock")
+                .first
         else {
             logger.notice("Dock process not found")
             return false
@@ -58,7 +60,7 @@ public final class DockHoverMonitor {
 
         var created: AXObserver?
         guard AXObserverCreate(dockApp.processIdentifier, Self.callback, &created) == .success,
-              let created
+            let created
         else {
             logger.error("Could not create Dock AX observer")
             return false
@@ -67,12 +69,16 @@ public final class DockHoverMonitor {
         let context = Unmanaged.passUnretained(self).toOpaque()
         var attached = false
 
-        if AXObserverAddNotification(created, list, kAXSelectedChildrenChangedNotification as CFString, context) == .success {
+        if AXObserverAddNotification(created, list, kAXSelectedChildrenChangedNotification as CFString, context)
+            == .success
+        {
             attached = true
         }
         // Fallback for Dock builds that report hovering as a focus change
         // rather than a selection change.
-        if AXObserverAddNotification(created, app, kAXFocusedUIElementChangedNotification as CFString, context) == .success {
+        if AXObserverAddNotification(created, app, kAXFocusedUIElementChangedNotification as CFString, context)
+            == .success
+        {
             attached = true
         }
 

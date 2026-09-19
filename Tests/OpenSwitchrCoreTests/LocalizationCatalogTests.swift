@@ -34,7 +34,8 @@ struct LocalizationCatalogTests {
                 return [value]
             }
             if let variations = localization["variations"] as? [String: Any],
-               let plural = variations["plural"] as? [String: Any] {
+                let plural = variations["plural"] as? [String: Any]
+            {
                 return plural.values.compactMap { ($0 as? [String: Any])?["stringUnit"] as? [String: Any] }
                     .compactMap { $0["value"] as? String }
             }
@@ -44,7 +45,7 @@ struct LocalizationCatalogTests {
 
     private static let catalogPaths = [
         "Sources/OpenSwitchr/Localizable.xcstrings",
-        "Sources/OpenSwitchrUI/UI.xcstrings"
+        "Sources/OpenSwitchrUI/UI.xcstrings",
     ]
 
     private static func specifiers(in text: String) -> [String] {
@@ -72,8 +73,9 @@ struct LocalizationCatalogTests {
             for key in catalog.strings.keys where catalog.localization(key, "en") == nil {
                 let expected = Self.specifiers(in: key)
                 for value in catalog.values(key, "de") {
-                    #expect(Self.specifiers(in: value) == expected,
-                            "\(path): “\(key)” → “\(value)” changes its placeholders")
+                    #expect(
+                        Self.specifiers(in: value) == expected,
+                        "\(path): “\(key)” → “\(value)” changes its placeholders")
                 }
             }
         }
@@ -85,13 +87,19 @@ struct LocalizationCatalogTests {
             let catalog = try Catalog(path)
             for (key, entry) in catalog.strings {
                 guard let localizations = entry["localizations"] as? [String: Any],
-                      localizations.values.contains(where: { ($0 as? [String: Any])?["variations"] != nil })
+                    localizations.values.contains(where: { ($0 as? [String: Any])?["variations"] != nil })
                 else { continue }
                 for language in ["en", "de"] {
-                    let variations = (catalog.localization(key, language)?["variations"] as? [String: Any])?["plural"] as? [String: Any]
-                    #expect(variations?["one"] != nil && variations?["other"] != nil, "\(path): “\(key)” lacks a plural form in \(language)")
+                    let variations =
+                        (catalog.localization(key, language)?["variations"] as? [String: Any])?["plural"]
+                        as? [String: Any]
+                    #expect(
+                        variations?["one"] != nil && variations?["other"] != nil,
+                        "\(path): “\(key)” lacks a plural form in \(language)")
                     for value in catalog.values(key, language) {
-                        #expect(value.contains("%lld"), "\(path): “\(key)” [\(language)] plural form has no count: “\(value)”")
+                        #expect(
+                            value.contains("%lld"),
+                            "\(path): “\(key)” [\(language)] plural form has no count: “\(value)”")
                     }
                 }
             }
@@ -142,7 +150,9 @@ struct LocalizationCatalogTests {
         // literal has a generated key.
         #expect(literals.count > 30, "the scan found almost nothing, so it proves nothing")
         let exempt: Set<String> = ["OpenSwitchr"]
-        let missing = literals.filter { $0.range(of: "\\(") == nil && !exempt.contains($0) && catalog.strings[$0] == nil }
+        let missing = literals.filter {
+            $0.range(of: "\\(") == nil && !exempt.contains($0) && catalog.strings[$0] == nil
+        }
         #expect(missing.isEmpty, "Not in Localizable.xcstrings: \(missing.sorted())")
     }
 
@@ -153,7 +163,8 @@ struct LocalizationCatalogTests {
             in: "Sources/OpenSwitchrUI",
             matching: #"String\(localized: "([^"\\]+)", table: "UI""#
         )
-        let keys = Set(literals.map { $0.replacingOccurrences(of: #"\([^)]*\)"#, with: "%@", options: .regularExpression) })
+        let keys = Set(
+            literals.map { $0.replacingOccurrences(of: #"\([^)]*\)"#, with: "%@", options: .regularExpression) })
         let missing = keys.filter { catalog.strings[$0] == nil }
         #expect(!keys.isEmpty)
         #expect(missing.isEmpty, "Not in UI.xcstrings: \(missing.sorted())")

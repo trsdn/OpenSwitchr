@@ -1,8 +1,8 @@
 import AppUpdater
 import Foundation
+import OSLog
 import Observation
 import OpenSwitchrCore
-import OSLog
 
 /// Checks GitHub Releases for a newer OpenSwitchr and installs it in place.
 ///
@@ -57,11 +57,12 @@ final class UpdateManager {
         automaticCheckTask = Task { [weak self] in
             while !Task.isCancelled {
                 if let self,
-                   UpdateSchedule.isDue(
-                       enabled: self.preferences.automaticUpdateChecks,
-                       lastCheck: self.preferences.lastUpdateCheck,
-                       now: Date()
-                   ) {
+                    UpdateSchedule.isDue(
+                        enabled: self.preferences.automaticUpdateChecks,
+                        lastCheck: self.preferences.lastUpdateCheck,
+                        now: Date()
+                    )
+                {
                     await self.check(userInitiated: false)
                 }
                 try? await Task.sleep(for: .seconds(UpdateSchedule.wakeInterval))

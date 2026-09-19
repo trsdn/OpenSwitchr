@@ -220,23 +220,25 @@ public final class PreferencesStore {
             Key.switcherMinimizedPolicy: Default.filter.minimized.rawValue,
             Key.switcherWindowless: Default.filter.windowless.rawValue,
             Key.switcherScreenScope: Default.filter.screens.rawValue,
-            Key.switcherOrder: Default.filter.order.rawValue
+            Key.switcherOrder: Default.filter.order.rawValue,
         ])
 
         // An unknown stored modifier means the value was removed from the app,
         // so it falls back rather than leaving the switcher without a hotkey.
-        holdModifier = HotkeyMonitor.HoldModifier(
-            rawValue: defaults.string(forKey: Key.holdModifier) ?? ""
-        ) ?? .command
+        holdModifier =
+            HotkeyMonitor.HoldModifier(
+                rawValue: defaults.string(forKey: Key.holdModifier) ?? ""
+            ) ?? .command
         switcherEnabled = defaults.bool(forKey: Key.switcherEnabled)
         dockHoverEnabled = defaults.bool(forKey: Key.dockHoverEnabled)
         dockHoverDelay = defaults.double(forKey: Key.dockHoverDelay)
         dockHideDelay = defaults.double(forKey: Key.dockHideDelay)
         dockHoverInstantSwitch = defaults.bool(forKey: Key.dockHoverInstantSwitch)
         thumbnailBudgetMB = defaults.integer(forKey: Key.thumbnailBudgetMB)
-        thumbnailRefreshRate = ThumbnailRefreshRate(
-            rawValue: defaults.string(forKey: Key.thumbnailRefreshRate) ?? ""
-        ) ?? .default
+        thumbnailRefreshRate =
+            ThumbnailRefreshRate(
+                rawValue: defaults.string(forKey: Key.thumbnailRefreshRate) ?? ""
+            ) ?? .default
         tileWidth = defaults.double(forKey: Key.tileWidth)
         showCloseButton = defaults.bool(forKey: Key.showCloseButton)
         fitTilesToWindowCount = defaults.bool(forKey: Key.fitTilesToWindowCount)
@@ -246,28 +248,34 @@ public final class PreferencesStore {
         automaticUpdateChecks = defaults.bool(forKey: Key.automaticUpdateChecks)
         lastUpdateCheck = (defaults.object(forKey: Key.lastUpdateCheck) as? Double)
             .map { Date(timeIntervalSince1970: $0) }
-        tilePreference = TilePreference(
-            rawValue: defaults.string(forKey: Key.tilePreference) ?? ""
-        ) ?? Default.tilePreference
+        tilePreference =
+            TilePreference(
+                rawValue: defaults.string(forKey: Key.tilePreference) ?? ""
+            ) ?? Default.tilePreference
 
         // Same fallback rule as the hold modifier: a stored value the app no
         // longer recognises means the case was removed, so it reverts to the
         // registered default rather than leaving the switcher without a filter.
-        switcherApplicationScope = WindowFilter.ApplicationScope(
-            rawValue: defaults.string(forKey: Key.switcherApplicationScope) ?? ""
-        ) ?? Default.filter.applications
-        switcherWindowless = WindowFilter.WindowlessPolicy(
-            rawValue: defaults.string(forKey: Key.switcherWindowless) ?? ""
-        ) ?? Default.filter.windowless
-        switcherMinimizedPolicy = WindowFilter.MinimizedPolicy(
-            rawValue: defaults.string(forKey: Key.switcherMinimizedPolicy) ?? ""
-        ) ?? Default.filter.minimized
-        switcherScreenScope = WindowFilter.ScreenScope(
-            rawValue: defaults.string(forKey: Key.switcherScreenScope) ?? ""
-        ) ?? Default.filter.screens
-        switcherOrder = WindowFilter.Order(
-            rawValue: defaults.string(forKey: Key.switcherOrder) ?? ""
-        ) ?? Default.filter.order
+        switcherApplicationScope =
+            WindowFilter.ApplicationScope(
+                rawValue: defaults.string(forKey: Key.switcherApplicationScope) ?? ""
+            ) ?? Default.filter.applications
+        switcherWindowless =
+            WindowFilter.WindowlessPolicy(
+                rawValue: defaults.string(forKey: Key.switcherWindowless) ?? ""
+            ) ?? Default.filter.windowless
+        switcherMinimizedPolicy =
+            WindowFilter.MinimizedPolicy(
+                rawValue: defaults.string(forKey: Key.switcherMinimizedPolicy) ?? ""
+            ) ?? Default.filter.minimized
+        switcherScreenScope =
+            WindowFilter.ScreenScope(
+                rawValue: defaults.string(forKey: Key.switcherScreenScope) ?? ""
+            ) ?? Default.filter.screens
+        switcherOrder =
+            WindowFilter.Order(
+                rawValue: defaults.string(forKey: Key.switcherOrder) ?? ""
+            ) ?? Default.filter.order
 
         launchAtLogin = SMAppService.mainApp.status == .enabled
     }

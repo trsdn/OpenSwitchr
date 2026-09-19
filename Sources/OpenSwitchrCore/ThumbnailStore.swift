@@ -117,11 +117,12 @@ public actor ThumbnailStore {
         priority: CaptureLimiter.Priority = .normal
     ) async -> ThumbnailImage? {
         if let entry = cache[windowID],
-           ThumbnailRetention.isFresh(
-               age: Date().timeIntervalSince(entry.image.capturedAt),
-               maxAge: maxAge,
-               isMinimized: minimized.contains(windowID)
-           ) {
+            ThumbnailRetention.isFresh(
+                age: Date().timeIntervalSince(entry.image.capturedAt),
+                maxAge: maxAge,
+                isMinimized: minimized.contains(windowID)
+            )
+        {
             return cached(windowID)
         }
 

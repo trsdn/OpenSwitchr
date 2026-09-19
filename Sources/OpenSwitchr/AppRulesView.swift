@@ -37,9 +37,11 @@ struct AppRulesView: View {
     var body: some View {
         Form {
             Section("Rules") {
-                Text("Matched by bundle identifier prefix, so one entry covers a vendor's several builds. The most specific prefix wins.")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+                Text(
+                    "Matched by bundle identifier prefix, so one entry covers a vendor's several builds. The most specific prefix wins."
+                )
+                .font(.caption)
+                .foregroundStyle(.secondary)
 
                 if rules.isEmpty {
                     Text("No rules. Nothing is hidden and the hotkey never stands aside.")
@@ -63,8 +65,8 @@ struct AppRulesView: View {
                     )
                     .labelsHidden()
                     .textFieldStyle(.roundedBorder)
-                        .font(.system(.body, design: .monospaced))
-                        .onSubmit(addTypedPrefix)
+                    .font(.system(.body, design: .monospaced))
+                    .onSubmit(addTypedPrefix)
                     Button("Add", action: addTypedPrefix)
                         .disabled(newPrefix.trimmingCharacters(in: .whitespaces).isEmpty)
                 }
@@ -102,33 +104,41 @@ struct AppRulesView: View {
                 .accessibilityLabel(Text("Delete the rule for \(rule.bundleIDPrefix)"))
             }
 
-            Picker("Hide windows", selection: Binding(
-                get: { HideKind(rule.hide) },
-                set: { kind in
-                    update { rules in
-                        switch kind {
-                        case .never: rules[offset].hide = .never
-                        case .always: rules[offset].hide = .always
-                        case .titleContains: rules[offset].hide = .whenTitleContains("")
+            Picker(
+                "Hide windows",
+                selection: Binding(
+                    get: { HideKind(rule.hide) },
+                    set: { kind in
+                        update { rules in
+                            switch kind {
+                            case .never: rules[offset].hide = .never
+                            case .always: rules[offset].hide = .always
+                            case .titleContains: rules[offset].hide = .whenTitleContains("")
+                            }
                         }
                     }
-                }
-            )) {
+                )
+            ) {
                 ForEach(HideKind.allCases, id: \.self) { Text(LocalizedStringKey($0.title)).tag($0) }
             }
 
             if case .whenTitleContains(let text) = rule.hide {
-                TextField("Title contains", text: Binding(
-                    get: { text },
-                    set: { value in update { $0[offset].hide = .whenTitleContains(value) } }
-                ))
+                TextField(
+                    "Title contains",
+                    text: Binding(
+                        get: { text },
+                        set: { value in update { $0[offset].hide = .whenTitleContains(value) } }
+                    )
+                )
                 .textFieldStyle(.roundedBorder)
             }
 
-            Toggle("Stand aside while it is frontmost and full screen", isOn: Binding(
-                get: { rule.standAsideWhenFullScreen },
-                set: { value in update { $0[offset].standAsideWhenFullScreen = value } }
-            ))
+            Toggle(
+                "Stand aside while it is frontmost and full screen",
+                isOn: Binding(
+                    get: { rule.standAsideWhenFullScreen },
+                    set: { value in update { $0[offset].standAsideWhenFullScreen = value } }
+                ))
 
             // What a rule costs, stated where it is set. A rule that hides
             // everything otherwise shows up as a bug report that says the

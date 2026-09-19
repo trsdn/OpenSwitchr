@@ -2,8 +2,8 @@ import AppKit
 import ApplicationServices
 import CoreGraphics
 import Foundation
-import Observation
 import OSLog
+import Observation
 
 /// The single source of truth for open windows.
 ///
@@ -74,7 +74,8 @@ public final class WindowIndex {
     /// window it considers focused, which costs one synchronous message on an
     /// event that happens at human speed.
     public func noteFocus(pid: pid_t, element: AXUIElement? = nil) {
-        let focused = element
+        let focused =
+            element
             ?? AXBridge.element(AXBridge.application(pid: pid), kAXFocusedWindowAttribute as String)
 
         guard let target = Self.focusTarget(pid: pid, element: focused, in: windows) else { return }
@@ -93,9 +94,10 @@ public final class WindowIndex {
     /// window still beats ignoring the event.
     static func focusTarget(pid: pid_t, element: AXUIElement?, in windows: [WindowInfo]) -> WindowInfo? {
         if let element,
-           let match = windows.first(where: { window in
-               window.element.map { CFEqual($0, element) } ?? false
-           }) {
+            let match = windows.first(where: { window in
+                window.element.map { CFEqual($0, element) } ?? false
+            })
+        {
             return match
         }
 
@@ -194,11 +196,13 @@ public final class WindowIndex {
 
             for entry in pidEntries {
                 let link = links[entry.id]
-                guard WindowAdmission.admits(
-                    hasAccessibilityLink: link != nil,
-                    isOnScreen: entry.isOnScreen,
-                    title: entry.title
-                ) else { continue }
+                guard
+                    WindowAdmission.admits(
+                        hasAccessibilityLink: link != nil,
+                        isOnScreen: entry.isOnScreen,
+                        title: entry.title
+                    )
+                else { continue }
 
                 result.append(
                     WindowInfo(
@@ -217,7 +221,8 @@ public final class WindowIndex {
             }
         }
 
-        let zOrdered = entries
+        let zOrdered =
+            entries
             .filter { entry in result.contains { $0.id == entry.id } }
             .sorted { $0.zOrder < $1.zOrder }
             .map(\.id)
@@ -234,7 +239,9 @@ public final class WindowIndex {
         windows = mru.sorted(result)
         lastRebuildDuration = CFAbsoluteTimeGetCurrent() - started
 
-        logger.debug("Rebuilt index: \(self.windows.count) windows in \(self.lastRebuildDuration * 1000, format: .fixed(precision: 1)) ms")
+        logger.debug(
+            "Rebuilt index: \(self.windows.count) windows in \(self.lastRebuildDuration * 1000, format: .fixed(precision: 1)) ms"
+        )
     }
 
     /// How many switchable windows an app exposes over accessibility.
@@ -270,7 +277,7 @@ public final class WindowIndex {
             }
 
             guard let app = NSRunningApplication(processIdentifier: pid),
-                  app.activationPolicy == .regular
+                app.activationPolicy == .regular
             else { continue }
 
             applicationCache[pid] = app

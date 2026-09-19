@@ -50,10 +50,10 @@ public enum CGWindowSnapshot {
 
         for info in raw {
             guard let layer = info[kCGWindowLayer as String] as? Int, layer == 0,
-                  let id = info[kCGWindowNumber as String] as? CGWindowID,
-                  let pid = info[kCGWindowOwnerPID as String] as? pid_t,
-                  let boundsDict = info[kCGWindowBounds as String] as? [String: Any],
-                  let frame = CGRect(dictionaryRepresentation: boundsDict as CFDictionary)
+                let id = info[kCGWindowNumber as String] as? CGWindowID,
+                let pid = info[kCGWindowOwnerPID as String] as? pid_t,
+                let boundsDict = info[kCGWindowBounds as String] as? [String: Any],
+                let frame = CGRect(dictionaryRepresentation: boundsDict as CFDictionary)
             else { continue }
 
             guard frame.width >= minimumSize.width, frame.height >= minimumSize.height else { continue }

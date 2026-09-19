@@ -31,7 +31,7 @@ struct ThumbnailRetentionTests {
         let entries: [ThumbnailRetention.Candidate] = [
             .init(id: 1, lastAccess: Date(timeIntervalSince1970: 30), isMinimized: false),
             .init(id: 2, lastAccess: Date(timeIntervalSince1970: 10), isMinimized: false),
-            .init(id: 3, lastAccess: Date(timeIntervalSince1970: 20), isMinimized: false)
+            .init(id: 3, lastAccess: Date(timeIntervalSince1970: 20), isMinimized: false),
         ]
         #expect(ThumbnailRetention.evictionOrder(entries) == [2, 3, 1])
     }
@@ -41,7 +41,7 @@ struct ThumbnailRetentionTests {
         let entries: [ThumbnailRetention.Candidate] = [
             .init(id: 1, lastAccess: Date(timeIntervalSince1970: 1), isMinimized: true),
             .init(id: 2, lastAccess: Date(timeIntervalSince1970: 100), isMinimized: false),
-            .init(id: 3, lastAccess: Date(timeIntervalSince1970: 50), isMinimized: false)
+            .init(id: 3, lastAccess: Date(timeIntervalSince1970: 50), isMinimized: false),
         ]
         // The minimized entry is the oldest, and it is the only one that cannot
         // be re-created, so it goes last.
@@ -52,7 +52,7 @@ struct ThumbnailRetentionTests {
     func minimizedOrderedAmongThemselves() {
         let entries: [ThumbnailRetention.Candidate] = [
             .init(id: 1, lastAccess: Date(timeIntervalSince1970: 20), isMinimized: true),
-            .init(id: 2, lastAccess: Date(timeIntervalSince1970: 10), isMinimized: true)
+            .init(id: 2, lastAccess: Date(timeIntervalSince1970: 10), isMinimized: true),
         ]
         #expect(ThumbnailRetention.evictionOrder(entries) == [2, 1])
     }

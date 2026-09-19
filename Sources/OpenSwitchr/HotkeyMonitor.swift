@@ -110,18 +110,19 @@ public final class HotkeyMonitor {
         }
 
         let mask: CGEventMask =
-            (1 << CGEventType.keyDown.rawValue) |
-            (1 << CGEventType.keyUp.rawValue) |
-            (1 << CGEventType.flagsChanged.rawValue)
+            (1 << CGEventType.keyDown.rawValue) | (1 << CGEventType.keyUp.rawValue)
+            | (1 << CGEventType.flagsChanged.rawValue)
 
-        guard let tap = CGEvent.tapCreate(
-            tap: .cgSessionEventTap,
-            place: .headInsertEventTap,
-            options: .defaultTap,
-            eventsOfInterest: mask,
-            callback: TapCore.callback,
-            userInfo: Unmanaged.passUnretained(core).toOpaque()
-        ) else {
+        guard
+            let tap = CGEvent.tapCreate(
+                tap: .cgSessionEventTap,
+                place: .headInsertEventTap,
+                options: .defaultTap,
+                eventsOfInterest: mask,
+                callback: TapCore.callback,
+                userInfo: Unmanaged.passUnretained(core).toOpaque()
+            )
+        else {
             logger.error("Could not create event tap")
             return false
         }
@@ -273,16 +274,17 @@ private final class TapCore: @unchecked Sendable {
             return false
         }
 
-        let (overlayVisible, modifier, swallowedKey, shouldCommitOnRelease, standAsideActive, secondHotkey) = lock.withLock {
-            (
-                _isOverlayVisible,
-                _holdModifier,
-                _swallowedKeyCode,
-                _sessionGate.shouldCommitOnRelease(overlayVisible: _isOverlayVisible),
-                _standAsideActive,
-                _secondHotkeyEnabled
-            )
-        }
+        let (overlayVisible, modifier, swallowedKey, shouldCommitOnRelease, standAsideActive, secondHotkey) =
+            lock.withLock {
+                (
+                    _isOverlayVisible,
+                    _holdModifier,
+                    _swallowedKeyCode,
+                    _sessionGate.shouldCommitOnRelease(overlayVisible: _isOverlayVisible),
+                    _standAsideActive,
+                    _secondHotkeyEnabled
+                )
+            }
 
         // A remote desktop, screen share, or virtual machine running full
         // screen gets every keystroke, including the hotkey: no overlay, no
@@ -330,7 +332,8 @@ private final class TapCore: @unchecked Sendable {
         // it is tested, so this stays a single call rather than a second chord
         // to reason about in the callback.
         if flags.contains(modifier.flag),
-           let profile = SwitcherProfile.profile(forKeyCode: keyCode, secondHotkeyEnabled: secondHotkey) {
+            let profile = SwitcherProfile.profile(forKeyCode: keyCode, secondHotkeyEnabled: secondHotkey)
+        {
             if overlayVisible {
                 emit?(.advance(reverse: reverse))
             } else {

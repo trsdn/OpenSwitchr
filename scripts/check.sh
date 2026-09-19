@@ -44,6 +44,16 @@ if [[ "$RUN_BUILD" == true ]]; then
         fail "swift build"
     fi
 
+    # Formatting is checked, never rewritten, here: a check that edits files would
+    # make a passing run depend on what it changed. Fix with
+    # `swift format -i --recursive Sources Tests`.
+    step "Swift formatting"
+    if swift format lint --strict --recursive Sources Tests; then
+        echo "ok"
+    else
+        fail "swift format lint (run: swift format -i --recursive Sources Tests)"
+    fi
+
     step "Tests"
     if swift test; then
         echo "ok"

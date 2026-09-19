@@ -122,10 +122,11 @@ struct AXWindowLinkerTests {
     @Test("Empty input produces no links")
     func emptyInputs() {
         #expect(AXWindowLinker.link(axWindows: [], to: []).isEmpty)
-        #expect(AXWindowLinker.link(
-            axWindows: [],
-            to: [entry(id: 1, title: "x", frame: .zero)]
-        ).isEmpty)
+        #expect(
+            AXWindowLinker.link(
+                axWindows: [],
+                to: [entry(id: 1, title: "x", frame: .zero)]
+            ).isEmpty)
     }
 
     // MARK: - Windows nothing but depth can tell apart
@@ -177,11 +178,11 @@ struct AXWindowLinkerTests {
         let links = AXWindowLinker.link(
             axWindows: [
                 axWindow(element: front, title: "Connect Form", frame: frame),
-                axWindow(element: back, title: "Connect Form", frame: frame)
+                axWindow(element: back, title: "Connect Form", frame: frame),
             ],
             to: [
                 entry(id: 10, title: "Connect Form", frame: frame, zOrder: 0),
-                entry(id: 20, title: "Connect Form", frame: frame, zOrder: 1)
+                entry(id: 20, title: "Connect Form", frame: frame, zOrder: 1),
             ]
         )
 
@@ -198,11 +199,11 @@ struct AXWindowLinkerTests {
         let links = AXWindowLinker.link(
             axWindows: [
                 axWindow(element: first, title: "Connect Form", frame: frame),
-                axWindow(element: second, title: "Connect Form", frame: frame)
+                axWindow(element: second, title: "Connect Form", frame: frame),
             ],
             to: [
                 entry(id: 10, title: "Connect Form", frame: frame, zOrder: 5),
-                entry(id: 20, title: "Connect Form", frame: frame, zOrder: 4)
+                entry(id: 20, title: "Connect Form", frame: frame, zOrder: 4),
             ]
         )
 
@@ -224,11 +225,11 @@ struct AXWindowLinkerTests {
         let links = AXWindowLinker.link(
             axWindows: [
                 axWindow(element: alpha, title: "Alpha - Microsoft Edge", frame: frame),
-                axWindow(element: beta, title: "Beta - Microsoft Edge", frame: frame)
+                axWindow(element: beta, title: "Beta - Microsoft Edge", frame: frame),
             ],
             to: [
                 entry(id: 10, title: "Beta", frame: frame, zOrder: 0),
-                entry(id: 20, title: "Alpha", frame: frame, zOrder: 1)
+                entry(id: 20, title: "Alpha", frame: frame, zOrder: 1),
             ]
         )
 
@@ -243,7 +244,7 @@ struct AXWindowLinkerTests {
             axWindows: [axWindow(title: "Ab", frame: frame)],
             to: [
                 entry(id: 10, title: "Abendessen", frame: frame, zOrder: 0),
-                entry(id: 20, title: "Ab", frame: frame, zOrder: 1)
+                entry(id: 20, title: "Ab", frame: frame, zOrder: 1),
             ]
         )
 
@@ -277,29 +278,32 @@ struct AXWindowLinkerTests {
 
     @Test("A standard window is switchable")
     func standardWindowIsSwitchable() {
-        #expect(AXWindowLinker.isSwitchable(
-            role: kAXWindowRole as String,
-            subrole: kAXStandardWindowSubrole as String,
-            isMinimized: false
-        ))
+        #expect(
+            AXWindowLinker.isSwitchable(
+                role: kAXWindowRole as String,
+                subrole: kAXStandardWindowSubrole as String,
+                isMinimized: false
+            ))
     }
 
     @Test("A window that omits its subrole is treated as a normal window")
     func missingSubroleIsSwitchable() {
-        #expect(AXWindowLinker.isSwitchable(
-            role: kAXWindowRole as String,
-            subrole: nil,
-            isMinimized: false
-        ))
+        #expect(
+            AXWindowLinker.isSwitchable(
+                role: kAXWindowRole as String,
+                subrole: nil,
+                isMinimized: false
+            ))
     }
 
     @Test("A dialog on screen is not a switch target")
     func onScreenDialogIsNotSwitchable() {
-        #expect(!AXWindowLinker.isSwitchable(
-            role: kAXWindowRole as String,
-            subrole: kAXDialogSubrole as String,
-            isMinimized: false
-        ))
+        #expect(
+            !AXWindowLinker.isSwitchable(
+                role: kAXWindowRole as String,
+                subrole: kAXDialogSubrole as String,
+                isMinimized: false
+            ))
     }
 
     /// macOS relabels a minimized window's subrole from `AXStandardWindow` to
@@ -307,21 +311,23 @@ struct AXWindowLinkerTests {
     /// went to the Dock — which is precisely when a switcher is worth having.
     @Test("A minimized window survives being relabelled a dialog")
     func minimizedDialogIsSwitchable() {
-        #expect(AXWindowLinker.isSwitchable(
-            role: kAXWindowRole as String,
-            subrole: kAXDialogSubrole as String,
-            isMinimized: true
-        ))
+        #expect(
+            AXWindowLinker.isSwitchable(
+                role: kAXWindowRole as String,
+                subrole: kAXDialogSubrole as String,
+                isMinimized: true
+            ))
     }
 
     @Test("Anything that is not a window is never switchable")
     func nonWindowRoleIsNotSwitchable() {
         for minimized in [true, false] {
-            #expect(!AXWindowLinker.isSwitchable(
-                role: kAXSheetRole as String,
-                subrole: kAXStandardWindowSubrole as String,
-                isMinimized: minimized
-            ))
+            #expect(
+                !AXWindowLinker.isSwitchable(
+                    role: kAXSheetRole as String,
+                    subrole: kAXStandardWindowSubrole as String,
+                    isMinimized: minimized
+                ))
         }
     }
 }

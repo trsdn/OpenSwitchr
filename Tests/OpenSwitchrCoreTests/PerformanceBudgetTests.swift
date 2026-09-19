@@ -7,7 +7,7 @@ struct PerformanceBudgetTests {
 
     private let budgets = [
         PerformanceBudget(name: "warm rebuild", limitMilliseconds: 100),
-        PerformanceBudget(name: "cache hit", limitMilliseconds: 1)
+        PerformanceBudget(name: "cache hit", limitMilliseconds: 1),
     ]
 
     @Test("Everything within budget is a clean pass")

@@ -73,8 +73,9 @@ public struct WindowTile: View {
                 .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
                 .overlay(
                     RoundedRectangle(cornerRadius: 8, style: .continuous)
-                        .strokeBorder(isSelected ? Color.accentColor : Color.primary.opacity(appearance.opacity(of: .tileBorder)),
-                                      lineWidth: isSelected ? 3 : 1)
+                        .strokeBorder(
+                            isSelected ? Color.accentColor : Color.primary.opacity(appearance.opacity(of: .tileBorder)),
+                            lineWidth: isSelected ? 3 : 1)
                 )
                 .overlay(alignment: .topLeading) { closeButton }
                 .overlay(alignment: .topTrailing) { quitButton }
@@ -200,7 +201,8 @@ public struct WindowTile: View {
                 .font(.system(size: 11))
                 .lineLimit(1)
                 .truncationMode(.middle)
-                .foregroundStyle(isSelected || appearance.increasedContrast ? AnyShapeStyle(.primary) : AnyShapeStyle(.secondary))
+                .foregroundStyle(
+                    isSelected || appearance.increasedContrast ? AnyShapeStyle(.primary) : AnyShapeStyle(.secondary))
 
             if window.isMinimized {
                 Image(systemName: "minus.circle.fill")
@@ -213,7 +215,11 @@ public struct WindowTile: View {
                 Image(systemName: "plus.circle")
                     .font(.system(size: 9))
                     .foregroundStyle(appearance.usesQuietMarks ? AnyShapeStyle(.tertiary) : AnyShapeStyle(.secondary))
-                    .help(String(localized: "No open windows: choosing this activates the application and asks it to open one", table: "UI", bundle: .main))
+                    .help(
+                        String(
+                            localized:
+                                "No open windows: choosing this activates the application and asks it to open one",
+                            table: "UI", bundle: .main))
             }
         }
         .frame(width: thumbnailSize.width, alignment: .center)

@@ -1,9 +1,9 @@
 import AppKit
 import Foundation
+import OSLog
 import Observation
 import OpenSwitchrCore
 import OpenSwitchrUI
-import OSLog
 
 /// Wires the shared foundation to both frontends.
 ///

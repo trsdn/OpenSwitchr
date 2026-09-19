@@ -61,7 +61,7 @@ public final class WindowEventBus {
         kAXTitleChangedNotification as String,
         kAXFocusedWindowChangedNotification as String,
         kAXApplicationHiddenNotification as String,
-        kAXApplicationShownNotification as String
+        kAXApplicationShownNotification as String,
     ]
 
     public init() {}
@@ -212,7 +212,8 @@ public final class WindowEventBus {
         // The event is built here rather than on the other side of the hop: a
         // bare `AXUIElement` is not `Sendable` and cannot cross onto the main
         // actor, while `Event` — through `FocusedWindow` — can.
-        let event: Event = name == kAXFocusedWindowChangedNotification as String
+        let event: Event =
+            name == kAXFocusedWindowChangedNotification as String
             // The pid comes from the element that actually changed. Reading the
             // frontmost application instead, as this once did, misattributes
             // every focus change made by an app that is not in front.

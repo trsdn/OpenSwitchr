@@ -55,13 +55,16 @@ public struct DockPreviewView: View {
 
     public var body: some View {
         tiles
-        .padding(8)
-        .background(appearance.usesTranslucency ? AnyShapeStyle(.ultraThinMaterial) : AnyShapeStyle(Color(nsColor: .windowBackgroundColor)))
-        .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
-        .overlay(
-            RoundedRectangle(cornerRadius: 14, style: .continuous)
-                .strokeBorder(Color.primary.opacity(appearance.opacity(of: .panelBorder)), lineWidth: 1)
-        )
+            .padding(8)
+            .background(
+                appearance.usesTranslucency
+                    ? AnyShapeStyle(.ultraThinMaterial) : AnyShapeStyle(Color(nsColor: .windowBackgroundColor))
+            )
+            .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+            .overlay(
+                RoundedRectangle(cornerRadius: 14, style: .continuous)
+                    .strokeBorder(Color.primary.opacity(appearance.opacity(of: .panelBorder)), lineWidth: 1)
+            )
     }
 
     /// A row beside a bottom Dock, a column beside a side one. The column

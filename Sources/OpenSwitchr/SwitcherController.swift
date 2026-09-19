@@ -1,7 +1,7 @@
 import AppKit
+import OSLog
 import OpenSwitchrCore
 import OpenSwitchrUI
-import OSLog
 import SwiftUI
 
 /// Drives the switcher overlay: what is shown, what is selected, and what
@@ -135,7 +135,8 @@ public final class SwitcherController {
             }
         }
         // Below the legible floor the answer is icons, not a smaller image.
-        tileMode = previewsAreLegible
+        tileMode =
+            previewsAreLegible
             ? TileModePolicy.resolve(
                 preference: preferences.tilePreference,
                 screenRecordingGranted: CGPreflightScreenCaptureAccess(),
@@ -185,11 +186,13 @@ public final class SwitcherController {
         // application that gained a window since the overlay opened stops being
         // listed as having none.
         let windowed = Set(index.windows.map(\.pid))
-        let all = index.windows + WindowlessApplications.entries(
-            running: sessionRunningApplications,
-            windowedPIDs: windowed,
-            ownPID: ProcessInfo.processInfo.processIdentifier
-        )
+        let all =
+            index.windows
+            + WindowlessApplications.entries(
+                running: sessionRunningApplications,
+                windowedPIDs: windowed,
+                ownPID: ProcessInfo.processInfo.processIdentifier
+            )
         let kept = sessionFilter.apply(to: all, context: sessionContext)
         filterRemovedWindows = kept.count < all.count
         return kept
@@ -202,7 +205,10 @@ public final class SwitcherController {
     private static func runningApplications() -> [RunningApplication] {
         NSWorkspace.shared.runningApplications
             .filter { $0.activationPolicy == .regular && !$0.isTerminated }
-            .map { RunningApplication(pid: $0.processIdentifier, bundleID: $0.bundleIdentifier, name: $0.localizedName ?? "Unknown") }
+            .map {
+                RunningApplication(
+                    pid: $0.processIdentifier, bundleID: $0.bundleIdentifier, name: $0.localizedName ?? "Unknown")
+            }
     }
 
     private static func frontmostPID() -> pid_t? {
@@ -254,7 +260,9 @@ public final class SwitcherController {
         let selected = visibleWindows.indices.contains(selectedIndex) ? visibleWindows[selectedIndex].id : nil
         // An application-only entry has no window to capture.
         let capturable = visibleWindows.filter { !$0.isApplicationOnly }.map(\.id)
-        thumbnails.prefetch(capturable, maxPixelSize: tileSize().width * 2, selected: selected.flatMap { WindowlessApplications.isApplicationOnly(id: $0) ? nil : $0 })
+        thumbnails.prefetch(
+            capturable, maxPixelSize: tileSize().width * 2,
+            selected: selected.flatMap { WindowlessApplications.isApplicationOnly(id: $0) ? nil : $0 })
     }
 
     private func render() {

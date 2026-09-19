@@ -28,7 +28,8 @@ struct SwitcherProfileTests {
 
     @Test("The configured profile leaves the user's filter exactly as it is")
     func configuredIsIdentity() {
-        let filter = WindowFilter(applications: .excludingFrontmost, minimized: .hide, screens: .surfaceScreenOnly, order: .alphabetical)
+        let filter = WindowFilter(
+            applications: .excludingFrontmost, minimized: .hide, screens: .surfaceScreenOnly, order: .alphabetical)
         #expect(SwitcherProfile.configured.filter(from: filter) == filter)
     }
 
@@ -36,7 +37,8 @@ struct SwitcherProfileTests {
     func currentApplicationChangesOneAxis() {
         // The whole point of a fixed profile: the second hotkey is a different
         // question ("this app's windows"), not a second copy of every setting.
-        let filter = WindowFilter(applications: .all, minimized: .hide, screens: .surfaceScreenOnly, order: .alphabetical)
+        let filter = WindowFilter(
+            applications: .all, minimized: .hide, screens: .surfaceScreenOnly, order: .alphabetical)
         let result = SwitcherProfile.currentApplication.filter(from: filter)
         #expect(result.applications == .frontmostOnly)
         #expect(result.minimized == .hide)

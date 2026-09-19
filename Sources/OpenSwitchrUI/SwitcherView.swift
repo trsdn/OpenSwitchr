@@ -76,7 +76,10 @@ public struct SwitcherView: View {
         }
         .padding(16)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(appearance.usesTranslucency ? AnyShapeStyle(.ultraThinMaterial) : AnyShapeStyle(Color(nsColor: .windowBackgroundColor)))
+        .background(
+            appearance.usesTranslucency
+                ? AnyShapeStyle(.ultraThinMaterial) : AnyShapeStyle(Color(nsColor: .windowBackgroundColor))
+        )
         .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: 18, style: .continuous)
@@ -107,7 +110,9 @@ public struct SwitcherView: View {
     }
 
     private var selectionSubtitle: String {
-        guard windows.indices.contains(selectedIndex) else { return String(localized: "No windows", table: "UI", bundle: .main) }
+        guard windows.indices.contains(selectedIndex) else {
+            return String(localized: "No windows", table: "UI", bundle: .main)
+        }
         return windows[selectedIndex].appName
     }
 

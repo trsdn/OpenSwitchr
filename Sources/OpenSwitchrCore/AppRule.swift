@@ -61,7 +61,8 @@ public struct AppRuleTable: Equatable, Sendable {
     /// override for the same vendor can coexist.
     public func rule(forBundleID bundleID: String?) -> AppRule? {
         guard let bundleID else { return nil }
-        return rules
+        return
+            rules
             .filter { bundleID.hasPrefix($0.bundleIDPrefix) }
             .max { $0.bundleIDPrefix.count < $1.bundleIDPrefix.count }
     }
@@ -117,7 +118,7 @@ public struct AppRuleTable: Equatable, Sendable {
         AppRule(bundleIDPrefix: "com.utmapp.UTM", standAsideWhenFullScreen: true),
         // Apple's own Screen Sharing.app, used for both local screen sharing
         // and remote Mac management.
-        AppRule(bundleIDPrefix: "com.apple.ScreenSharing", standAsideWhenFullScreen: true)
+        AppRule(bundleIDPrefix: "com.apple.ScreenSharing", standAsideWhenFullScreen: true),
     ])
 }
 
@@ -141,23 +142,24 @@ public extension AppRuleTable {
     }
 
     func encoded() throws -> Data {
-        let stored = Stored(rules: rules.map { rule in
-            let kind: String
-            var text = ""
-            switch rule.hide {
-            case .never: kind = "never"
-            case .always: kind = "always"
-            case .whenTitleContains(let substring):
-                kind = "titleContains"
-                text = substring
-            }
-            return StoredRule(
-                bundleIDPrefix: rule.bundleIDPrefix,
-                hideKind: kind,
-                hideText: text,
-                standAside: rule.standAsideWhenFullScreen
-            )
-        })
+        let stored = Stored(
+            rules: rules.map { rule in
+                let kind: String
+                var text = ""
+                switch rule.hide {
+                case .never: kind = "never"
+                case .always: kind = "always"
+                case .whenTitleContains(let substring):
+                    kind = "titleContains"
+                    text = substring
+                }
+                return StoredRule(
+                    bundleIDPrefix: rule.bundleIDPrefix,
+                    hideKind: kind,
+                    hideText: text,
+                    standAside: rule.standAsideWhenFullScreen
+                )
+            })
         return try JSONEncoder().encode(stored)
     }
 
@@ -173,19 +175,20 @@ public extension AppRuleTable {
         guard let data, let stored = try? JSONDecoder().decode(Stored.self, from: data) else {
             return .defaults
         }
-        return AppRuleTable(rules: stored.rules.map { entry in
-            let hide: AppRule.HidePolicy
-            switch entry.hideKind {
-            case "always": hide = .always
-            case "titleContains": hide = .whenTitleContains(entry.hideText)
-            default: hide = .never
-            }
-            return AppRule(
-                bundleIDPrefix: entry.bundleIDPrefix,
-                hide: hide,
-                standAsideWhenFullScreen: entry.standAside
-            )
-        })
+        return AppRuleTable(
+            rules: stored.rules.map { entry in
+                let hide: AppRule.HidePolicy
+                switch entry.hideKind {
+                case "always": hide = .always
+                case "titleContains": hide = .whenTitleContains(entry.hideText)
+                default: hide = .never
+                }
+                return AppRule(
+                    bundleIDPrefix: entry.bundleIDPrefix,
+                    hide: hide,
+                    standAsideWhenFullScreen: entry.standAside
+                )
+            })
     }
 
     /// How many of `windows` this rule is currently hiding, so a settings row

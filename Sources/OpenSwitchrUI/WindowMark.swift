@@ -61,18 +61,20 @@ public enum WindowMark {
         let width = Double(pixelWidth)
         let pixelHeight = max(1, Int((width / aspectRatio).rounded()))
 
-        guard let rep = NSBitmapImageRep(
-            bitmapDataPlanes: nil,
-            pixelsWide: pixelWidth,
-            pixelsHigh: pixelHeight,
-            bitsPerSample: 8,
-            samplesPerPixel: 4,
-            hasAlpha: true,
-            isPlanar: false,
-            colorSpaceName: .calibratedRGB,
-            bytesPerRow: 0,
-            bitsPerPixel: 0
-        ) else {
+        guard
+            let rep = NSBitmapImageRep(
+                bitmapDataPlanes: nil,
+                pixelsWide: pixelWidth,
+                pixelsHigh: pixelHeight,
+                bitsPerSample: 8,
+                samplesPerPixel: 4,
+                hasAlpha: true,
+                isPlanar: false,
+                colorSpaceName: .calibratedRGB,
+                bytesPerRow: 0,
+                bitsPerPixel: 0
+            )
+        else {
             fatalError("could not allocate a \(pixelWidth)x\(pixelHeight) bitmap")
         }
         rep.size = NSSize(width: width, height: Double(pixelHeight))
@@ -139,19 +141,21 @@ public enum WindowMark {
         let rep = representation(pixelWidth: max(1, Int(width.rounded())), color: color, style: style)
         let image = NSImage(size: rep.size)
         image.addRepresentation(rep)
-        image.draw(in: NSRect(
-            x: container.midX - rep.size.width / 2,
-            y: container.midY - rep.size.height / 2,
-            width: rep.size.width,
-            height: rep.size.height
-        ))
+        image.draw(
+            in: NSRect(
+                x: container.midX - rep.size.width / 2,
+                y: container.midY - rep.size.height / 2,
+                width: rep.size.width,
+                height: rep.size.height
+            ))
     }
 
     private static func draw(in bounds: NSRect, color: NSColor, style: Style) {
         // An outline is centred on its path, so half of it falls outside the
         // window it traces. Both dimensions have to give that half back, or the
         // stroke is clipped by the edge of the bitmap.
-        let line = style == .outlined
+        let line =
+            style == .outlined
             ? max(1, (bounds.width / (1 + stackOffset) * strokeWidth).rounded())
             : 0
 

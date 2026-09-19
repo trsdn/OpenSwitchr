@@ -33,14 +33,16 @@ final class DockScrollCycler {
         guard thread == nil else { return true }
         guard AXIsProcessTrusted() else { return false }
 
-        guard let tap = CGEvent.tapCreate(
-            tap: .cgSessionEventTap,
-            place: .headInsertEventTap,
-            options: .defaultTap,
-            eventsOfInterest: CGEventMask(1 << CGEventType.scrollWheel.rawValue),
-            callback: ScrollTapCore.callback,
-            userInfo: Unmanaged.passUnretained(core).toOpaque()
-        ) else {
+        guard
+            let tap = CGEvent.tapCreate(
+                tap: .cgSessionEventTap,
+                place: .headInsertEventTap,
+                options: .defaultTap,
+                eventsOfInterest: CGEventMask(1 << CGEventType.scrollWheel.rawValue),
+                callback: ScrollTapCore.callback,
+                userInfo: Unmanaged.passUnretained(core).toOpaque()
+            )
+        else {
             logger.error("Could not create the scroll tap")
             return false
         }
