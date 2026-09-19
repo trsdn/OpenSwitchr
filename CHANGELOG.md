@@ -118,6 +118,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- `openswitchr-diag --probe-app` decides whether focus moved by the frontmost
+  window's `CGWindowID` instead of by a rendered "app — title" string, which
+  read a correct switch as a failure whenever two windows shared a title. The
+  Dock preview's "hidden on exit" check now polls up to three seconds instead of
+  sleeping a fixed 900 ms, which reported the preview still visible once and
+  never again.
 - The two sibling `### Added` headings under `0.1.0` in this file are merged
   into one, which is both a lint failure and genuinely confusing to read.
 - `actions/checkout` and the reusable `trsdn/.github` conformance workflow are

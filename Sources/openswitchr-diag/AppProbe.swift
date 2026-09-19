@@ -61,7 +61,7 @@ enum AppProbe {
         // preview is a panel like any other. Park it before measuring.
         parkPointer()
 
-        let before = frontmostWindowDescription()
+        let before = frontmostWindow()
         let dockBefore = dockWindowIDs()
         let panelsBefore = Set(panels().keys)
         if !panelsBefore.isEmpty {
@@ -106,9 +106,12 @@ enum AppProbe {
 
         print("  On release: \(panels().keys.contains(where: { !panelsBefore.contains($0) }) ? "STILL OPEN" : "closed")")
 
-        let after = frontmostWindowDescription()
-        print("  Focus: \(before) -> \(after)")
-        print(before == after ? "  FAILED: focus did not move." : "  Focus moved.")
+        let after = frontmostWindow()
+        print("  Focus: \(before.description) -> \(after.description)")
+        // Compared by window id, not by the text: two windows of one app that
+        // share a title read identically, so a correct switch looked like a
+        // failure. The text stays for whoever reads the output.
+        print(before.id == after.id ? "  FAILED: focus did not move." : "  Focus moved.")
     }
 
     // MARK: - Dock hover
@@ -183,8 +186,12 @@ enum AppProbe {
             }
 
             move(to: parked)
-            usleep(900_000)
-            print("    on exit: \(panelSizes().isEmpty ? "hidden" : "STILL VISIBLE")")
+            // Polled rather than a fixed settle: the preview hides after
+            // `dockHideDelay` plus a fade, and a warped pointer does not always
+            // generate the event the hover monitor waits for. A fixed sleep
+            // reported "STILL VISIBLE" once and then never again.
+            let hidden = waitUntil(timeout: 3.0) { panelSizes().isEmpty }
+            print("    on exit: \(hidden ? "hidden" : "STILL VISIBLE after 3 s")")
         }
 
         // NSEvent.mouseLocation is bottom-left origin; CGEvent is top-left, and
@@ -270,15 +277,28 @@ enum AppProbe {
     /// `NSWorkspace.frontmostApplication` is updated by notifications, which do
     /// not arrive in a short-lived process with no run loop, so it reports a
     /// stale answer. The window server's z-order is always current.
-    private static func frontmostWindowDescription() -> String {
+    ///
+    /// The id is what is asserted on; the description is only for a human.
+    private static func frontmostWindow() -> (id: CGWindowID?, description: String) {
         let options: CGWindowListOption = [.optionOnScreenOnly, .excludeDesktopElements]
         let list = CGWindowListCopyWindowInfo(options, kCGNullWindowID) as? [[String: Any]] ?? []
         for window in list where (window[kCGWindowLayer as String] as? Int ?? 0) == 0 {
             let owner = window[kCGWindowOwnerName as String] as? String ?? "?"
             let title = window[kCGWindowName as String] as? String ?? ""
-            return title.isEmpty ? owner : "\(owner) — \(title.prefix(40))"
+            let id = window[kCGWindowNumber as String] as? CGWindowID
+            return (id, title.isEmpty ? owner : "\(owner) — \(title.prefix(40))")
         }
-        return "?"
+        return (nil, "?")
+    }
+
+    /// Polls `condition` until it holds or `timeout` seconds pass.
+    private static func waitUntil(timeout: TimeInterval, _ condition: () -> Bool) -> Bool {
+        let deadline = Date().addingTimeInterval(timeout)
+        while Date() < deadline {
+            if condition() { return true }
+            usleep(50_000)
+        }
+        return condition()
     }
 
     // MARK: - Synthetic input
