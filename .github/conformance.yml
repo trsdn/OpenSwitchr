@@ -24,7 +24,7 @@ criteria:
   B10: pass
   B11: pass
   B12: pass
-  B13: partial
+  B13: pass
   B14: pass
   B15: pass
   B16: pass
@@ -37,7 +37,7 @@ criteria:
   P05: pass
   P06: pass
   P07: pass
-  P08: partial
+  P08: pass
   P09: pass
   P10: pass
   P11: pass
@@ -45,7 +45,7 @@ criteria:
   # --- Software Repositories --------------------------------------------
   S01: pass
   S02: partial
-  S03: partial
+  S03: pass
   S04: pass
   S05: pass
   S06: na
@@ -114,15 +114,15 @@ criteria:
   L01: pass
   L02: pass
   L03: pass
-  L04: partial
+  L04: pass
   L05: na
-  L06: partial
+  L06: pass
   L07: pass
 
   # --- Accessibility -----------------------------------------------------
-  X01: partial
+  X01: pass
   X02: pass
-  X03: partial
+  X03: pass
   X04: pass
   X05: pass
 

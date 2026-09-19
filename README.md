@@ -364,8 +364,12 @@ translated. Counts use plural forms rather than string interpolation.
 
 Two things to know:
 
-- **The German was written by an AI assistant and has not been reviewed by a
-  native speaker.** Corrections are a catalog edit.
+- **The German is machine-translated and has not been reviewed by a native
+  speaker.** A large language model (Claude, by Anthropic) translated it from the
+  English source strings while the app was being developed (September 2026), and
+  read it again in the running Settings window on 2026-09-19. That is the whole of
+  its provenance. Each catalog entry is keyed by its English source string, so the
+  source of every translation is the entry itself. Corrections are a catalog edit.
 - **Check the bundle, not the build log.** `scripts/build-app.sh` and the release
   broker's `openswitchr` adapter both put the compiled `.lproj` directories into the
   bundle. The first localized release shipped without them because the hosted

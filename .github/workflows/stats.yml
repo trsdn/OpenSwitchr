@@ -10,6 +10,11 @@ on:
 permissions:
   contents: read
 
+# Two runs pushing to the same generated branch race each other.
+concurrency:
+  group: repo-stats
+  cancel-in-progress: false
+
 jobs:
   stats:
     # The one workflow here with write access. It can only reach the generated
