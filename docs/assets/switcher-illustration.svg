@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 360" role="img" aria-labelledby="t d">
+  <title id="t">Illustration of the OpenSwitchr window switcher</title>
+  <desc id="d">A row of three window tiles, each with an application icon and a title, with the middle one selected. An illustration, not a screenshot.</desc>
+  <rect width="640" height="360" fill="#1f2328"/>
+  <rect x="40" y="90" width="560" height="180" rx="14" fill="#2b3138" stroke="#4b535c"/>
+  <g font-family="-apple-system, system-ui, sans-serif" font-size="14" fill="#e6e9ec" text-anchor="middle">
+    <rect x="64" y="114" width="160" height="110" rx="8" fill="#39414a"/>
+    <rect x="120" y="146" width="48" height="48" rx="11" fill="#5c6670"/>
+    <text x="144" y="248">Notes</text>
+
+    <rect x="240" y="114" width="160" height="110" rx="8" fill="#39414a" stroke="#7aa2ff" stroke-width="3"/>
+    <rect x="296" y="146" width="48" height="48" rx="11" fill="#7aa2ff"/>
+    <text x="320" y="248">Terminal</text>
+
+    <rect x="416" y="114" width="160" height="110" rx="8" fill="#39414a"/>
+    <rect x="472" y="146" width="48" height="48" rx="11" fill="#5c6670"/>
+    <text x="496" y="248">Safari</text>
+  </g>
+</svg>

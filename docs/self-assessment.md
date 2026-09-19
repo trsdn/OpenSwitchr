@@ -63,7 +63,7 @@ and recorded under Notable passes below.
 | Data Protection And Privacy | Yes | Reads window metadata and captures screen content |
 | Deployable | No | Nothing is deployed to any environment |
 | Documentation | No | The product is software; docs support it |
-| Published Sites | No | There is no site. The homepage points at the releases page |
+| Published Sites | Yes | `docs/index.html`, served by GitHub Pages at [trsdn.github.io/OpenSwitchr](https://trsdn.github.io/OpenSwitchr/) |
 | Archived | No | Actively developed |
 
 ## Failures
@@ -270,9 +270,6 @@ Both limitations are stated in the README under `X05`.
   infrastructure, and no operational surface. The app runs on a user's machine.
 - **`T01`–`T05`** — the product is an application, not documentation. The
   documentation here supports the software rather than being the deliverable.
-- **`W01`–`W08`** — there is no published site. The repository homepage points
-  at its own releases page, which is not a site in the sense the profile
-  means.
 - **`S06`** — there is no runtime configuration. No environment variable, no
   configuration file, no remote configuration; only user preferences in
   `UserDefaults`, which are the user's own data rather than deployment config.
@@ -345,6 +342,36 @@ These are recorded because they took work, not because they were free.
   this repository without a commit here. Both are now pinned to a full commit
   SHA, with a trailing comment naming the tag for readability — the pattern
   GitHub itself recommends for third-party actions.
+
+- **`W01`–`W08`** — the published site. It is one page, `docs/index.html`,
+  served by GitHub's branch build from `main` / `docs` (`.nojekyll` disables the
+  Jekyll pass so the markdown beside it is not rendered as pages).
+  - `W01` — the process is repeatable and documented in `AGENTS.md`: merge to
+    `main`. There is deliberately **no deployment workflow**: publishing from a
+    workflow needs `pages: write` and an environment, which this repository does
+    not allow itself (`AGENTS.md`, forbidden operations). The branch build is the
+    same result without granting that.
+  - `W02` — the repository `homepage` field is the site, and the site's footer
+    and header link back to the repository.
+  - `W03`, `W04` — the landing view states what it is, that it is for people who
+    switch between many windows on a Mac, and its status and version, with the
+    build instructions, the one-sentence `Y01` disclosure, the repository,
+    license, security policy and support links, and a last-reviewed date.
+  - `W05`, `W06` — styled with Instrument Workshop **v1.5.1**, two stylesheets
+    vendored unmodified into `docs/assets`, with the tag, commit and SHA-256 of
+    each recorded in `docs/assets/VERSION`.
+  - `W07` — network review, done by reading the page and both stylesheets
+    rather than trusting the claim: `docs/index.html` references no host other
+    than `github.com` links a visitor has to click, and neither stylesheet
+    contains an `http`, `@import` or `url()` reference. No script, no font
+    request (the design language falls back to the system font stack), no
+    cookie, no analytics.
+  - `W08` — one page, each fact stated once and linked to the repository for
+    depth. Nothing addressed to contributors lives on it.
+  The site is also a shipped interface, so accessibility applies to it: the page
+  is semantic HTML with a skip link, a `lang` attribute, alt text on the
+  illustration (which says it is an illustration, not a screenshot), and no
+  script. It has not been audited with a screen reader.
 
 ## What to do next
 
