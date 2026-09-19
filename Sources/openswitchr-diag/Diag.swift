@@ -61,6 +61,8 @@ enum Diag {
         let windows = index.windows
 
         print("Cold rebuild: \(windows.count) windows in \(ms(index.lastRebuildDuration))")
+        var measurements: [String: Double] = [Budgets.coldRebuild: index.lastRebuildDuration * 1000]
+        let checkBudgets = arguments.contains("--check-budgets")
         let linked = windows.filter { $0.element != nil }.count
         print("Linked to an accessibility element: \(linked)/\(windows.count)")
 
@@ -76,11 +78,14 @@ enum Diag {
         print("")
         print("Identity across two rebuilds: \(churn.isEmpty ? "stable" : "\(churn.count) window ID(s) changed")")
 
-        if arguments.contains("--bench") {
-            await benchmarkRebuilds(index)
+        if arguments.contains("--bench") || checkBudgets {
+            measurements.merge(await benchmarkRebuilds(index)) { $1 }
         }
-        if arguments.contains("--capture") {
-            await benchmarkCaptures(windows)
+        if arguments.contains("--capture") || checkBudgets {
+            measurements.merge(await benchmarkCaptures(windows)) { $1 }
+        }
+        if checkBudgets {
+            reportBudgets(measurements)
         }
         if arguments.contains("--audit-links") {
             auditLinks(windows)
@@ -362,7 +367,8 @@ enum Diag {
 
     // MARK: - Benchmarks
 
-    private static func benchmarkRebuilds(_ index: WindowIndex) async {
+    @discardableResult
+    private static func benchmarkRebuilds(_ index: WindowIndex) async -> [String: Double] {
         var serial: [TimeInterval] = []
         var concurrent: [TimeInterval] = []
 
@@ -376,13 +382,15 @@ enum Diag {
         print("")
         print("Warm rebuild, serial:     \(summary(serial))")
         print("Warm rebuild, concurrent: \(summary(concurrent))")
+        return [Budgets.warmRebuild: concurrent.reduce(0, +) / Double(concurrent.count) * 1000]
     }
 
-    private static func benchmarkCaptures(_ windows: [WindowInfo]) async {
+    @discardableResult
+    private static func benchmarkCaptures(_ windows: [WindowInfo]) async -> [String: Double] {
         print("")
         guard CGPreflightScreenCaptureAccess() else {
             print("Capture check skipped: Screen Recording permission missing.")
-            return
+            return [:]
         }
 
         let store = ThumbnailStore()
@@ -401,11 +409,45 @@ enum Diag {
                 return hits
             }
         }.value
-        print("Capture, cold and parallel: \(hits)/\(ids.count) in \(ms(CFAbsoluteTimeGetCurrent() - started))")
+        let coldSeconds = CFAbsoluteTimeGetCurrent() - started
+        print("Capture, cold and parallel: \(hits)/\(ids.count) in \(ms(coldSeconds))")
 
         let cached = CFAbsoluteTimeGetCurrent()
         for id in ids { _ = await store.cached(id) }
-        print("Capture, cache hits:        \(ms(CFAbsoluteTimeGetCurrent() - cached))")
+        let cachedSeconds = CFAbsoluteTimeGetCurrent() - cached
+        print("Capture, cache hits:        \(ms(cachedSeconds))")
+        return [
+            Budgets.coldThumbnails: coldSeconds * 1000,
+            Budgets.cacheHits: cachedSeconds * 1000
+        ]
+    }
+
+    /// Prints every budget with its measurement and exits non-zero if one is
+    /// exceeded or could not be measured.
+    private static func reportBudgets(_ measurements: [String: Double]) {
+        let outcome = PerformanceBudget.evaluate(measurements, against: Budgets.all)
+
+        print("")
+        print("Performance budgets (wall-clock, machine-dependent: run on a quiet machine, not in hosted CI)")
+        for budget in Budgets.all {
+            let status: String
+            if let measured = measurements[budget.name] {
+                status = String(format: "%8.1f ms  budget %6.0f ms  %@", measured, budget.limitMilliseconds,
+                                measured > budget.limitMilliseconds ? "EXCEEDED" : "ok")
+            } else {
+                status = "not measured  budget \(Int(budget.limitMilliseconds)) ms  MISSING"
+            }
+            print("  " + pad(budget.name, 42) + status)
+        }
+
+        guard outcome.passes else {
+            print("")
+            print("FAILED: \(outcome.violations.count) budget(s) exceeded, \(outcome.unmeasured.count) not measured.")
+            print("Raise a budget in Sources/openswitchr-diag/Budgets.swift only in the commit that justifies it.")
+            exit(1)
+        }
+        print("")
+        print("All budgets met.")
     }
 
     // MARK: - Formatting
