@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.1] - 2026-09-19
+
+### Fixed
+
+- The German localization is now actually in the release. 0.2.0 was built by a toolchain that copied the string catalogs instead of compiling them, so it shipped English only; the release build now compiles them itself and refuses to ship without German.
+
 ## [0.2.0] - 2026-09-19
 
 ### Added

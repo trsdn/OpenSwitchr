@@ -14,9 +14,9 @@
         <string>de</string>
     </array>
     <key>CFBundleVersion</key>
-    <string>0.2.0</string>
+    <string>0.2.1</string>
     <key>CFBundleShortVersionString</key>
-    <string>0.2.0</string>
+    <string>0.2.1</string>
     <!-- Identity the running app reads back rather than hardcoding a second
          time: AboutView renders its links from these keys, so the bundle and
          the About tab cannot disagree. `scripts/check.sh` asserts that the two
