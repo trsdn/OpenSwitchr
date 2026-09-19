@@ -90,7 +90,7 @@ public final class PermissionsManager {
         pollTimer?.invalidate()
         watchDeadline = timeout.map { Date().addingTimeInterval($0) }
 
-        pollTimer = Timer.scheduledTimer(withTimeInterval: Self.pollInterval, repeats: true) { _ in
+        pollTimer = Timer.scheduledTimer(withTimeInterval: Self.pollInterval, repeats: true) { [weak self] _ in
             Task { @MainActor [weak self] in
                 self?.checkPendingGrant()
             }
