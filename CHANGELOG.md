@@ -131,11 +131,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   clock that moved back) and the state rules (`UpdateState`: a failed background
   check stays silent, a manual one always answers) are pure and unit tested.
   `THIRD_PARTY_NOTICES.txt` carries AppUpdater's (Unlicense) and its dependency
-  Version's (Apache-2.0) licenses verbatim and is copied into the bundle. **Not
-  done here, and recorded in `RELEASE_CHECKLIST.md`: the broker still has to emit
-  an `OpenSwitchr-<semver>.dmg` asset, lock the dependency and declare the
-  resource bundle, so no release can update an installed copy yet, and a real
-  update has never been run.**
+  Version's (Apache-2.0) licenses verbatim and is copied into the bundle. The
+  broker side (an `OpenSwitchr-<semver>.dmg` asset, the dependency lock, the
+  resource bundle) landed in trsdn/macos-notarization-broker#56, but **no release
+  with the updater has been built, and a real update has never been run**, both
+  recorded in `RELEASE_CHECKLIST.md`.
 - The interface is localized, with German as the first additional language
   (#5). Two String Catalogs, `Localizable.xcstrings` for the app and `UI.xcstrings`
   for the shared views, are compiled by SwiftPM and copied into the app bundle by
@@ -144,9 +144,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   untranslated entry, a dropped placeholder, an incomplete plural, a lost product
   name, or a plain literal that never reached a catalog (mutation-tested). The
   German was written by an AI assistant and has not been reviewed by a native
-  speaker, and only a locally built app is localized so far: the release broker
-  assembles its own bundle and has to copy the `.lproj` directories too, recorded
-  in `RELEASE_CHECKLIST.md` with a per-release check. `Info.plist` gains
+  speaker. The release broker's `openswitchr` adapter now copies the `.lproj`
+  directories too (trsdn/macos-notarization-broker#56), but no release has been
+  built since, and a per-release check is in `RELEASE_CHECKLIST.md`. `Info.plist` gains
   `CFBundleDevelopmentRegion` and `CFBundleLocalizations`.
 - The switcher can list running applications that have no open windows (off by
   default, "Applications with no windows"). They come after the windows, and
