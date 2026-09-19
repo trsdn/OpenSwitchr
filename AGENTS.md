@@ -185,9 +185,8 @@ rejects the release. See `RELEASE_CHECKLIST.md`.
 ## Architecture
 
 OpenSwitchr is a `LSUIElement` menu bar app targeting macOS 15+. Two frontends
-sit on one shared foundation, which is the entire point of the project: the
-window index, the event bus, the thumbnail cache, and the window actions exist
-**once**.
+sit on one shared foundation (the case for that is in the README); this section
+is where the pieces live.
 
 ```text
 Sources/
@@ -519,10 +518,9 @@ immediately and are confined to `AXBridge` / `HotkeyMonitor`.
 
 ## The name
 
-"OpenSwitchr" is "Open Switcher" without the *e*. The vowel is dropped
-deliberately: plain "OpenSwitch" belongs to the Linux Foundation's OpenSwitch
-(OPX) network operating system, so it must not reappear in the bundle
-identifier, the product name, or anything published. Use
+Plain "OpenSwitch" belongs to another project (the reason is in the README), so
+it must not reappear in the bundle identifier, the product name, or anything
+published. Use
 `bash scripts/rename-product.sh <NewName>` for any further rename rather than
 editing names by hand.
 
