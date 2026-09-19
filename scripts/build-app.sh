@@ -71,6 +71,19 @@ cp "$PROJECT_DIR/Info.plist" "$APP/Contents/Info.plist"
 cp "$PROJECT_DIR/LICENSE" "$APP/Contents/Resources/LICENSE"
 
 HAS_ICON=false
+# Localized strings. SwiftPM compiles each target's String Catalog into a
+# resource bundle holding *.lproj directories, but SwiftUI resolves literals
+# against the app's main bundle, so they are copied in beside the icon. The
+# release broker assembles the bundle itself and has to do the same, or released
+# builds are English-only while local ones are not (see RELEASE_CHECKLIST.md).
+# Each module uses its own table (Localizable, UI), so the copies merge.
+for bundle in "$BUILD_DIR"/OpenSwitchr_*.bundle; do
+    [[ -d "$bundle" ]] || continue
+    while IFS= read -r lproj; do
+        cp -R "$lproj" "$APP/Contents/Resources/"
+    done < <(find "$bundle" -name '*.lproj' -type d)
+done
+
 if [[ -f "$PROJECT_DIR/Resources/AppIcon.icns" ]]; then
     cp "$PROJECT_DIR/Resources/AppIcon.icns" "$APP/Contents/Resources/AppIcon.icns"
     HAS_ICON=true

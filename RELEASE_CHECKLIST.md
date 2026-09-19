@@ -23,6 +23,22 @@ architecture, entitlements, or minimum macOS version — is not a local decision
 It requires a reviewed pull request against the broker's `profiles/apps.json`,
 and the release fails until that lands.
 
+## Localization and the broker
+
+The interface is localized with String Catalogs that SwiftPM compiles into two
+resource bundles, `OpenSwitchr_OpenSwitchr.bundle` (table `Localizable`) and
+`OpenSwitchr_OpenSwitchrUI.bundle` (table `UI`), each holding `*.lproj`
+directories. SwiftUI resolves strings against the app's **main** bundle, so the
+`*.lproj` directories have to be copied into `Contents/Resources`, which is what
+`scripts/build-app.sh` now does for local builds.
+
+**The broker assembles the release bundle itself and does not do this yet.** Until
+its `openswitchr-swiftpm` adapter copies the `*.lproj` directories from both
+resource bundles into `Contents/Resources` (a reviewed pull request against
+`profiles/apps.json` and the adapter, per the section above), a released build is
+English-only while a local one is German on a German system. The two tables have
+different names on purpose, so copying both merges rather than overwrites.
+
 ## Per release
 
 1. Update `CHANGELOG.md`: move entries out of *Unreleased* into the new
@@ -50,7 +66,11 @@ and the release fails until that lands.
 
    The broker verifies `provenance.json` and the release digests, and emits
    `OpenSwitchr-v<version>-macOS-arm64.dmg` with its `.sha256`.
-7. Attach the broker's artifacts to the GitHub release. Do not upload anything
+7. Install the broker's artifact and confirm the localized resources are in it:
+   `ls OpenSwitchr.app/Contents/Resources/de.lproj` should list `Localizable.strings`,
+   `Localizable.stringsdict` and `UI.strings`. Absent means the broker still has
+   not adopted the copy step above.
+8. Attach the broker's artifacts to the GitHub release. Do not upload anything
    built locally.
 
 ## Local testing

@@ -1,0 +1,1028 @@
+{
+  "sourceLanguage": "en",
+  "strings": {
+    "%lld windows on this Space": {
+      "localizations": {
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld window on this Space"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld windows on this Space"
+                }
+              }
+            }
+          }
+        },
+        "de": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld Fenster in diesem Space"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld Fenster in diesem Space"
+                }
+              }
+            }
+          }
+        }
+      },
+      "comment": "Menu bar status line; count of windows in the current Space"
+    },
+    "A minimized window sits on no display, so “Only this display” never removes one. Otherwise a display setting would quietly hide everything in the Dock.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ein minimiertes Fenster gehört zu keinem Bildschirm, daher entfernt „Nur dieser Bildschirm“ nie eines. Sonst würde eine Bildschirmeinstellung stillschweigend alles im Dock ausblenden."
+          }
+        }
+      }
+    },
+    "About": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Info"
+          }
+        }
+      }
+    },
+    "Accessibility": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bedienungshilfen"
+          }
+        }
+      }
+    },
+    "Accessibility permission required": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bedienungshilfen-Berechtigung erforderlich"
+          }
+        }
+      }
+    },
+    "Add": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hinzufügen"
+          }
+        }
+      }
+    },
+    "Add a rule": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Regel hinzufügen"
+          }
+        }
+      }
+    },
+    "Add a running application": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Laufende App hinzufügen"
+          }
+        }
+      }
+    },
+    "All applications": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alle Apps"
+          }
+        }
+      }
+    },
+    "All displays": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alle Bildschirme"
+          }
+        }
+      }
+    },
+    "Always": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Immer"
+          }
+        }
+      }
+    },
+    "Always fresh": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Immer aktuell"
+          }
+        }
+      }
+    },
+    "Appearance": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Darstellung"
+          }
+        }
+      }
+    },
+    "Application, then title": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "App, dann Titel"
+          }
+        }
+      }
+    },
+    "Applications with no windows": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apps ohne Fenster"
+          }
+        }
+      }
+    },
+    "Applies to the switcher only. Dock previews always show every window of the application under the pointer, because that is the one you pointed at.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gilt nur für den Umschalter. Dock-Vorschauen zeigen immer alle Fenster der App unter dem Zeiger, denn diese App wurde ja gezielt gewählt."
+          }
+        }
+      }
+    },
+    "Apps": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apps"
+          }
+        }
+      }
+    },
+    "At most every 15 s": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Höchstens alle 15 s"
+          }
+        }
+      }
+    },
+    "At most every 2 s": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Höchstens alle 2 s"
+          }
+        }
+      }
+    },
+    "At most every 5 s": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Höchstens alle 5 s"
+          }
+        }
+      }
+    },
+    "Both appear only while the pointer is on a preview. Top left closes that window; top right quits the whole app, and is red because it is the one you cannot undo.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Beide erscheinen nur, solange der Zeiger auf einer Vorschau steht. Oben links schließt das Fenster; oben rechts beendet die ganze App und ist rot, weil sich das nicht rückgängig machen lässt."
+          }
+        }
+      }
+    },
+    "Bundle identifier prefix": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Präfix der Bundle-Kennung"
+          }
+        }
+      }
+    },
+    "Delete the rule for %@": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Regel für %@ löschen"
+          }
+        }
+      }
+    },
+    "Displays": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bildschirme"
+          }
+        }
+      }
+    },
+    "Dock hover previews and a window switcher on one shared window index.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dock-Vorschauen und ein Fensterumschalter auf einem gemeinsamen Fensterindex."
+          }
+        }
+      }
+    },
+    "Dock hover unavailable": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dock-Vorschau nicht verfügbar"
+          }
+        }
+      }
+    },
+    "Dock previews": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dock-Vorschauen"
+          }
+        }
+      }
+    },
+    "Enable window switcher": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fensterumschalter aktivieren"
+          }
+        }
+      }
+    },
+    "Everything but the current application": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alles außer der aktuellen App"
+          }
+        }
+      }
+    },
+    "General": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Allgemein"
+          }
+        }
+      }
+    },
+    "Grant Accessibility…": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bedienungshilfen erlauben …"
+          }
+        }
+      }
+    },
+    "Granted": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Erlaubt"
+          }
+        }
+      }
+    },
+    "Hide": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ausblenden"
+          }
+        }
+      }
+    },
+    "Hide windows": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fenster ausblenden"
+          }
+        }
+      }
+    },
+    "Hides %lld windows right now.": {
+      "localizations": {
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Hides %lld window right now."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Hides %lld windows right now."
+                }
+              }
+            }
+          }
+        },
+        "de": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Blendet gerade %lld Fenster aus."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Blendet gerade %lld Fenster aus."
+                }
+              }
+            }
+          }
+        }
+      },
+      "comment": "How many windows an app rule currently hides"
+    },
+    "Hold modifier": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Haltetaste"
+          }
+        }
+      }
+    },
+    "Icons and titles capture nothing, so they cost no CPU or memory for previews. Previews switch to icons on their own when Screen Recording is not granted, or when there are more than %lld windows. Takes effect the next time a panel opens.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Symbole und Titel nehmen nichts auf und kosten daher keine Rechenleistung oder Speicher für Vorschauen. Vorschauen wechseln von selbst zu Symbolen, wenn die Bildschirmaufnahme nicht erlaubt ist oder es mehr als %lld Fenster gibt. Wirkt beim nächsten Öffnen eines Fensters."
+          }
+        }
+      }
+    },
+    "Icons and titles only": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nur Symbole und Titel"
+          }
+        }
+      }
+    },
+    "Launch at login": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bei der Anmeldung starten"
+          }
+        }
+      }
+    },
+    "Lists running applications that have every window closed, so you can switch to them. Choosing one activates the application and asks it to open a window, as clicking its Dock icon does. Not every application makes one, and some make an unexpected one.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zeigt laufende Apps, deren Fenster alle geschlossen sind, damit man zu ihnen wechseln kann. Die Auswahl aktiviert die App und bittet sie, ein Fenster zu öffnen, wie beim Klick auf ihr Dock-Symbol. Nicht jede App öffnet eines, und manche öffnen ein unerwartetes."
+          }
+        }
+      }
+    },
+    "Matched by bundle identifier prefix, so one entry covers a vendor's several builds. The most specific prefix wins.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zuordnung über das Präfix der Bundle-Kennung, sodass ein Eintrag mehrere Builds eines Herstellers abdeckt. Das genaueste Präfix gewinnt."
+          }
+        }
+      }
+    },
+    "Minimized windows": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Minimierte Fenster"
+          }
+        }
+      }
+    },
+    "Most recently opened": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zuletzt geöffnet"
+          }
+        }
+      }
+    },
+    "Most recently used": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zuletzt verwendet"
+          }
+        }
+      }
+    },
+    "Never": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nie"
+          }
+        }
+      }
+    },
+    "No rules. Nothing is hidden and the hotkey never stands aside.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keine Regeln. Nichts wird ausgeblendet, und das Kürzel tritt nie zurück."
+          }
+        }
+      }
+    },
+    "Not granted": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nicht erlaubt"
+          }
+        }
+      }
+    },
+    "Only once per window": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nur einmal pro Fenster"
+          }
+        }
+      }
+    },
+    "Only the current application": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nur die aktuelle App"
+          }
+        }
+      }
+    },
+    "Only this display": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nur dieser Bildschirm"
+          }
+        }
+      }
+    },
+    "Open System Settings…": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Systemeinstellungen öffnen …"
+          }
+        }
+      }
+    },
+    "Optional. Without it, tiles show app icons instead of live previews.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Optional. Ohne sie zeigen die Kacheln App-Symbole statt Live-Vorschauen."
+          }
+        }
+      }
+    },
+    "Order": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reihenfolge"
+          }
+        }
+      }
+    },
+    "Permissions": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Berechtigungen"
+          }
+        }
+      }
+    },
+    "Preview size": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vorschaugröße"
+          }
+        }
+      }
+    },
+    "Previews": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vorschauen"
+          }
+        }
+      }
+    },
+    "Quit OpenSwitchr": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "OpenSwitchr beenden"
+          }
+        }
+      }
+    },
+    "Refresh thumbnails": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vorschaubilder aktualisieren"
+          }
+        }
+      }
+    },
+    "Refresh window list": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fensterliste aktualisieren"
+          }
+        }
+      }
+    },
+    "Refreshing less often trades a slightly stale preview for less CPU. Nothing is captured while no preview is on screen.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Seltenere Aktualisierung tauscht eine etwas veraltete Vorschau gegen weniger Rechenleistung. Solange keine Vorschau sichtbar ist, wird nichts aufgenommen."
+          }
+        }
+      }
+    },
+    "Report an issue": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Problem melden"
+          }
+        }
+      }
+    },
+    "Request…": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Anfordern …"
+          }
+        }
+      }
+    },
+    "Required to list windows, read the hotkey, and raise windows.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nötig, um Fenster aufzulisten, das Tastenkürzel zu lesen und Fenster nach vorn zu holen."
+          }
+        }
+      }
+    },
+    "Restore the shipped defaults": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ausgelieferte Voreinstellungen wiederherstellen"
+          }
+        }
+      }
+    },
+    "Rules": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Regeln"
+          }
+        }
+      }
+    },
+    "Screen Recording": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bildschirmaufnahme"
+          }
+        }
+      }
+    },
+    "Scroll over a Dock icon to cycle its windows": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Über einem Dock-Symbol scrollen, um dessen Fenster durchzuschalten"
+          }
+        }
+      }
+    },
+    "Scrolling with the pointer on a Dock icon focuses that application's next or previous window without opening a preview. It listens to scrolling only while the pointer is on a Dock icon, and takes that scroll away from the Dock.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Scrollen mit dem Zeiger auf einem Dock-Symbol aktiviert das nächste oder vorherige Fenster dieser App, ohne eine Vorschau zu öffnen. Scrollen wird nur beobachtet, solange der Zeiger auf einem Dock-Symbol steht, und dem Dock entzogen."
+          }
+        }
+      }
+    },
+    "Second hotkey: this application's windows": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zweites Kürzel: Fenster dieser App"
+          }
+        }
+      }
+    },
+    "Settings…": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Einstellungen …"
+          }
+        }
+      }
+    },
+    "Show": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Anzeigen"
+          }
+        }
+      }
+    },
+    "Show after": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Anzeigen nach"
+          }
+        }
+      }
+    },
+    "Show after the rest": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nach den übrigen anzeigen"
+          }
+        }
+      }
+    },
+    "Show after the windows": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nach den Fenstern anzeigen"
+          }
+        }
+      }
+    },
+    "Show close and quit buttons on previews": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Schließen- und Beenden-Tasten auf Vorschauen zeigen"
+          }
+        }
+      }
+    },
+    "Show window previews on Dock hover": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fenstervorschauen beim Überfahren des Docks zeigen"
+          }
+        }
+      }
+    },
+    "Shrink switcher tiles so every window fits": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kacheln verkleinern, damit alle Fenster passen"
+          }
+        }
+      }
+    },
+    "Source code": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quellcode"
+          }
+        }
+      }
+    },
+    "Stand aside while it is frontmost and full screen": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zurücktreten, solange die App vorn und im Vollbild ist"
+          }
+        }
+      }
+    },
+    "Startup": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Start"
+          }
+        }
+      }
+    },
+    "Switch instantly while a preview is open": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sofort wechseln, solange eine Vorschau offen ist"
+          }
+        }
+      }
+    },
+    "Switcher": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Umschalter"
+          }
+        }
+      }
+    },
+    "Switcher hotkey unavailable": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Umschalter-Kürzel nicht verfügbar"
+          }
+        }
+      }
+    },
+    "Switcher: %@-Tab": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Umschalter: %@-Tab"
+          }
+        }
+      }
+    },
+    "The delay keeps a preview from appearing when you sweep across the Dock on the way somewhere else. Once one is open you have already asked for it, so moving to the next icon need not wait again.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Die Verzögerung verhindert, dass eine Vorschau erscheint, wenn man nur über das Dock streicht. Ist eine offen, wurde sie schon gewünscht, daher muss der Wechsel zum nächsten Symbol nicht erneut warten."
+          }
+        }
+      }
+    },
+    "The keyboard hotkey is not installed. Check the Accessibility permission below.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Das Tastaturkürzel ist nicht installiert. Bitte die Bedienungshilfen-Berechtigung unten prüfen."
+          }
+        }
+      }
+    },
+    "The same modifier with the ` key opens the switcher for the current application's windows only, keeping your other list settings. It replaces the macOS shortcut for cycling an application's own windows.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dieselbe Haltetaste mit der Taste ` öffnet den Umschalter nur für die Fenster der aktuellen App und behält die übrigen Listeneinstellungen bei. Es ersetzt das macOS-Kürzel zum Wechseln zwischen den Fenstern einer App."
+          }
+        }
+      }
+    },
+    "The size above is the largest a tile gets; with many windows, tiles step down in size until they all fit without scrolling. Too many for legible previews falls back to icons.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Die Größe oben ist die größte Kachelgröße; bei vielen Fenstern werden die Kacheln stufenweise kleiner, bis alle ohne Scrollen passen. Sind es zu viele für lesbare Vorschauen, werden Symbole gezeigt."
+          }
+        }
+      }
+    },
+    "Thumbnail memory budget": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Speicherbudget für Vorschaubilder"
+          }
+        }
+      }
+    },
+    "Tiles show": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kacheln zeigen"
+          }
+        }
+      }
+    },
+    "Title contains": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Titel enthält"
+          }
+        }
+      }
+    },
+    "Try again": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Erneut versuchen"
+          }
+        }
+      }
+    },
+    "Version %@": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Version %@"
+          }
+        }
+      }
+    },
+    "When the title contains": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wenn der Titel enthält"
+          }
+        }
+      }
+    },
+    "Window list": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fensterliste"
+          }
+        }
+      }
+    },
+    "⌘-Tab is the default and replaces the macOS app switcher while OpenSwitchr is running. Quitting the app gives it back.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "⌘-Tab ist voreingestellt und ersetzt den App-Umschalter von macOS, solange OpenSwitchr läuft. Beim Beenden der App ist er wieder da."
+          }
+        }
+      }
+    }
+  },
+  "version": "1.0"
+}

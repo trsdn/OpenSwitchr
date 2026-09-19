@@ -3,6 +3,7 @@ import PackageDescription
 
 let package = Package(
     name: "OpenSwitchr",
+    defaultLocalization: "en",
     platforms: [
         .macOS(.v15)
     ],
@@ -12,11 +13,13 @@ let package = Package(
         ),
         .target(
             name: "OpenSwitchrUI",
-            dependencies: ["OpenSwitchrCore"]
+            dependencies: ["OpenSwitchrCore"],
+            resources: [.process("UI.xcstrings")]
         ),
         .executableTarget(
             name: "OpenSwitchr",
-            dependencies: ["OpenSwitchrCore", "OpenSwitchrUI"]
+            dependencies: ["OpenSwitchrCore", "OpenSwitchrUI"],
+            resources: [.process("Localizable.xcstrings")]
         ),
         // Command-line diagnostics for the parts of the core that can only be
         // judged against real windows: accessibility enumeration and the

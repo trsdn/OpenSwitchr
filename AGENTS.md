@@ -445,6 +445,29 @@ already filters them out and `commit` activates instead of raising. Choosing one
 launches the running application again, which sends the reopen event a Dock click
 does. That is an assumption about the application, not a guarantee.
 
+### Localization
+
+Strings live in two catalogs: `Sources/OpenSwitchr/Localizable.xcstrings` (table
+`Localizable`) and `Sources/OpenSwitchrUI/UI.xcstrings` (table `UI`). The tables
+have different names on purpose: SwiftPM compiles each into its own resource
+bundle and `build-app.sh` merges their `*.lproj` directories, so two catalogs with
+the same table would overwrite each other.
+
+- A literal handed to `Text`, `Label`, `Toggle`, `Picker`, `Button`, `Section`,
+  `LabeledContent`, `Stepper` or `TextField` in the app target is looked up in the
+  main bundle. It must have a catalog entry; `LocalizationCatalogTests` fails
+  otherwise, and also on a missing German value or a dropped placeholder.
+- A `String` is **not** localized by `Text(string)`. `OpenSwitchrCore` cannot
+  reach a bundle, so its `title` properties stay plain English keys, and the views
+  wrap them: `Text(LocalizedStringKey(policy.title))`, with the title added to the
+  catalog by hand.
+- `OpenSwitchrUI` uses `String(localized: "…", table: "UI", bundle: .main)`,
+  because its own bundle is not the one the app ships.
+- Counts use plural variants (`%lld`), never interpolation. Do not translate the
+  product name or `⌘ ⌥ ⌃`.
+- Only a locally built app is localized. The release broker assembles its own
+  bundle; see `RELEASE_CHECKLIST.md` before claiming a released build is.
+
 ## Three window-server facts that are easy to get wrong
 
 `CGWindowListCopyWindowInfo` documents front-to-back ordering **only** for

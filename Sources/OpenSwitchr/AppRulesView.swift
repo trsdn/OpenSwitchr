@@ -106,7 +106,7 @@ struct AppRulesView: View {
                     }
                 }
             )) {
-                ForEach(HideKind.allCases, id: \.self) { Text($0.title).tag($0) }
+                ForEach(HideKind.allCases, id: \.self) { Text(LocalizedStringKey($0.title)).tag($0) }
             }
 
             if case .whenTitleContains(let text) = rule.hide {
@@ -126,7 +126,7 @@ struct AppRulesView: View {
             // everything otherwise shows up as a bug report that says the
             // switcher is empty.
             if rule.hide != .never {
-                Text(hidden == 1 ? "Hides 1 window right now." : "Hides \(hidden) windows right now.")
+                Text("Hides \(hidden) windows right now.")
                     .font(.caption)
                     .foregroundStyle(hidden > 0 ? .primary : .secondary)
             }
