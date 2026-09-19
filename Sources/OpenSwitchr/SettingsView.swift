@@ -70,7 +70,7 @@ struct SettingsView: View {
                     set: { model.preferences.switcherApplicationScope = $0 }
                 )) {
                     ForEach(WindowFilter.ApplicationScope.allCases, id: \.self) { scope in
-                        Text(scope.title).tag(scope)
+                        Text(LocalizedStringKey(scope.title)).tag(scope)
                     }
                 }
 
@@ -79,7 +79,7 @@ struct SettingsView: View {
                     set: { model.preferences.switcherWindowless = $0 }
                 )) {
                     ForEach(WindowFilter.WindowlessPolicy.allCases, id: \.self) { policy in
-                        Text(policy.title).tag(policy)
+                        Text(LocalizedStringKey(policy.title)).tag(policy)
                     }
                 }
 
@@ -92,7 +92,7 @@ struct SettingsView: View {
                     set: { model.preferences.switcherMinimizedPolicy = $0 }
                 )) {
                     ForEach(WindowFilter.MinimizedPolicy.allCases, id: \.self) { policy in
-                        Text(policy.title).tag(policy)
+                        Text(LocalizedStringKey(policy.title)).tag(policy)
                     }
                 }
 
@@ -101,7 +101,7 @@ struct SettingsView: View {
                     set: { model.preferences.switcherScreenScope = $0 }
                 )) {
                     ForEach(WindowFilter.ScreenScope.allCases, id: \.self) { scope in
-                        Text(scope.title).tag(scope)
+                        Text(LocalizedStringKey(scope.title)).tag(scope)
                     }
                 }
 
@@ -110,7 +110,7 @@ struct SettingsView: View {
                     set: { model.preferences.switcherOrder = $0 }
                 )) {
                     ForEach(WindowFilter.Order.allCases, id: \.self) { order in
-                        Text(order.title).tag(order)
+                        Text(LocalizedStringKey(order.title)).tag(order)
                     }
                 }
 
@@ -206,7 +206,7 @@ struct SettingsView: View {
                     set: { model.preferences.tilePreference = $0 }
                 )) {
                     ForEach(TilePreference.allCases, id: \.self) { preference in
-                        Text(preference.title).tag(preference)
+                        Text(LocalizedStringKey(preference.title)).tag(preference)
                     }
                 }
 
@@ -219,7 +219,7 @@ struct SettingsView: View {
                     set: { model.preferences.thumbnailRefreshRate = $0; model.applyPreferences() }
                 )) {
                     ForEach(ThumbnailRefreshRate.allCases, id: \.self) { rate in
-                        Text(rate.title).tag(rate)
+                        Text(LocalizedStringKey(rate.title)).tag(rate)
                     }
                 }
 
@@ -280,13 +280,13 @@ struct SettingsView: View {
 
     private func permissionRow(
         granted: Bool,
-        title: String,
+        title: LocalizedStringKey,
         action: @escaping () -> Void,
         settings: @escaping () -> Void
     ) -> some View {
         VStack(alignment: .leading, spacing: 8) {
             Label(
-                granted ? "Granted" : "Not granted",
+                LocalizedStringKey(granted ? "Granted" : "Not granted"),
                 systemImage: granted ? "checkmark.circle.fill" : "exclamationmark.triangle.fill"
             )
             .foregroundStyle(granted ? Color.green : Color.orange)

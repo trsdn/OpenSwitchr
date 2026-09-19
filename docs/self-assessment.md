@@ -264,6 +264,29 @@ increased-contrast settings are not specifically honoured either; the panels use
 system materials and standard SwiftUI controls and inherit whatever those do.
 Both limitations are stated in the README under `X05`.
 
+### `L04` — catalogs kept complete, missing and orphaned keys detected
+
+The app has two String Catalogs (`Localizable.xcstrings`, `UI.xcstrings`), and
+`LocalizationCatalogTests` runs in CI and fails on the *missing* half: an entry
+with no German value, a translation that drops a placeholder, an incomplete
+plural, a lost product name or modifier symbol, and a plain literal in the views
+that never reached a catalog. It was mutation-tested by deleting an entry and
+confirming the test named it.
+
+What keeps this at `partial` is the *orphaned* half. Nothing notices a catalog
+entry that no code uses any more, so a removed string leaves a dead translation
+behind. Interpolated literals also have generated keys the scan does not
+reconstruct, so those are covered by the entries being present rather than by the
+code being scanned.
+
+### `L06` — translations traceable to their source and origin
+
+Each entry is keyed by its English source string, so the source is traceable by
+construction. The *origin* is not recorded per entry: the German was written by an
+AI assistant and has not been reviewed by a native speaker, and that is stated in
+the README's Language section rather than on each string. A catalog can carry a
+comment per entry, but not a reviewer or a review date.
+
 ## Results that are `na`, and why
 
 - **`D01`–`D06`** — nothing is deployed. There is no environment, no runtime
@@ -273,8 +296,6 @@ Both limitations are stated in the README under `X05`.
 - **`S06`** — there is no runtime configuration. No environment variable, no
   configuration file, no remote configuration; only user preferences in
   `UserDefaults`, which are the user's own data rather than deployment config.
-- **`L04`, `L06`** — there are no string catalogs and no translations, so there
-  is nothing to keep complete or to trace. English-only is declared under `L03`.
 - **`L05`** — the interface formats no dates, numbers, currency, or sorted
   lists. The only numerals a user sees are in fixed option labels such as
   "At most every 5 s", which are static strings rather than formatted values,

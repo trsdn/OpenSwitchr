@@ -95,7 +95,7 @@ public struct SwitcherView: View {
     }
 
     private var selectionSubtitle: String {
-        guard windows.indices.contains(selectedIndex) else { return "No windows" }
+        guard windows.indices.contains(selectedIndex) else { return String(localized: "No windows", table: "UI", bundle: .main) }
         return windows[selectedIndex].appName
     }
 
@@ -112,10 +112,10 @@ public struct SwitcherView: View {
     }
 
     private var emptyMessage: String {
-        if !query.isEmpty { return "No matches" }
+        if !query.isEmpty { return String(localized: "No matches", table: "UI", bundle: .main) }
         return isFiltered
-            ? "No windows match the switcher's filter"
-            : "No open windows on this Space"
+            ? String(localized: "No windows match the switcher's filter", table: "UI", bundle: .main)
+            : String(localized: "No open windows on this Space", table: "UI", bundle: .main)
     }
 
     private var grid: some View {

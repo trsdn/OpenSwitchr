@@ -341,11 +341,27 @@ contacts that host, or any other.
 
 ## Language
 
-English only. Every user-facing string, every command-line message, and every
-document in this repository is English, and there is no localization
-infrastructure — no string catalogs, no `.lproj` directories, no translation
-pipeline. This is a declared state rather than an oversight; adding a language
-is tracked in [#5](https://github.com/trsdn/OpenSwitchr/issues/5).
+**English and German.** English is the primary language and the source of every
+string. The interface is localized through two String Catalogs:
+`Sources/OpenSwitchr/Localizable.xcstrings` for the app and
+`Sources/OpenSwitchrUI/UI.xcstrings` for the shared views. The repository's
+documents, the `openswitchr-diag` command-line output, commit messages and issues
+stay English. The product name and the modifier symbols (⌘ ⌥ ⌃) are never
+translated. Counts use plural forms rather than string interpolation.
+
+Two things to know:
+
+- **The German was written by an AI assistant and has not been reviewed by a
+  native speaker.** Corrections are a catalog edit.
+- **Only a locally built app is localized so far.** `scripts/build-app.sh` copies
+  the compiled `.lproj` directories into the bundle, but the release broker
+  assembles its own bundle and does not yet, so a released build is English until
+  its `openswitchr-swiftpm` adapter does the same. See `RELEASE_CHECKLIST.md`.
+
+A test reads the catalogs and the views and fails on an untranslated entry, a
+translation that drops a placeholder, an incomplete plural, a lost product name,
+or a new literal that never reached a catalog. Adding a language is a catalog
+edit plus an entry in `CFBundleLocalizations` in `Info.plist`.
 
 ## Accessibility
 

@@ -118,6 +118,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- The interface is localized, with German as the first additional language
+  (#5). Two String Catalogs, `Localizable.xcstrings` for the app and `UI.xcstrings`
+  for the shared views, are compiled by SwiftPM and copied into the app bundle by
+  `scripts/build-app.sh`; counts use plural variants; the product name and the
+  modifier symbols are never translated. `LocalizationCatalogTests` fails on an
+  untranslated entry, a dropped placeholder, an incomplete plural, a lost product
+  name, or a plain literal that never reached a catalog (mutation-tested). The
+  German was written by an AI assistant and has not been reviewed by a native
+  speaker, and only a locally built app is localized so far: the release broker
+  assembles its own bundle and has to copy the `.lproj` directories too, recorded
+  in `RELEASE_CHECKLIST.md` with a per-release check. `Info.plist` gains
+  `CFBundleDevelopmentRegion` and `CFBundleLocalizations`.
 - The switcher can list running applications that have no open windows (off by
   default, "Applications with no windows"). They come after the windows, and
   choosing one activates the application and asks it to open a window by

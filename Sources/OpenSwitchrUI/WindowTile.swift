@@ -93,8 +93,8 @@ public struct WindowTile: View {
             tileControl(
                 systemName: "xmark.circle.fill",
                 tint: Color.black.opacity(0.55),
-                help: "Close window",
-                label: "Close \(window.displayTitle)",
+                help: String(localized: "Close window", table: "UI", bundle: .main),
+                label: String(localized: "Close \(window.displayTitle)", table: "UI", bundle: .main),
                 action: onClose
             )
         }
@@ -111,8 +111,8 @@ public struct WindowTile: View {
             tileControl(
                 systemName: "power.circle.fill",
                 tint: Color.red.opacity(0.85),
-                help: "Quit \(window.appName)",
-                label: "Quit \(window.appName)",
+                help: String(localized: "Quit \(window.appName)", table: "UI", bundle: .main),
+                label: String(localized: "Quit \(window.appName)", table: "UI", bundle: .main),
                 action: onQuitApp
             )
         }
@@ -195,14 +195,14 @@ public struct WindowTile: View {
                 Image(systemName: "minus.circle.fill")
                     .font(.system(size: 9))
                     .foregroundStyle(.tertiary)
-                    .help("Minimized")
+                    .help(String(localized: "Minimized", table: "UI", bundle: .main))
             }
 
             if window.isApplicationOnly {
                 Image(systemName: "plus.circle")
                     .font(.system(size: 9))
                     .foregroundStyle(.tertiary)
-                    .help("No open windows: choosing this activates the application and asks it to open one")
+                    .help(String(localized: "No open windows: choosing this activates the application and asks it to open one", table: "UI", bundle: .main))
             }
         }
         .frame(width: thumbnailSize.width, alignment: .center)
