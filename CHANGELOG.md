@@ -118,6 +118,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Optional scroll-to-cycle on a Dock icon (off by default): scrolling with the
+  pointer on an application's icon focuses its next or previous window without
+  opening a preview. It is the version the deferral said was the only one worth
+  building: the scroll tap exists disabled, is enabled on hover-enter and disabled
+  on hover-leave, and its callback also checks the event's location against the
+  hovered icon, so a missed leave cannot leave scrolling swallowed anywhere else.
+  Step accumulation (`ScrollStepper`: one step per event at most, rate-limited,
+  reversal discards) and which window is next (`WindowCycle`: a stable order, not
+  recency, so repeated steps visit every window instead of ping-ponging) are pure
+  and unit tested. The callback's per-event work measured about 105 ns in a debug
+  build.
 - An optional second switcher hotkey (off by default): the hold modifier with the
   backtick key opens the switcher for the current application's windows only, the
   question that is awkward to express as a search. The profile is fixed and

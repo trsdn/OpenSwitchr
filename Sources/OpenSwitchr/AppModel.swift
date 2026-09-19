@@ -22,6 +22,8 @@ public final class AppModel {
     @ObservationIgnored private let eventBus = WindowEventBus()
     @ObservationIgnored private let hotkeys = HotkeyMonitor()
     @ObservationIgnored private let dockHover = DockHoverMonitor()
+    @ObservationIgnored private let dockScroll = DockScrollCycler()
+    @ObservationIgnored private var hoveredDockItem: DockHoverMonitor.DockItem?
     @ObservationIgnored private lazy var switcher = SwitcherController(
         index: index,
         thumbnails: thumbnails,
@@ -108,6 +110,7 @@ public final class AppModel {
         eventBus.stop()
         hotkeys.stop()
         dockHover.stop()
+        dockScroll.stop()
         dockPreview.hide()
         switcher.close()
         memoryPressureSource?.cancel()
@@ -155,6 +158,7 @@ public final class AppModel {
             dockHover.stop()
             dockHoverActive = false
         }
+        updateDockScroll()
     }
 
     // MARK: - Subsystems
@@ -197,12 +201,41 @@ public final class AppModel {
             if item != nil {
                 self.refreshIfStale()
             }
+            self.hoveredDockItem = item
+            if let item, self.preferences.dockScrollCycling {
+                self.dockScroll.hoverBegan(frame: item.frame)
+            } else {
+                self.dockScroll.hoverEnded()
+            }
             self.dockPreview.hoverChanged(to: item)
         }
         dockPreview.onHidden = { [weak self] in
             self?.dockHover.forgetLastHover()
         }
         dockHoverActive = dockHover.start()
+        updateDockScroll()
+    }
+
+    /// The scroll tap exists only when the feature is on and Dock hover is
+    /// running; even then it is disabled until the pointer is on a Dock icon.
+    private func updateDockScroll() {
+        if preferences.dockScrollCycling && preferences.dockHoverEnabled && dockHoverActive {
+            dockScroll.onStep = { [weak self] step in self?.cycleHoveredApplication(step) }
+            dockScroll.start()
+        } else {
+            dockScroll.stop()
+        }
+    }
+
+    /// Focuses the next or previous window of the application whose Dock icon
+    /// the pointer is on. See `WindowCycle` for why the order is stable.
+    private func cycleHoveredApplication(_ step: Int) {
+        guard let item = hoveredDockItem else { return }
+        let windows = dockPreview.resolveWindows(for: item)
+        let current = (windows.first { !$0.isMinimized } ?? windows.first)?.id
+        guard let target = WindowCycle.target(among: windows, current: current, direction: step) else { return }
+        WindowActions.focus(target)
+        index.noteFocus(windowID: target.id)
     }
 
     private func startMemoryPressureWatch() {

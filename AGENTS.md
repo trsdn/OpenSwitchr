@@ -422,6 +422,16 @@ scope: do not add per-hotkey copies of the other filter axes, which is what made
 this expensive to consider. The tap remembers the key code it swallowed
 (`_swallowedKeyCode`) so the matching key-up is swallowed and nothing else.
 
+### Scroll-to-cycle on a Dock icon
+
+`DockScrollCycler` owns a scroll-wheel tap, and a tap that sees every scroll event
+is exactly what this app is built to avoid, so it is bounded three ways: it is
+created **disabled**, enabled only on hover-enter and disabled on hover-leave, and
+its callback passes through any event whose location is not inside the hovered
+icon's frame. Do not leave it enabled, and do not widen the frame check. Which
+window is next is `WindowCycle`, ordered by window id on purpose: the index is in
+recency order, and stepping through that only ping-pongs between two windows.
+
 ## Three window-server facts that are easy to get wrong
 
 `CGWindowListCopyWindowInfo` documents front-to-back ordering **only** for

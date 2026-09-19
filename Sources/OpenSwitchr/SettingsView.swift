@@ -112,6 +112,15 @@ struct SettingsView: View {
             .disabled(!model.preferences.switcherEnabled)
 
             Section("Dock previews") {
+                Toggle("Scroll over a Dock icon to cycle its windows", isOn: Binding(
+                    get: { model.preferences.dockScrollCycling },
+                    set: { model.preferences.dockScrollCycling = $0; model.applyPreferences() }
+                ))
+
+                Text("Scrolling with the pointer on a Dock icon focuses that application's next or previous window without opening a preview. It listens to scrolling only while the pointer is on a Dock icon, and takes that scroll away from the Dock.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+
                 Toggle("Show window previews on Dock hover", isOn: Binding(
                     get: { model.preferences.dockHoverEnabled },
                     set: { model.preferences.dockHoverEnabled = $0; model.applyPreferences() }
