@@ -330,8 +330,10 @@ These are recorded because they took work, not because they were free.
   keys back rather than hardcoding them a second time.
 - **`X04`** — `openswitchr-diag` emits plain text with no colour and no Unicode
   decoration, so its output survives any pipe, log, or screen reader.
-- **`Y02`–`Y06`** — the app opens no network connection, has no telemetry, sends
-  nothing to any third party or AI provider, keeps thumbnails in memory under a
+- **`Y02`–`Y06`** — the app's one network connection is the daily update check to
+  GitHub, documented with its destination and purpose in the README's Privacy
+  section and Settings, and switched off by "Check for Updates Automatically";
+  it has no telemetry, sends nothing to any other third party or AI provider, keeps thumbnails in memory under a
   byte budget so nothing outlives the session, and stores only preferences,
   whose location and deletion command are documented. `Y01` is the load-bearing
   one: the README states the "none" case explicitly, because "no privacy policy"
@@ -341,10 +343,11 @@ These are recorded because they took work, not because they were free.
   here and that releases exist specifically so that never has to happen, and
   `.release.env.example` documents that the one identity string a local build
   uses is a Keychain selector, not a secret, gitignored regardless.
-- **`B15`** — the Swift package has zero external dependencies, stated as a
-  deliberate constraint in `AGENTS.md`'s forbidden-operations list ("Adding a
-  third-party dependency… which is why a clean checkout builds with no network
-  access"), so there is nothing here to redistribute.
+- **`B15`** — the app now redistributes two third-party packages, compiled in:
+  AppUpdater 4.1.2 (Unlicense) and its dependency Version 2.2.1 (Apache-2.0).
+  `THIRD_PARTY_NOTICES.txt` carries both licenses verbatim, names the pinned
+  versions, and `scripts/build-app.sh` copies it into `Contents/Resources`. Both are
+  pinned in `Package.swift` and `Package.resolved`. Version has no NOTICE file.
 - **`B16`** — verified against the rulesets API directly: `main` carries both a
   `deletion` rule and a `non_fast_forward` rule with no exempted actor.
 - **`P10`, `P11`** — the bug-report form asks for what happened, reproduction

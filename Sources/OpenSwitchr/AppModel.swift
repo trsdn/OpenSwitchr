@@ -18,6 +18,7 @@ public final class AppModel {
     public let preferences: PreferencesStore
     public let index = WindowIndex()
     public let thumbnails: ThumbnailProvider
+    let updates: UpdateManager
 
     @ObservationIgnored private let eventBus = WindowEventBus()
     @ObservationIgnored private let hotkeys = HotkeyMonitor()
@@ -57,6 +58,7 @@ public final class AppModel {
     public init() {
         let preferences = PreferencesStore()
         self.preferences = preferences
+        updates = UpdateManager(preferences: preferences)
         thumbnails = ThumbnailProvider(
             store: ThumbnailStore(budgetBytes: Self.budgetBytes(preferences.thumbnailBudgetMB))
         )
@@ -98,6 +100,7 @@ public final class AppModel {
         startHotkeys()
         startDockHover()
         startMemoryPressureWatch()
+        startUpdates()
         isRunning = true
         logger.notice(
             "Started. Switcher hotkey: \(self.switcherHotkeyActive), Dock hover: \(self.dockHoverActive)"
@@ -116,6 +119,7 @@ public final class AppModel {
         memoryPressureSource?.cancel()
         memoryPressureSource = nil
         permissions.stopWatching()
+        updates.stopAutomaticChecks()
         isRunning = false
         dockHoverActive = false
         switcherHotkeyActive = false
@@ -125,6 +129,7 @@ public final class AppModel {
     public func applyPreferences() {
         hotkeys.holdModifier = preferences.holdModifier
         hotkeys.secondHotkeyEnabled = preferences.secondHotkeyEnabled
+        updates.applyAutomaticChecksSetting()
         // Editing a rule can change whether the hotkey stands aside right now.
         updateStandAside()
 
@@ -236,6 +241,24 @@ public final class AppModel {
         guard let target = WindowCycle.target(among: windows, current: current, direction: step) else { return }
         WindowActions.focus(target)
         index.noteFocus(windowID: target.id)
+    }
+
+    /// Wires the updater to the app's own lifetime and starts its daily check.
+    ///
+    /// Before the bundle is replaced everything that watches other processes is
+    /// stopped, so the app is not killed mid-gesture with an event tap live and a
+    /// Dock preview on screen.
+    private func startUpdates() {
+        updates.onWillInstall = { [weak self] in
+            guard let self else { return }
+            self.dockPreview.hide()
+            self.switcher.close()
+            self.hotkeys.stop()
+            self.dockHover.stop()
+            self.dockScroll.stop()
+            self.eventBus.stop()
+        }
+        updates.applyAutomaticChecksSetting()
     }
 
     private func startMemoryPressureWatch() {

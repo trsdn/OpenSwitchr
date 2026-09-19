@@ -22,6 +22,8 @@ public final class PreferencesStore {
         static let appRules = "appRules"
         static let secondHotkeyEnabled = "secondHotkeyEnabled"
         static let dockScrollCycling = "dockScrollCycling"
+        static let automaticUpdateChecks = "automaticUpdateChecks"
+        static let lastUpdateCheck = "lastUpdateCheck"
         static let fitTilesToWindowCount = "fitTilesToWindowCount"
         static let launchAtLogin = "launchAtLogin"
         static let dockHoverInstantSwitch = "dockHoverInstantSwitch"
@@ -44,6 +46,7 @@ public final class PreferencesStore {
         static let fitTilesToWindowCount = true
         static let secondHotkeyEnabled = false
         static let dockScrollCycling = false
+        static let automaticUpdateChecks = true
 
         /// Derived rather than restated: `WindowFilter.switcherDefault` is the
         /// one place the switcher's starting profile is written down.
@@ -176,6 +179,25 @@ public final class PreferencesStore {
         didSet { defaults.set(dockScrollCycling, forKey: Key.dockScrollCycling) }
     }
 
+    /// On by default, like the updater in the sibling apps: an app that installs
+    /// code should not need to be told to look for fixes. It is the only thing
+    /// here that opens a network connection, and turning it off stops that.
+    public var automaticUpdateChecks: Bool {
+        didSet { defaults.set(automaticUpdateChecks, forKey: Key.automaticUpdateChecks) }
+    }
+
+    /// When the last automatic check ran, so a relaunch does not check again the
+    /// same day. Internal state, not a preference the user sets.
+    public var lastUpdateCheck: Date? {
+        didSet {
+            if let lastUpdateCheck {
+                defaults.set(lastUpdateCheck.timeIntervalSince1970, forKey: Key.lastUpdateCheck)
+            } else {
+                defaults.removeObject(forKey: Key.lastUpdateCheck)
+            }
+        }
+    }
+
     public init(defaults: UserDefaults = .standard) {
         self.defaults = defaults
         defaults.register(defaults: [
@@ -192,6 +214,7 @@ public final class PreferencesStore {
             Key.tilePreference: Default.tilePreference.rawValue,
             Key.secondHotkeyEnabled: Default.secondHotkeyEnabled,
             Key.dockScrollCycling: Default.dockScrollCycling,
+            Key.automaticUpdateChecks: Default.automaticUpdateChecks,
             Key.fitTilesToWindowCount: Default.fitTilesToWindowCount,
             Key.switcherApplicationScope: Default.filter.applications.rawValue,
             Key.switcherMinimizedPolicy: Default.filter.minimized.rawValue,
@@ -220,6 +243,9 @@ public final class PreferencesStore {
         appRules = AppRuleTable.decode(from: defaults.data(forKey: Key.appRules))
         secondHotkeyEnabled = defaults.bool(forKey: Key.secondHotkeyEnabled)
         dockScrollCycling = defaults.bool(forKey: Key.dockScrollCycling)
+        automaticUpdateChecks = defaults.bool(forKey: Key.automaticUpdateChecks)
+        lastUpdateCheck = (defaults.object(forKey: Key.lastUpdateCheck) as? Double)
+            .map { Date(timeIntervalSince1970: $0) }
         tilePreference = TilePreference(
             rawValue: defaults.string(forKey: Key.tilePreference) ?? ""
         ) ?? Default.tilePreference

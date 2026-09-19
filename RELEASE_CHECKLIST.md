@@ -23,6 +23,42 @@ architecture, entitlements, or minimum macOS version — is not a local decision
 It requires a reviewed pull request against the broker's `profiles/apps.json`,
 and the release fails until that lands.
 
+## Updates and the broker
+
+The app updates itself from GitHub Releases through
+[AppUpdater](https://github.com/mxcl/AppUpdater) 4.1.2, pinned in `Package.swift`
+with `Package.resolved` committed. **None of the following is done in this
+repository, and until it is, no release can update an installed copy.**
+
+1. **The release asset must be named exactly `OpenSwitchr-<semver>.dmg`.** AppUpdater
+   accepts only that name, containing one app whose file name matches the
+   installed one. On the broker profile that is an extra `copy_of` artifact of the
+   notarized DMG (the broker emits `OpenSwitchr-v<version>-macOS-arm64.dmg`, which
+   AppUpdater will not accept), and `scripts/request.sh openswitchr v<version>
+   --publish` then uploads it.
+2. **The broker profile needs a `dependency_lock`** equal to this repository's
+   `Package.resolved`, and the compiled-in resource bundle
+   `AppUpdater_AppUpdater.bundle` declared under `nested_resource_bundles`, the way
+   the sibling apps' profiles do (trsdn/macos-notarization-broker#46).
+3. **The signature must stay stable across updates.** Accessibility and Screen
+   Recording grants are tied to the code signature, so a release signed with a
+   different identity silently loses both.
+4. **`THIRD_PARTY_NOTICES.txt` must be in the bundle.** `build-app.sh` copies it;
+   the broker's adapter has to as well (AppUpdater is Unlicense, its dependency
+   Version is Apache-2.0, whose terms ask for the license to travel).
+5. **No `GitHubAttestationPolicy` is set.** The broker builds a release in its own
+   repository, so there is no provenance from this one to verify, and for a
+   `swift build` product AppUpdater's `Bundle.module` lookup never looks in
+   `Contents/Resources`, so verifying one would end in a `fatalError`. The Developer
+   ID, Team ID and bundle identifier checks still apply.
+
+**Existing installs have no updater.** Anyone running a build from before this one
+installs the first release that has it by hand.
+
+**A real update has never been tested.** No release exists to update to. After
+two releases, install the older on a Mac other than the build machine and confirm
+the newer arrives and relaunches with its permissions intact.
+
 ## Localization and the broker
 
 The interface is localized with String Catalogs that SwiftPM compiles into two

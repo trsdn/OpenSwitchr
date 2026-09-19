@@ -170,6 +170,17 @@ struct SettingsView: View {
                     set: { model.preferences.launchAtLogin = $0 }
                 ))
             }
+
+            Section("Updates") {
+                Toggle("Check for Updates Automatically", isOn: Binding(
+                    get: { model.preferences.automaticUpdateChecks },
+                    set: { model.preferences.automaticUpdateChecks = $0; model.applyPreferences() }
+                ))
+
+                Text("Once a day OpenSwitchr asks GitHub whether a newer release exists, and downloads it so installing is one click. This is the only network connection the app makes, and it goes to GitHub only. Turn it off and nothing is contacted unless you choose Check for Updates… yourself.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
         }
         .formStyle(.grouped)
     }

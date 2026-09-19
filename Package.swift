@@ -7,6 +7,12 @@ let package = Package(
     platforms: [
         .macOS(.v15)
     ],
+    dependencies: [
+        // The one third-party dependency, for in-app updates from GitHub Releases.
+        // Pinned exactly, with Package.resolved committed, so an update path that
+        // downloads and installs code cannot drift underneath a release.
+        .package(url: "https://github.com/mxcl/AppUpdater.git", exact: "4.1.2")
+    ],
     targets: [
         .target(
             name: "OpenSwitchrCore"
@@ -18,7 +24,11 @@ let package = Package(
         ),
         .executableTarget(
             name: "OpenSwitchr",
-            dependencies: ["OpenSwitchrCore", "OpenSwitchrUI"],
+            dependencies: [
+                "OpenSwitchrCore",
+                "OpenSwitchrUI",
+                .product(name: "AppUpdater", package: "AppUpdater")
+            ],
             resources: [.process("Localizable.xcstrings")]
         ),
         // Command-line diagnostics for the parts of the core that can only be
