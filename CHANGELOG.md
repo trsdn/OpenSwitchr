@@ -79,6 +79,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   captures; the mode is decided when a panel opens and kept for that session,
   and the cache is left valid rather than cleared. For scale, eight cold
   parallel captures measured ~340 ms with `openswitchr-diag --bench --capture`.
+- Switcher tiles can shrink so every window fits without scrolling
+  ("Shrink switcher tiles so every window fits", on by default). The configured
+  width is the upper limit and is never exceeded: with a few windows nothing
+  changes, and with more than fit in the overlay's three visible rows the tile
+  steps down in twenty point steps until they do. Sizes are quantised so the
+  thumbnail cache keeps hitting and the step is what is captured, and below the
+  legible floor the switcher uses icon tiles instead of a smaller image. The
+  layout maths is `TileSizing`, pure and unit tested.
 
 ### Changed
 

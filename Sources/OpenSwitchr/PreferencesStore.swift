@@ -19,6 +19,7 @@ public final class PreferencesStore {
         static let tileWidth = "tileWidth"
         static let showCloseButton = "showCloseButton"
         static let tilePreference = "tilePreference"
+        static let fitTilesToWindowCount = "fitTilesToWindowCount"
         static let launchAtLogin = "launchAtLogin"
         static let dockHoverInstantSwitch = "dockHoverInstantSwitch"
         static let switcherApplicationScope = "switcherApplicationScope"
@@ -36,6 +37,7 @@ public final class PreferencesStore {
     private enum Default {
         static let dockHoverInstantSwitch = true
         static let tilePreference = TilePreference.previews
+        static let fitTilesToWindowCount = true
 
         /// Derived rather than restated: `WindowFilter.switcherDefault` is the
         /// one place the switcher's starting profile is written down.
@@ -133,6 +135,13 @@ public final class PreferencesStore {
         didSet { defaults.set(tilePreference.rawValue, forKey: Key.tilePreference) }
     }
 
+    /// On by default: it only ever makes switcher tiles smaller so every
+    /// window fits without scrolling, and the configured width stays the upper
+    /// limit, so nobody's chosen size is exceeded.
+    public var fitTilesToWindowCount: Bool {
+        didSet { defaults.set(fitTilesToWindowCount, forKey: Key.fitTilesToWindowCount) }
+    }
+
     public init(defaults: UserDefaults = .standard) {
         self.defaults = defaults
         defaults.register(defaults: [
@@ -147,6 +156,7 @@ public final class PreferencesStore {
             Key.tileWidth: 200.0,
             Key.showCloseButton: false,
             Key.tilePreference: Default.tilePreference.rawValue,
+            Key.fitTilesToWindowCount: Default.fitTilesToWindowCount,
             Key.switcherApplicationScope: Default.filter.applications.rawValue,
             Key.switcherMinimizedPolicy: Default.filter.minimized.rawValue,
             Key.switcherScreenScope: Default.filter.screens.rawValue,
@@ -169,6 +179,7 @@ public final class PreferencesStore {
         ) ?? .default
         tileWidth = defaults.double(forKey: Key.tileWidth)
         showCloseButton = defaults.bool(forKey: Key.showCloseButton)
+        fitTilesToWindowCount = defaults.bool(forKey: Key.fitTilesToWindowCount)
         tilePreference = TilePreference(
             rawValue: defaults.string(forKey: Key.tilePreference) ?? ""
         ) ?? Default.tilePreference

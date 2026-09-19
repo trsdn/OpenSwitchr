@@ -159,6 +159,15 @@ struct SettingsView: View {
                     }
                 }
 
+                Toggle("Shrink switcher tiles so every window fits", isOn: Binding(
+                    get: { model.preferences.fitTilesToWindowCount },
+                    set: { model.preferences.fitTilesToWindowCount = $0 }
+                ))
+
+                Text("The size above is the largest a tile gets; with many windows, tiles step down in size until they all fit without scrolling. Too many for legible previews falls back to icons.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+
                 Picker("Tiles show", selection: Binding(
                     get: { model.preferences.tilePreference },
                     set: { model.preferences.tilePreference = $0 }
