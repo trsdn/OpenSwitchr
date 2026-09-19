@@ -25,6 +25,10 @@ public final class SwitcherController {
     /// must not flip the layout out from under the user.
     private var tileMode: TileMode = .previews
 
+    /// The preview width for this session: the configured one, or a smaller
+    /// quantised step when fitting every window needs it. Frozen with the mode.
+    private var previewWidth: CGFloat = 200
+
     /// The screen this overlay is appearing on, decided once when it opens.
     ///
     /// It is both a layout input and a filter input, and the two have to agree:
@@ -105,12 +109,29 @@ public final class SwitcherController {
         let currentWindowID = currentWindow()?.id
 
         visibleWindows = baseWindows()
-        tileMode = TileModePolicy.resolve(
-            preference: preferences.tilePreference,
-            screenRecordingGranted: CGPreflightScreenCaptureAccess(),
-            windowCount: visibleWindows.count,
-            threshold: TileModePolicy.switcherWindowThreshold
-        )
+        previewWidth = preferences.tileWidth
+        var previewsAreLegible = true
+        if preferences.fitTilesToWindowCount {
+            switch TileSizing.fit(
+                windowCount: visibleWindows.count,
+                availableWidth: Self.availableWidth(on: surfaceScreen),
+                configuredWidth: preferences.tileWidth
+            ) {
+            case .width(let width):
+                previewWidth = width
+            case .tooSmall:
+                previewsAreLegible = false
+            }
+        }
+        // Below the legible floor the answer is icons, not a smaller image.
+        tileMode = previewsAreLegible
+            ? TileModePolicy.resolve(
+                preference: preferences.tilePreference,
+                screenRecordingGranted: CGPreflightScreenCaptureAccess(),
+                windowCount: visibleWindows.count,
+                threshold: TileModePolicy.switcherWindowThreshold
+            )
+            : .icons
 
         selectedIndex = SwitcherSelection.initialIndex(
             count: visibleWindows.count,
@@ -166,14 +187,22 @@ public final class SwitcherController {
         )
     }
 
+    /// The widest the overlay's grid may be on `screen`. One definition, shared
+    /// by the size the tiles are fitted to and the panel that holds them, so
+    /// the two cannot disagree about how many columns fit.
+    private static func availableWidth(on screen: NSScreen?) -> CGFloat {
+        let visible = (screen ?? NSScreen.main)?.visibleFrame ?? NSRect(x: 0, y: 0, width: 1440, height: 900)
+        return min(visible.width * 0.86, 1400)
+    }
+
     private func present() {
         let tileSize = tileSize()
         let screen = surfaceScreen ?? NSScreen.main
         let visible = screen?.visibleFrame ?? NSRect(x: 0, y: 0, width: 1440, height: 900)
 
-        let maxWidth = min(visible.width * 0.86, 1400)
+        let maxWidth = Self.availableWidth(on: surfaceScreen)
         let perTile = tileSize.width + 16 + 4
-        columnCount = max(1, Int(((maxWidth - 32) / perTile).rounded(.down)))
+        columnCount = TileSizing.columns(availableWidth: maxWidth, tileWidth: tileSize.width)
 
         let rows = max(1, Int(ceil(Double(visibleWindows.count) / Double(columnCount))))
         let contentHeight = CGFloat(min(rows, 3)) * (tileSize.height + 16 + 20 + 8)
@@ -263,7 +292,7 @@ public final class SwitcherController {
     }
 
     private func tileSize() -> CGSize {
-        TileModePolicy.tileSize(for: tileMode, previewWidth: preferences.tileWidth)
+        TileModePolicy.tileSize(for: tileMode, previewWidth: previewWidth)
     }
 
     // MARK: - Selection
