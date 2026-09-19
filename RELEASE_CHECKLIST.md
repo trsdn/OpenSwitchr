@@ -23,57 +23,61 @@ architecture, entitlements, or minimum macOS version — is not a local decision
 It requires a reviewed pull request against the broker's `profiles/apps.json`,
 and the release fails until that lands.
 
-## Updates and the broker
+## Updates, localization and the broker
 
 The app updates itself from GitHub Releases through
 [AppUpdater](https://github.com/mxcl/AppUpdater) 4.1.2, pinned in `Package.swift`
-with `Package.resolved` committed. **None of the following is done in this
-repository, and until it is, no release can update an installed copy.**
+with `Package.resolved` committed, and its interface is localized with String
+Catalogs. The broker assembles the release bundle itself, so both depend on the
+broker's `openswitchr` profile and `assemble_openswitchr` adapter.
 
-1. **The release asset must be named exactly `OpenSwitchr-<semver>.dmg`.** AppUpdater
-   accepts only that name, containing one app whose file name matches the
-   installed one. On the broker profile that is an extra `copy_of` artifact of the
-   notarized DMG (the broker emits `OpenSwitchr-v<version>-macOS-arm64.dmg`, which
-   AppUpdater will not accept), and `scripts/request.sh openswitchr v<version>
-   --publish` then uploads it.
-2. **The broker profile needs a `dependency_lock`** equal to this repository's
-   `Package.resolved`, and the compiled-in resource bundle
-   `AppUpdater_AppUpdater.bundle` declared under `nested_resource_bundles`, the way
-   the sibling apps' profiles do (trsdn/macos-notarization-broker#46).
-3. **The signature must stay stable across updates.** Accessibility and Screen
-   Recording grants are tied to the code signature, so a release signed with a
-   different identity silently loses both.
-4. **`THIRD_PARTY_NOTICES.txt` must be in the bundle.** `build-app.sh` copies it;
-   the broker's adapter has to as well (AppUpdater is Unlicense, its dependency
-   Version is Apache-2.0, whose terms ask for the license to travel).
-5. **No `GitHubAttestationPolicy` is set.** The broker builds a release in its own
-   repository, so there is no provenance from this one to verify, and for a
-   `swift build` product AppUpdater's `Bundle.module` lookup never looks in
-   `Contents/Resources`, so verifying one would end in a `fatalError`. The Developer
-   ID, Team ID and bundle identifier checks still apply.
+**The broker side has landed**
+([trsdn/macos-notarization-broker#56](https://github.com/trsdn/macos-notarization-broker/pull/56)):
 
-**Existing installs have no updater.** Anyone running a build from before this one
-installs the first release that has it by hand.
+- `locks/openswitchr-Package.resolved` is a byte-for-byte copy of this repository's
+  `Package.resolved`, and the adapter requires the two to be equal before and after
+  compilation. **The lock's `originHash` is tied to `Package.swift`, so any change to
+  its dependency section needs the lock refreshed in the broker first.**
+- The data-only `AppUpdater_AppUpdater.bundle` is declared and copied.
+- `*.lproj` directories are copied out of OpenSwitchr's own resource bundles into
+  `Contents/Resources` (those bundles are not shipped; the app resolves strings
+  against its main bundle). The two string tables have different names, so they
+  merge.
+- `THIRD_PARTY_NOTICES.txt` and `LICENSE` are bundled.
+- `OpenSwitchr-{version}.dmg` is published as a copy of the notarized DMG, the exact
+  name AppUpdater accepts.
+- No `GitHubAttestationPolicy` is set: the broker builds a release in its own
+  repository, so there is no provenance from this one to verify, and for a
+  `swift build` product AppUpdater's `Bundle.module` lookup never looks in
+  `Contents/Resources`, so verifying one would end in a `fatalError`. The Developer
+  ID, Team ID and bundle identifier checks still apply.
 
-**A real update has never been tested.** No release exists to update to. After
-two releases, install the older on a Mac other than the build machine and confirm
-the newer arrives and relaunches with its permissions intact.
+That was checked by running the real adapter against a clean clone of this repository
+with a real `swift build`, and the resulting tree passes the broker's `validate_app_tree`.
+It was **not** checked by a real notarized release.
 
-## Localization and the broker
+**What is still open, and cannot be done by a change to either repository:**
 
-The interface is localized with String Catalogs that SwiftPM compiles into two
-resource bundles, `OpenSwitchr_OpenSwitchr.bundle` (table `Localizable`) and
-`OpenSwitchr_OpenSwitchrUI.bundle` (table `UI`), each holding `*.lproj`
-directories. SwiftUI resolves strings against the app's **main** bundle, so the
-`*.lproj` directories have to be copied into `Contents/Resources`, which is what
-`scripts/build-app.sh` now does for local builds.
+1. **No release with the updater exists.** `v0.1.0` predates it (it is well behind
+   `main`), so releasing that tag would ship an app with no updater and no German. The
+   first updater-capable release needs a new version: move the changelog entries out of
+   *Unreleased*, bump `Info.plist` (`scripts/check.sh` fails if it disagrees with the
+   changelog), tag, and run `scripts/request.sh openswitchr v<version> --publish` from a
+   broker checkout. The signing job runs in a protected environment that needs a human
+   approval.
+2. **The signature must stay stable across updates.** Accessibility and Screen
+   Recording grants are tied to the code signature, so a release signed with a different
+   identity silently loses both.
+3. **A real update has never been run.** After two releases, install the older on a Mac
+   other than the build machine and confirm the newer arrives and relaunches with its
+   permissions intact.
+4. **Existing installs have no updater**, so anyone running a build from before this one
+   installs the first updater-capable release by hand.
 
-**The broker assembles the release bundle itself and does not do this yet.** Until
-its `openswitchr-swiftpm` adapter copies the `*.lproj` directories from both
-resource bundles into `Contents/Resources` (a reviewed pull request against
-`profiles/apps.json` and the adapter, per the section above), a released build is
-English-only while a local one is German on a German system. The two tables have
-different names on purpose, so copying both merges rather than overwrites.
+Per release, after the broker's artifact exists:
+`ls OpenSwitchr.app/Contents/Resources/de.lproj` should list `Localizable.strings`,
+`Localizable.stringsdict` and `UI.strings`, and `THIRD_PARTY_NOTICES.txt` should sit
+beside them. Absent means the broker profile regressed.
 
 ## Per release
 
@@ -104,8 +108,8 @@ different names on purpose, so copying both merges rather than overwrites.
    `OpenSwitchr-v<version>-macOS-arm64.dmg` with its `.sha256`.
 7. Install the broker's artifact and confirm the localized resources are in it:
    `ls OpenSwitchr.app/Contents/Resources/de.lproj` should list `Localizable.strings`,
-   `Localizable.stringsdict` and `UI.strings`. Absent means the broker still has
-   not adopted the copy step above.
+   `Localizable.stringsdict` and `UI.strings`. Absent means the broker
+   profile regressed (see above).
 8. Attach the broker's artifacts to the GitHub release. Do not upload anything
    built locally.
 

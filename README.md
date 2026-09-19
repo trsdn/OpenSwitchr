@@ -361,10 +361,10 @@ Two things to know:
 
 - **The German was written by an AI assistant and has not been reviewed by a
   native speaker.** Corrections are a catalog edit.
-- **Only a locally built app is localized so far.** `scripts/build-app.sh` copies
-  the compiled `.lproj` directories into the bundle, but the release broker
-  assembles its own bundle and does not yet, so a released build is English until
-  its `openswitchr-swiftpm` adapter does the same. See `RELEASE_CHECKLIST.md`.
+- **No localized release exists yet.** `scripts/build-app.sh` and the release
+  broker's `openswitchr` adapter both copy the compiled `.lproj` directories into
+  the bundle, but no release has been built since, and `v0.1.0` predates the
+  localization. See `RELEASE_CHECKLIST.md`.
 
 A test reads the catalogs and the views and fails on an untranslated entry, a
 translation that drops a placeholder, an incomplete plural, a lost product name,
