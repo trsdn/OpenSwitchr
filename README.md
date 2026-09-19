@@ -6,6 +6,11 @@
 [![Latest tag](https://img.shields.io/github/v/tag/trsdn/OpenSwitchr?label=release)](https://github.com/trsdn/OpenSwitchr/releases)
 [![Conformance](.github/badges/conformance.svg)](.github/conformance.yml)
 
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/trsdn/OpenSwitchr/repo-stats/.github/stats/repo-card-dark.svg">
+  <img alt="Repository statistics" src="https://raw.githubusercontent.com/trsdn/OpenSwitchr/repo-stats/.github/stats/repo-card.svg">
+</picture>
+
 **One app instead of two.** Dock hover previews and a hold-and-Tab window
 switcher, built on a single shared window index.
 
