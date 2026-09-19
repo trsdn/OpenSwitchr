@@ -27,6 +27,10 @@ overlay are thin readers on top.
 - **Switcher overlay** — hold `⌘` and press `Tab` for every window on the
   current Space in most-recently-used order, with live thumbnails. `⌥` and `⌃`
   are available in Settings if you would rather keep the system switcher.
+- **A second hotkey, off by default** — the same modifier with `` ` `` opens the
+  switcher for the current application's windows only, and keeps every other list
+  setting you chose. It is one toggle, not a second copy of the settings, and it
+  replaces the macOS shortcut for cycling an application's own windows.
 - **Type to filter** — start typing to narrow by app name or window title.
 - **Choose what the switcher lists** — by application, by display, how
   minimized windows are treated, and in what order.

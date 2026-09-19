@@ -20,6 +20,7 @@ public final class PreferencesStore {
         static let showCloseButton = "showCloseButton"
         static let tilePreference = "tilePreference"
         static let appRules = "appRules"
+        static let secondHotkeyEnabled = "secondHotkeyEnabled"
         static let fitTilesToWindowCount = "fitTilesToWindowCount"
         static let launchAtLogin = "launchAtLogin"
         static let dockHoverInstantSwitch = "dockHoverInstantSwitch"
@@ -39,6 +40,7 @@ public final class PreferencesStore {
         static let dockHoverInstantSwitch = true
         static let tilePreference = TilePreference.previews
         static let fitTilesToWindowCount = true
+        static let secondHotkeyEnabled = false
 
         /// Derived rather than restated: `WindowFilter.switcherDefault` is the
         /// one place the switcher's starting profile is written down.
@@ -154,6 +156,12 @@ public final class PreferencesStore {
         }
     }
 
+    /// Off by default: the backtick key is the macOS shortcut for cycling an
+    /// application's own windows, and turning this on replaces it.
+    public var secondHotkeyEnabled: Bool {
+        didSet { defaults.set(secondHotkeyEnabled, forKey: Key.secondHotkeyEnabled) }
+    }
+
     public init(defaults: UserDefaults = .standard) {
         self.defaults = defaults
         defaults.register(defaults: [
@@ -168,6 +176,7 @@ public final class PreferencesStore {
             Key.tileWidth: 200.0,
             Key.showCloseButton: false,
             Key.tilePreference: Default.tilePreference.rawValue,
+            Key.secondHotkeyEnabled: Default.secondHotkeyEnabled,
             Key.fitTilesToWindowCount: Default.fitTilesToWindowCount,
             Key.switcherApplicationScope: Default.filter.applications.rawValue,
             Key.switcherMinimizedPolicy: Default.filter.minimized.rawValue,
@@ -193,6 +202,7 @@ public final class PreferencesStore {
         showCloseButton = defaults.bool(forKey: Key.showCloseButton)
         fitTilesToWindowCount = defaults.bool(forKey: Key.fitTilesToWindowCount)
         appRules = AppRuleTable.decode(from: defaults.data(forKey: Key.appRules))
+        secondHotkeyEnabled = defaults.bool(forKey: Key.secondHotkeyEnabled)
         tilePreference = TilePreference(
             rawValue: defaults.string(forKey: Key.tilePreference) ?? ""
         ) ?? Default.tilePreference

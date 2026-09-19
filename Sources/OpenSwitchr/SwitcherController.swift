@@ -25,6 +25,10 @@ public final class SwitcherController {
     /// must not flip the layout out from under the user.
     private var tileMode: TileMode = .previews
 
+    /// The filter for this whole session: the configured one, adjusted by the
+    /// profile the key that opened it asked for. Frozen like `sessionContext`.
+    private var sessionFilter = WindowFilter()
+
     /// The preview width for this session: the configured one, or a smaller
     /// quantised step when fitting every window needs it. Frozen with the mode.
     private var previewWidth: CGFloat = 200
@@ -72,8 +76,8 @@ public final class SwitcherController {
 
     public func handle(_ action: HotkeyMonitor.Action) {
         switch action {
-        case .open(let reverse):
-            open(reverse: reverse)
+        case .open(let reverse, let profile):
+            open(reverse: reverse, profile: profile)
         case .advance(let reverse):
             advance(by: reverse ? -1 : 1)
         case .move(let direction):
@@ -94,8 +98,9 @@ public final class SwitcherController {
 
     // MARK: - Presentation
 
-    private func open(reverse: Bool) {
+    private func open(reverse: Bool, profile: SwitcherProfile) {
         guard !isVisible else { return }
+        sessionFilter = profile.filter(from: preferences.switcherFilter)
         query = ""
         surfaceScreen = OverlayPanel.screenWithMouse() ?? NSScreen.main
         sessionContext = WindowFilter.Context(
@@ -171,7 +176,7 @@ public final class SwitcherController {
     /// need that answer and neither should have to recompute it.
     private func baseWindows() -> [WindowInfo] {
         let all = index.windows
-        let kept = preferences.switcherFilter.apply(to: all, context: sessionContext)
+        let kept = sessionFilter.apply(to: all, context: sessionContext)
         filterRemovedWindows = kept.count < all.count
         return kept
     }

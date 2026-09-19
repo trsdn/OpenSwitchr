@@ -121,6 +121,7 @@ public final class AppModel {
     /// Applies preference changes that affect running subsystems.
     public func applyPreferences() {
         hotkeys.holdModifier = preferences.holdModifier
+        hotkeys.secondHotkeyEnabled = preferences.secondHotkeyEnabled
         // Editing a rule can change whether the hotkey stands aside right now.
         updateStandAside()
 
@@ -168,6 +169,7 @@ public final class AppModel {
     private func startHotkeys() {
         guard preferences.switcherEnabled else { return }
         hotkeys.holdModifier = preferences.holdModifier
+        hotkeys.secondHotkeyEnabled = preferences.secondHotkeyEnabled
         hotkeys.onAction = { [weak self] action in
             guard let self else { return }
             if !self.switcher.isVisible {
