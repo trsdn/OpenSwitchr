@@ -78,13 +78,12 @@ first.
 
 ### `R08` — a consumer can verify a published artifact came from this repository
 
-**Fail.** No release has been published (`R05`, `R06`), so there is no
-artifact to attest and no provenance claim to make one way or the other.
-Unlike `R07`, this one does not have to wait for `R03`: once a release exists,
-GitHub Artifact Attestations can be generated for it independent of whether
-the release itself is tag-triggered. Until then, this is unmet rather than
-not-yet-applicable — the standard's own wording is "or the repository states
-why they cannot," and nothing here states that yet either.
+**Fail.** Releases exist now (v0.2.0, v0.2.1, built by the notarization broker), but
+`gh attestation verify` finds no GitHub Artifact Attestation for the published DMG
+against this repository, the broker repository or the `trsdn` owner (the API answers
+404 for each), so a consumer has no way to check the artifact came from this source.
+The broker's `provenance.json` is attached to each release, which is a claim, not a
+verifiable attestation. Unmet, not not-applicable.
 
 ### `P09` — repository activity card
 

@@ -53,9 +53,10 @@ overlay are thin readers on top.
 
 ## Status
 
-Early, and actively developed. The core is implemented and measured, `v0.1.0`
-is tagged, and releases run through the notarization broker. There is no
-published binary yet, so installing means building from source. There is a
+Early, and actively developed. The core is implemented and measured, and releases
+run through the notarization broker: signed, notarized builds are on the
+[latest release](https://github.com/trsdn/OpenSwitchr/releases/latest) page, and the
+app updates itself from there. There is a
 [project page](https://trsdn.github.io/OpenSwitchr/) for readers who want the
 product rather than the source.
 
@@ -125,7 +126,7 @@ which builds, signs and notarizes from a pinned commit without any Apple
 credential ever reaching this repository:
 
 ```bash
-scripts/request.sh openswitchr v0.1.0   # run from a broker checkout
+scripts/request.sh openswitchr vX.Y.Z   # run from a broker checkout
 ```
 
 `scripts/build-app.sh` and `scripts/make_dmg.sh` here are for local testing
@@ -361,10 +362,11 @@ Two things to know:
 
 - **The German was written by an AI assistant and has not been reviewed by a
   native speaker.** Corrections are a catalog edit.
-- **No localized release exists yet.** `scripts/build-app.sh` and the release
-  broker's `openswitchr` adapter both copy the compiled `.lproj` directories into
-  the bundle, but no release has been built since, and `v0.1.0` predates the
-  localization. See `RELEASE_CHECKLIST.md`.
+- **Check the bundle, not the build log.** `scripts/build-app.sh` and the release
+  broker's `openswitchr` adapter both put the compiled `.lproj` directories into the
+  bundle. The first localized release shipped without them because the hosted
+  runner's SwiftPM copies string catalogs instead of compiling them; the broker now
+  compiles them itself and refuses to ship without German. See `RELEASE_CHECKLIST.md`.
 
 A test reads the catalogs and the views and fails on an untranslated entry, a
 translation that drops a placeholder, an incomplete plural, a lost product name,
