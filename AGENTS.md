@@ -377,6 +377,19 @@ set once, only for a first attempt, and cleared when the pointer leaves. Do not
 add a panel for this case; if something must be shown, one small tile with no
 controls, never a second UI surface.
 
+### Dock preview placement, and an auto-hiding Dock
+
+Placement is `DockPanelPlacement` in `OpenSwitchrCore`, driven by the Dock item's
+frame, which `DockHoverMonitor` already holds: no private API, no polling. The
+edge is the nearest screen edge (not "within a few points of one"), and the
+screen is the one containing the item's centre, never `NSScreen.main`.
+
+With an auto-hiding Dock the item's frame is valid only while the Dock is shown,
+and the Dock can slide away under an open panel. The one behaviour is: the panel
+stays anchored where it was placed, and the Dock is **not** held open. Holding it
+open means driving state that is not ours and restoring it on every exit path,
+including a crash. Do not add that.
+
 ## Three window-server facts that are easy to get wrong
 
 `CGWindowListCopyWindowInfo` documents front-to-back ordering **only** for

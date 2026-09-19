@@ -14,6 +14,7 @@ public struct DockPreviewView: View {
     private let tileSize: CGSize
     private let showsCloseButtons: Bool
     private let usesPreviews: Bool
+    private let edge: DockEdge
     private let onActivate: (Int) -> Void
     private let onClose: (Int) -> Void
     private let onQuitApp: (Int) -> Void
@@ -26,6 +27,7 @@ public struct DockPreviewView: View {
         tileSize: CGSize,
         showsCloseButtons: Bool = false,
         usesPreviews: Bool = true,
+        edge: DockEdge = .bottom,
         onActivate: @escaping (Int) -> Void,
         onClose: @escaping (Int) -> Void = { _ in },
         onQuitApp: @escaping (Int) -> Void = { _ in },
@@ -37,6 +39,7 @@ public struct DockPreviewView: View {
         self.tileSize = tileSize
         self.showsCloseButtons = showsCloseButtons
         self.usesPreviews = usesPreviews
+        self.edge = edge
         self.onActivate = onActivate
         self.onClose = onClose
         self.onQuitApp = onQuitApp
@@ -44,24 +47,7 @@ public struct DockPreviewView: View {
     }
 
     public var body: some View {
-        HStack(spacing: 2) {
-            ForEach(Array(windows.enumerated()), id: \.element.id) { index, window in
-                WindowTile(
-                    window: window,
-                    isSelected: index == hoveredIndex,
-                    thumbnailSize: tileSize,
-                    thumbnails: thumbnails,
-                    showsCloseButton: showsCloseButtons,
-                    usesPreviews: usesPreviews,
-                    onActivate: { onActivate(index) },
-                    onClose: { onClose(index) },
-                    onQuitApp: { onQuitApp(index) },
-                    onHover: { isHovering in
-                        onHover(isHovering ? index : nil)
-                    }
-                )
-            }
-        }
+        tiles
         .padding(8)
         .background(.ultraThinMaterial)
         .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
@@ -71,12 +57,40 @@ public struct DockPreviewView: View {
         )
     }
 
-    /// Size the panel needs for the given window count.
-    public static func panelSize(windowCount: Int, tileSize: CGSize) -> CGSize {
-        let tileWidth = tileSize.width + 16 + 2
-        return CGSize(
-            width: max(1, CGFloat(windowCount)) * tileWidth + 16,
-            height: tileSize.height + 16 + 20 + 16
-        )
+    /// A row beside a bottom Dock, a column beside a side one. The column
+    /// scrolls, because a Dock full of windows can be taller than the screen.
+    @ViewBuilder
+    private var tiles: some View {
+        if edge == .bottom {
+            HStack(spacing: 2) { tileViews }
+        } else {
+            ScrollView(.vertical, showsIndicators: false) {
+                VStack(spacing: 2) { tileViews }
+            }
+        }
+    }
+
+    private var tileViews: some View {
+        ForEach(Array(windows.enumerated()), id: \.element.id) { index, window in
+            WindowTile(
+                window: window,
+                isSelected: index == hoveredIndex,
+                thumbnailSize: tileSize,
+                thumbnails: thumbnails,
+                showsCloseButton: showsCloseButtons,
+                usesPreviews: usesPreviews,
+                onActivate: { onActivate(index) },
+                onClose: { onClose(index) },
+                onQuitApp: { onQuitApp(index) },
+                onHover: { isHovering in
+                    onHover(isHovering ? index : nil)
+                }
+            )
+        }
+    }
+
+    /// Size the panel needs for the given window count and Dock edge.
+    public static func panelSize(windowCount: Int, tileSize: CGSize, edge: DockEdge = .bottom) -> CGSize {
+        DockPanelPlacement.panelSize(windowCount: windowCount, tileSize: tileSize, edge: edge)
     }
 }
