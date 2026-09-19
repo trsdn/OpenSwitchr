@@ -136,6 +136,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   resource bundle) landed in trsdn/macos-notarization-broker#56, but **no release
   with the updater has been built, and a real update has never been run**, both
   recorded in `RELEASE_CHECKLIST.md`.
+- Two German layout and wording fixes found by rendering the Settings views
+  offscreen in German for the first time (#57): the "Präfix der Bundle-Kennung"
+  label wrapped onto two lines and squeezed its own text field, so it is now the
+  field's prompt; and the update explanation switched to informal "du" while every
+  other string is impersonal. The other tabs, including the two labels #5 warned
+  about, fit without truncation.
 - The interface is localized, with German as the first additional language
   (#5). Two String Catalogs, `Localizable.xcstrings` for the app and `UI.xcstrings`
   for the shared views, are compiled by SwiftPM and copied into the app bundle by
