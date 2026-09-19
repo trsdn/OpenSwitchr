@@ -4,6 +4,18 @@ import SwiftUI
 /// The full-screen switcher overlay contents.
 public struct SwitcherView: View {
 
+    @Environment(\.colorSchemeContrast) private var contrast
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
+
+    private var appearance: AccessibilityAppearance {
+        AccessibilityAppearance(
+            reduceMotion: reduceMotion,
+            reduceTransparency: reduceTransparency,
+            increasedContrast: contrast == .increased
+        )
+    }
+
     private let windows: [WindowInfo]
     private let selectedIndex: Int
     private let query: String
@@ -64,11 +76,11 @@ public struct SwitcherView: View {
         }
         .padding(16)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(.ultraThinMaterial)
+        .background(appearance.usesTranslucency ? AnyShapeStyle(.ultraThinMaterial) : AnyShapeStyle(Color(nsColor: .windowBackgroundColor)))
         .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: 18, style: .continuous)
-                .strokeBorder(Color.primary.opacity(0.1), lineWidth: 1)
+                .strokeBorder(Color.primary.opacity(appearance.opacity(of: .panelBorder)), lineWidth: 1)
         )
     }
 
@@ -90,7 +102,7 @@ public struct SwitcherView: View {
 
             Text("\(windows.count)")
                 .font(.system(size: 11).monospacedDigit())
-                .foregroundStyle(.tertiary)
+                .foregroundStyle(appearance.usesQuietMarks ? AnyShapeStyle(.tertiary) : AnyShapeStyle(.secondary))
         }
     }
 
@@ -147,7 +159,11 @@ public struct SwitcherView: View {
             .scrollIndicators(.never)
             .onChange(of: selectedIndex) { _, newValue in
                 guard windows.indices.contains(newValue) else { return }
-                withAnimation(.easeOut(duration: 0.12)) {
+                if appearance.animatesSelectionScroll {
+                    withAnimation(.easeOut(duration: 0.12)) {
+                        proxy.scrollTo(windows[newValue].id, anchor: .center)
+                    }
+                } else {
                     proxy.scrollTo(windows[newValue].id, anchor: .center)
                 }
             }
