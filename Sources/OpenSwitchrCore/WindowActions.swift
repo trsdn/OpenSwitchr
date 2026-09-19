@@ -62,6 +62,22 @@ public enum WindowActions {
         NSRunningApplication(processIdentifier: window.pid)?.hide() ?? false
     }
 
+    /// Switches to an application that has no window to raise: activates it and
+    /// asks it to open one.
+    ///
+    /// Launching an already-running application sends it the reopen event, which
+    /// is what a click on its Dock icon does, so this is the same behaviour
+    /// rather than a new one. It is still an assumption: not every application
+    /// makes a window on reopen, and some make the wrong one.
+    public static func activateWindowless(_ window: WindowInfo) {
+        guard let app = NSRunningApplication(processIdentifier: window.pid) else { return }
+        app.activate(options: [])
+        guard let url = app.bundleURL else { return }
+        let configuration = NSWorkspace.OpenConfiguration()
+        configuration.activates = true
+        NSWorkspace.shared.openApplication(at: url, configuration: configuration, completionHandler: nil)
+    }
+
     @discardableResult
     public static func quitApp(_ window: WindowInfo) -> Bool {
         NSRunningApplication(processIdentifier: window.pid)?.terminate() ?? false

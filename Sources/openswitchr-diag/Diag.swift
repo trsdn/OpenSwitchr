@@ -162,6 +162,25 @@ enum Diag {
         // an AppKit one, where a wrong flip still looks right on one display.
         // Only real displays can judge it, so put whatever is actually full
         // screen right now in front of a human rather than assert a number.
+        // The windowless axis is judged against what is really running: the
+        // entries come from NSWorkspace, which unit tests cannot stand in for.
+        let readStarted = CFAbsoluteTimeGetCurrent()
+        let running = NSWorkspace.shared.runningApplications
+            .filter { $0.activationPolicy == .regular && !$0.isTerminated }
+            .map { RunningApplication(pid: $0.processIdentifier, bundleID: $0.bundleIdentifier, name: $0.localizedName ?? "?") }
+        let windowless = WindowlessApplications.entries(
+            running: running,
+            windowedPIDs: Set(windows.map(\.pid)),
+            ownPID: ProcessInfo.processInfo.processIdentifier
+        )
+        print("")
+        print("Applications with no windows: \(windowless.count) of \(running.count) running, read in \(ms(CFAbsoluteTimeGetCurrent() - readStarted))")
+        for entry in windowless.prefix(12) {
+            print("  " + pad(short(entry.appName, 30), 32) + (entry.bundleID ?? "-"))
+        }
+        let shown = WindowFilter(windowless: .show).apply(to: windows + windowless)
+        print("  Switcher list with them shown: \(shown.count) entries (\(windows.count) windows + \(windowless.count))")
+
         print("")
         print("Full screen detection, against the attached displays")
         let fullScreen = windows.filter(\.isFullScreen)

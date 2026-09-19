@@ -27,6 +27,7 @@ public final class PreferencesStore {
         static let dockHoverInstantSwitch = "dockHoverInstantSwitch"
         static let switcherApplicationScope = "switcherApplicationScope"
         static let switcherMinimizedPolicy = "switcherMinimizedPolicy"
+        static let switcherWindowless = "switcherWindowless"
         static let switcherScreenScope = "switcherScreenScope"
         static let switcherOrder = "switcherOrder"
     }
@@ -93,6 +94,10 @@ public final class PreferencesStore {
         didSet { defaults.set(switcherApplicationScope.rawValue, forKey: Key.switcherApplicationScope) }
     }
 
+    public var switcherWindowless: WindowFilter.WindowlessPolicy {
+        didSet { defaults.set(switcherWindowless.rawValue, forKey: Key.switcherWindowless) }
+    }
+
     public var switcherMinimizedPolicy: WindowFilter.MinimizedPolicy {
         didSet { defaults.set(switcherMinimizedPolicy.rawValue, forKey: Key.switcherMinimizedPolicy) }
     }
@@ -111,7 +116,8 @@ public final class PreferencesStore {
             applications: switcherApplicationScope,
             minimized: switcherMinimizedPolicy,
             screens: switcherScreenScope,
-            order: switcherOrder
+            order: switcherOrder,
+            windowless: switcherWindowless
         )
     }
 
@@ -189,6 +195,7 @@ public final class PreferencesStore {
             Key.fitTilesToWindowCount: Default.fitTilesToWindowCount,
             Key.switcherApplicationScope: Default.filter.applications.rawValue,
             Key.switcherMinimizedPolicy: Default.filter.minimized.rawValue,
+            Key.switcherWindowless: Default.filter.windowless.rawValue,
             Key.switcherScreenScope: Default.filter.screens.rawValue,
             Key.switcherOrder: Default.filter.order.rawValue
         ])
@@ -223,6 +230,9 @@ public final class PreferencesStore {
         switcherApplicationScope = WindowFilter.ApplicationScope(
             rawValue: defaults.string(forKey: Key.switcherApplicationScope) ?? ""
         ) ?? Default.filter.applications
+        switcherWindowless = WindowFilter.WindowlessPolicy(
+            rawValue: defaults.string(forKey: Key.switcherWindowless) ?? ""
+        ) ?? Default.filter.windowless
         switcherMinimizedPolicy = WindowFilter.MinimizedPolicy(
             rawValue: defaults.string(forKey: Key.switcherMinimizedPolicy) ?? ""
         ) ?? Default.filter.minimized

@@ -29,6 +29,11 @@ public final class SwitcherController {
     /// profile the key that opened it asked for. Frozen like `sessionContext`.
     private var sessionFilter = WindowFilter()
 
+    /// Running applications, read once when the overlay opens and only if the
+    /// filter lists windowless ones. Reading them is what the index avoids doing
+    /// on every rebuild; here it is one call on a path the user asked for.
+    private var sessionRunningApplications: [RunningApplication] = []
+
     /// The preview width for this session: the configured one, or a smaller
     /// quantised step when fitting every window needs it. Frozen with the mode.
     private var previewWidth: CGFloat = 200
@@ -101,6 +106,7 @@ public final class SwitcherController {
     private func open(reverse: Bool, profile: SwitcherProfile) {
         guard !isVisible else { return }
         sessionFilter = profile.filter(from: preferences.switcherFilter)
+        sessionRunningApplications = sessionFilter.windowless == .show ? Self.runningApplications() : []
         query = ""
         surfaceScreen = OverlayPanel.screenWithMouse() ?? NSScreen.main
         sessionContext = WindowFilter.Context(
@@ -175,7 +181,15 @@ public final class SwitcherController {
     /// Records whether anything was actually dropped, because both call sites
     /// need that answer and neither should have to recompute it.
     private func baseWindows() -> [WindowInfo] {
-        let all = index.windows
+        // Windowless entries are derived against the *current* index, so an
+        // application that gained a window since the overlay opened stops being
+        // listed as having none.
+        let windowed = Set(index.windows.map(\.pid))
+        let all = index.windows + WindowlessApplications.entries(
+            running: sessionRunningApplications,
+            windowedPIDs: windowed,
+            ownPID: ProcessInfo.processInfo.processIdentifier
+        )
         let kept = sessionFilter.apply(to: all, context: sessionContext)
         filterRemovedWindows = kept.count < all.count
         return kept
@@ -185,6 +199,12 @@ public final class SwitcherController {
     ///
     /// The rule, and the reason window order is not used for this, live in
     /// `WindowFilter.Context.frontmostPID` where they can be tested.
+    private static func runningApplications() -> [RunningApplication] {
+        NSWorkspace.shared.runningApplications
+            .filter { $0.activationPolicy == .regular && !$0.isTerminated }
+            .map { RunningApplication(pid: $0.processIdentifier, bundleID: $0.bundleIdentifier, name: $0.localizedName ?? "Unknown") }
+    }
+
     private static func frontmostPID() -> pid_t? {
         WindowFilter.Context.frontmostPID(
             workspaceFrontmost: NSWorkspace.shared.frontmostApplication?.processIdentifier,
@@ -232,7 +252,9 @@ public final class SwitcherController {
         // here, not only where a tile draws.
         guard tileMode == .previews else { return }
         let selected = visibleWindows.indices.contains(selectedIndex) ? visibleWindows[selectedIndex].id : nil
-        thumbnails.prefetch(visibleWindows.map(\.id), maxPixelSize: tileSize().width * 2, selected: selected)
+        // An application-only entry has no window to capture.
+        let capturable = visibleWindows.filter { !$0.isApplicationOnly }.map(\.id)
+        thumbnails.prefetch(capturable, maxPixelSize: tileSize().width * 2, selected: selected.flatMap { WindowlessApplications.isApplicationOnly(id: $0) ? nil : $0 })
     }
 
     private func render() {
@@ -359,6 +381,11 @@ public final class SwitcherController {
         guard visibleWindows.indices.contains(selectedIndex) else { return }
 
         let window = visibleWindows[selectedIndex]
+        if window.isApplicationOnly {
+            // Nothing to raise, and the synthetic id is unknown to the index.
+            WindowActions.activateWindowless(window)
+            return
+        }
         WindowActions.focus(window)
         index.noteFocus(windowID: window.id)
     }

@@ -67,6 +67,19 @@ public struct WindowFilter: Equatable, Sendable {
         }
     }
 
+    /// Whether running applications with no open windows are listed too.
+    public enum WindowlessPolicy: String, CaseIterable, Sendable {
+        case hide
+        case show
+
+        public var title: String {
+            switch self {
+            case .hide: return "Hide"
+            case .show: return "Show after the windows"
+            }
+        }
+    }
+
     public enum Order: String, CaseIterable, Sendable {
         case recentlyUsed
         case recentlyOpened
@@ -138,17 +151,20 @@ public struct WindowFilter: Equatable, Sendable {
     public var minimized: MinimizedPolicy
     public var screens: ScreenScope
     public var order: Order
+    public var windowless: WindowlessPolicy
 
     public init(
         applications: ApplicationScope = .all,
         minimized: MinimizedPolicy = .show,
         screens: ScreenScope = .allScreens,
-        order: Order = .recentlyUsed
+        order: Order = .recentlyUsed,
+        windowless: WindowlessPolicy = .hide
     ) {
         self.applications = applications
         self.minimized = minimized
         self.screens = screens
         self.order = order
+        self.windowless = windowless
     }
 
     /// What a Dock preview asks for.
@@ -202,7 +218,8 @@ public struct WindowFilter: Equatable, Sendable {
 
     private func kept(_ windows: [WindowInfo], context: Context) -> [WindowInfo] {
         windows.filter { window in
-            !context.appRules.hides(window)
+            (windowless == .show || !window.isApplicationOnly)
+                && !context.appRules.hides(window)
                 && includesApplication(of: window, context: context)
                 && (minimized != .hide || !window.isMinimized)
                 && includesScreen(of: window, context: context)

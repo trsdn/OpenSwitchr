@@ -197,6 +197,13 @@ public struct WindowTile: View {
                     .foregroundStyle(.tertiary)
                     .help("Minimized")
             }
+
+            if window.isApplicationOnly {
+                Image(systemName: "plus.circle")
+                    .font(.system(size: 9))
+                    .foregroundStyle(.tertiary)
+                    .help("No open windows: choosing this activates the application and asks it to open one")
+            }
         }
         .frame(width: thumbnailSize.width, alignment: .center)
     }
