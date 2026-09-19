@@ -311,6 +311,10 @@ public final class AppModel {
         // only the windowsChanged/spaceChanged that scheduled this rebuild.
         updateStandAside()
 
+        // A minimized window cannot be captured again, so the store keeps its
+        // last good thumbnail and needs to know which windows those are.
+        thumbnails.noteMinimized(Set(index.windows.filter(\.isMinimized).map(\.id)))
+
         if switcher.isVisible {
             switcher.indexDidRebuild()
         } else {

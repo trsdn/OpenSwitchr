@@ -45,6 +45,11 @@ public actor ThumbnailStore {
     private static let contentCacheLifetime: TimeInterval = 1.0
 
     private var cache: [CGWindowID: Entry] = [:]
+
+    /// Windows currently in the Dock. Their cached thumbnail cannot be
+    /// re-created, so it is exempt from the age limit and evicted last — see
+    /// ``ThumbnailRetention``.
+    private var minimized: Set<CGWindowID> = []
     private var inFlight: [CGWindowID: Task<ThumbnailImage?, Never>] = [:]
     private var currentBytes = 0
 
@@ -100,7 +105,12 @@ public actor ThumbnailStore {
     /// Never throws: a failed capture is a normal outcome (window closed
     /// mid-flight, screen recording not granted) and simply yields `nil`.
     public func thumbnail(for windowID: CGWindowID, maxPixelSize: CGFloat = 640) async -> ThumbnailImage? {
-        if let entry = cache[windowID], Date().timeIntervalSince(entry.image.capturedAt) < maxAge {
+        if let entry = cache[windowID],
+           ThumbnailRetention.isFresh(
+               age: Date().timeIntervalSince(entry.image.capturedAt),
+               maxAge: maxAge,
+               isMinimized: minimized.contains(windowID)
+           ) {
             return cached(windowID)
         }
 
@@ -129,6 +139,18 @@ public actor ThumbnailStore {
         if let entry = cache.removeValue(forKey: windowID) {
             currentBytes -= entry.image.byteCount
         }
+    }
+
+    /// Tells the store which windows are minimized right now.
+    ///
+    /// A window that has left the set was restored, and its kept thumbnail
+    /// shows the pre-minimize contents, so it is dropped rather than served as
+    /// the first frame after restoring.
+    public func noteMinimized(_ ids: Set<CGWindowID>) {
+        for id in ThumbnailRetention.restored(previous: minimized, current: ids) {
+            invalidate(id)
+        }
+        minimized = ids
     }
 
     public func retain(only ids: Set<CGWindowID>) {
@@ -262,7 +284,14 @@ public actor ThumbnailStore {
 
     private func evictIfNeeded() {
         guard currentBytes > budgetBytes else { return }
-        for (id, _) in cache.sorted(by: { $0.value.lastAccess < $1.value.lastAccess }) {
+        let candidates = cache.map {
+            ThumbnailRetention.Candidate(
+                id: $0.key,
+                lastAccess: $0.value.lastAccess,
+                isMinimized: minimized.contains($0.key)
+            )
+        }
+        for id in ThumbnailRetention.evictionOrder(candidates) {
             invalidate(id)
             if currentBytes <= budgetBytes { break }
         }

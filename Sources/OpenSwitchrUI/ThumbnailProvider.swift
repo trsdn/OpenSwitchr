@@ -90,6 +90,12 @@ public final class ThumbnailProvider {
         Task { [store] in await store.invalidate(windowID) }
     }
 
+    /// Tells the store which windows are minimized, so it keeps their last good
+    /// thumbnail instead of ageing it out and drops it when the window returns.
+    public func noteMinimized(_ ids: Set<CGWindowID>) {
+        Task { [store] in await store.noteMinimized(ids) }
+    }
+
     /// Drops everything not in `ids`, keeping the published set aligned with
     /// the live window index.
     public func retain(only ids: Set<CGWindowID>) {
