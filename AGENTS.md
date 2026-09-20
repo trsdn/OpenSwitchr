@@ -422,8 +422,12 @@ merge to `main`; there is deliberately no deployment workflow, because one needs
   `grep -o -E '(src|href)="https?://[^"]+' docs/index.html`: only links a visitor
   clicks should remain.
 - **`docs/assets/site.css` is hand-written for this page** (`W09`). The blue and
-  the stacked-window motif come from the app icon, and the illustration
-  `docs/assets/hero.svg` is drawn to match the app. Keep it self-contained: no
+  the stacked-window motif come from the app icon. `docs/assets/hero-scene.svg`
+  is the drawn backdrop, and `docs/assets/switcher.png` is the app's own
+  `SwitcherView` rendered offscreen (an `NSHostingView` in a throwaway SwiftPM
+  harness, with invented sample windows and synthetic previews; the icons are real
+  application icons, no real window content). Re-render it when the switcher's look
+  changes, and keep the caption saying what it is. Keep the page self-contained: no
   `http`, `@import` or `url()` in the stylesheet, system fonts only, light and dark
   from `prefers-color-scheme`, and check the page at phone width for horizontal
   overflow before publishing.
