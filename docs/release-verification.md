@@ -44,10 +44,25 @@ the maintained changelog entry. It titles the release with the tag.
 
 ## Smoke tests of published artifacts (`R05`)
 
-One record per release line. A later release that changes how the artifact is
-built, signed or packaged needs a new one.
+**The smoke kit** is `scripts/smoke-release.sh [vX.Y.Z]`. It takes the published disk
+image, verifies its checksum, mounts it, checks the signature, the Team ID, Gatekeeper
+and the stapled notarization ticket, checks that the bundle carries the release's version,
+the app icon, the German localization and the notices, then starts the app from a copy and
+confirms it keeps running. It needs no operator; exit code 0 means every check passed, and
+`OPENSWITCHR_SMOKE_NO_LAUNCH=1` skips the start. It fails on v0.2.0 and v0.2.1, which had no
+icon, so it catches the failure that shipped. `.github/workflows/smoke-release.yml` runs it on
+a macOS runner whenever a release is published, which is the strongest form: every release
+is checked without anyone remembering to.
 
-### v0.2.2, 2026-09-20
+Below are the dated runs, plus the tests done by hand before the kit existed.
+
+### v0.2.2, 2026-09-20 (smoke kit)
+
+`scripts/smoke-release.sh v0.2.2` run by an agent on the maintainer's Mac: all checks
+passed, including the start. The same kit run against v0.2.1 and v0.2.0 fails on the missing
+icon, as it should.
+
+### v0.2.2, 2026-09-20 (by hand)
 
 Found by inspecting the installed v0.2.1 bundle after the maintainer saw a generic app
 icon: `AppIcon.icns` and `CFBundleIconFile` were missing from v0.2.0 and v0.2.1, because the
