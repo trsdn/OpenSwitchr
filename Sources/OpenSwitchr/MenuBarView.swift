@@ -12,8 +12,18 @@ struct MenuBarView: View {
     /// Driving the open explicitly is what makes room for the activation.
     @Environment(\.openSettings) private var openSettings
 
+    /// The running bundle's version, so the menu says which build this is.
+    private var version: String {
+        Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "dev"
+    }
+
     var body: some View {
         Group {
+            // A menu bar icon alone does not say whose menu this is. Verbatim: the
+            // product name is never translated.
+            Text(verbatim: "OpenSwitchr \(version)")
+            Divider()
+
             if model.permissions.isOperational {
                 statusSection
             } else {

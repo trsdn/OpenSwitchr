@@ -119,15 +119,14 @@ p['CFBundlePackageType'] = 'APPL'
 p['CFBundleDisplayName'] = 'OpenSwitchr'
 p['NSHighResolutionCapable'] = True
 p['LSMinimumSystemVersion'] = '15.0'
-if os.environ['HAS_ICON'] == 'true':
-    p['CFBundleIconFile'] = 'AppIcon'
+p['CFBundleIconFile'] = 'AppIcon'
 with open(app + '/Contents/Info.plist', 'wb') as f:
     plistlib.dump(p, f)
 "
 
 # A bundle that lacks its localization or notices is a broken release even when it
 # launches, so the build checks its own output instead of trusting the copy steps.
-for required in de.lproj/Localizable.strings de.lproj/UI.strings THIRD_PARTY_NOTICES.txt LICENSE; do
+for required in AppIcon.icns de.lproj/Localizable.strings de.lproj/UI.strings THIRD_PARTY_NOTICES.txt LICENSE; do
     [[ -e "$APP/Contents/Resources/$required" ]] || {
         echo "Bundle is missing Contents/Resources/$required" >&2
         exit 1
