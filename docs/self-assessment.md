@@ -284,12 +284,13 @@ These are recorded because they took work, not because they were free.
 - **`W09`** — the site's design is made for this project. Assessed by looking at the
   published page in light and dark and at phone width, not by a checklist. The palette
   (the icon's blue on paper or ink), the stacked-window motif, the app icon in the
-  hero and the illustration drawn to match the switcher panel all come from the
+  hero and the switcher panel (the app's own `SwitcherView`, rendered offscreen) all come from the
   product; the stylesheet, `docs/assets/site.css`, is hand-written for this one page
   and replaced the vendored framework. Focus is visible, contrast is set per theme,
   and at 390 px the page has no horizontal overflow (measured: `scrollWidth` 390).
-  Limits: the picture is an illustration, labelled as one, not a screenshot, and the
-  page has not been audited with a screen reader.
+  Limits: the panel is a render with invented sample windows and synthetic previews,
+  captioned as such, not a screenshot of a real desktop, and the page has not been
+  audited with a screen reader.
 - **`W01`–`W08`** — the published site. It is one page, `docs/index.html`,
   served by GitHub's branch build from `main` / `docs` (`.nojekyll` disables the
   Jekyll pass so the markdown beside it is not rendered as pages).
@@ -315,18 +316,18 @@ These are recorded because they took work, not because they were free.
     depth. Nothing addressed to contributors lives on it.
   The site is also a shipped interface, so accessibility applies to it: the page
   is semantic HTML with a skip link, a `lang` attribute, alt text on the
-  illustration (which says it is an illustration, not a screenshot), and no
+  picture (whose caption says it is a render with sample windows), and no
   script. It has not been audited with a screen reader.
 
 ## What to do next
 
 In order of how much each one moves:
 
-1. **Add a real screenshot to the site**, taken from a clean desktop with sample
-   windows, in place of the illustration.
-2. **Resolve the version derivation** with the broker so `I06` stops depending on a
+1. **Resolve the version derivation** with the broker so `I06` stops depending on a
    human typing the same number in two files.
-3. **Reduce the untestable surface (`S02`)**: the event tap, ScreenCaptureKit and the
+2. **Reduce the untestable surface (`S02`)**: the event tap, ScreenCaptureKit and the
    views are still covered only by `openswitchr-diag`, run by hand.
-4. **Ask the broker for a GitHub Artifact Attestation**, which would turn the
-   `provenance.json` claim into something a consumer can verify cryptographically.
+3. **A GitHub Artifact Attestation** would turn the `provenance.json` claim into
+   something a consumer can verify cryptographically. It needs `id-token: write` and
+   `attestations: write` in the broker's `notarize.yml`, which the broker's own rules
+   forbid, so it is a decision about the broker's trust boundary, not a task.
