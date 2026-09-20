@@ -47,6 +47,22 @@ the maintained changelog entry. It titles the release with the tag.
 One record per release line. A later release that changes how the artifact is
 built, signed or packaged needs a new one.
 
+### v0.2.2, 2026-09-20
+
+Found by inspecting the installed v0.2.1 bundle after the maintainer saw a generic app
+icon: `AppIcon.icns` and `CFBundleIconFile` were missing from v0.2.0 and v0.2.1, because the
+broker adapter never copied them (fixed in macos-notarization-broker#64, and the app's
+build script now requires the icon).
+
+Tested the published `OpenSwitchr-0.2.2.dmg`: `codesign --verify --deep --strict`, `spctl`
+(Notarized Developer ID) and `stapler validate` pass, the bundle holds `AppIcon.icns` and
+names it in the plist, and `de.lproj` is present.
+
+Exercised on the maintainer's Mac, on the real installation in `/Applications`: the running
+v0.2.1 found v0.2.2 through *Nach Updates suchen …*, downloaded it, installed it and
+relaunched as 0.2.2 with the same Team ID, and its menu now starts with "OpenSwitchr 0.2.2".
+Not exercised: a clean machine.
+
 ### v0.2.1, 2026-09-19
 
 Tested the published files, not a local build: downloaded `OpenSwitchr-0.2.1.dmg`
