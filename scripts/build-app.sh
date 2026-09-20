@@ -73,6 +73,15 @@ mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
 cp "$BUILD_DIR/OpenSwitchr" "$APP/Contents/MacOS/OpenSwitchr"
 cp "$PROJECT_DIR/Info.plist" "$APP/Contents/Info.plist"
 
+# The version has one home: the newest release heading in CHANGELOG.md, which is
+# also what the broker publishes as release notes. Info.plist carries a
+# __VERSION__ placeholder that is filled in here (and by the broker, from the tag).
+VERSION="$(sed -n 's/^## \[\([0-9][^]]*\)\].*/\1/p' "$PROJECT_DIR/CHANGELOG.md" | head -1)"
+[[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || {
+    echo "CHANGELOG.md has no release heading like '## [1.2.3]' to take the version from." >&2
+    exit 1
+}
+
 # The licence travels with the artifact, not just with the repository: someone
 # handed a .app has no checkout to read it from.
 cp "$PROJECT_DIR/LICENSE" "$APP/Contents/Resources/LICENSE"
@@ -98,11 +107,13 @@ if [[ -f "$PROJECT_DIR/Resources/AppIcon.icns" ]]; then
     HAS_ICON=true
 fi
 
-HAS_ICON="$HAS_ICON" python3 -c "
+HAS_ICON="$HAS_ICON" VERSION="$VERSION" python3 -c "
 import os, plistlib
 app = '$APP'
 with open(app + '/Contents/Info.plist', 'rb') as f:
     p = plistlib.load(f)
+p['CFBundleShortVersionString'] = os.environ['VERSION']
+p['CFBundleVersion'] = os.environ['VERSION']
 p['CFBundleExecutable'] = 'OpenSwitchr'
 p['CFBundlePackageType'] = 'APPL'
 p['CFBundleDisplayName'] = 'OpenSwitchr'
@@ -122,6 +133,12 @@ for required in de.lproj/Localizable.strings de.lproj/UI.strings THIRD_PARTY_NOT
         exit 1
     }
 done
+
+BUILT_VERSION="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "$APP/Contents/Info.plist")"
+[[ "$BUILT_VERSION" == "$VERSION" ]] || {
+    echo "Bundle version is $BUILT_VERSION, expected $VERSION from CHANGELOG.md" >&2
+    exit 1
+}
 
 if $UNSIGNED; then
     echo "App bundle created at: $APP (unsigned, not for distribution)"

@@ -62,10 +62,11 @@ if [[ "$RUN_BUILD" == true ]]; then
     fi
 fi
 
-# A version typed into Info.plist by hand drifts away from the changelog and
-# from the tag without anything noticing. This does not fix that, but it does
-# make the drift loud. See criterion I06 in .github/conformance.yml.
-step "Version consistency"
+# The version has one home, the newest release heading in CHANGELOG.md; the build
+# fills Info.plist from it (scripts/build-app.sh, and the broker from the tag). A
+# version typed into Info.plist would be a second home that can drift, so the
+# source plist must keep its placeholder. See criterion I06.
+step "Version comes from the changelog"
 plist_short="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' Info.plist 2>/dev/null || echo '')"
 plist_build="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleVersion' Info.plist 2>/dev/null || echo '')"
 changelog_version="$(sed -n 's/^## \[\([0-9][^]]*\)\].*/\1/p' CHANGELOG.md | head -1)"
@@ -74,12 +75,10 @@ echo "Info.plist CFBundleShortVersionString: ${plist_short:-<missing>}"
 echo "Info.plist CFBundleVersion:            ${plist_build:-<missing>}"
 echo "CHANGELOG.md newest release:           ${changelog_version:-<missing>}"
 
-if [[ -z "$plist_short" || -z "$plist_build" || -z "$changelog_version" ]]; then
-    fail "could not read all three version strings"
-elif [[ "$plist_short" != "$plist_build" ]]; then
-    fail "Info.plist disagrees with itself: $plist_short vs $plist_build"
-elif [[ "$plist_short" != "$changelog_version" ]]; then
-    fail "Info.plist says $plist_short, CHANGELOG.md says $changelog_version"
+if [[ ! "$changelog_version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+    fail "CHANGELOG.md has no release heading like '## [1.2.3]'"
+elif [[ "$plist_short" != "__VERSION__" || "$plist_build" != "__VERSION__" ]]; then
+    fail "Info.plist must keep __VERSION__; the build sets the version from CHANGELOG.md"
 else
     echo "ok"
 fi
