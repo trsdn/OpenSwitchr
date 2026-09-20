@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.2] - 2026-09-20
+
 ### Added
 
 - The switcher and the Dock preview now follow the system accessibility settings
@@ -14,8 +16,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   (the blur becomes an opaque fill) and Increase Contrast (borders, tile fill,
   selection and small marks step up). With all three off nothing looks different.
 
+### Fixed
+
+- The installed app had a generic icon. Releases 0.2.0 and 0.2.1 shipped without the
+  app icon because the release build never copied it into the bundle; the release
+  build now includes it and refuses to build without it.
+
 ### Changed
 
+- The menu bar menu now starts with the app's name and version, so it is clear whose
+  menu it is when it opens.
 - The version now has one home, the newest release heading in `CHANGELOG.md`. The
   source `Info.plist` holds a `__VERSION__` placeholder that `scripts/build-app.sh`
   and the release broker fill in, so a release no longer needs the number typed in
