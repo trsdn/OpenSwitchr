@@ -1,9 +1,9 @@
 # Self-assessment
 
-Evidence for `.github/conformance.yml`. Assessed against version **1.13.0** of
+Evidence for `.github/conformance.yml`. Assessed against version **1.15.0** of
 the [trsdn Repository Quality Standard](https://github.com/trsdn/.github/blob/main/docs/repository-quality-standard.md)
-on **2026-09-19**. Overall state: **Healthy**: no criterion fails, and the one
-that is `partial` (`S02`) is a minor gap named below.
+on **2026-09-20**. Overall state: **Healthy**: no criterion fails, and the one
+that is `partial` (`B13`) is a minor gap named below.
 
 Every line here is evidence from the GitHub API, a workflow run, a measurement,
 or a file in the tree. Nothing is assumed. Where a result is `partial` or
@@ -61,6 +61,26 @@ Two changes to the standard, and a lot of work in the repository, moved results.
   accessibility settings are honoured (`X03`); and the release path is covered in CI
   (`S02`). Each is under Notable passes.
 
+### 1.13.0 → 1.15.0
+
+The standard now states each criterion's Pass, Partial, Fail and Not applicable
+boundaries and how an agent decides, and computes the overall state from the results
+(`Healthy` when nothing fails). Re-reading every changed criterion against this
+repository moved four results, in both directions:
+
+- `R05` needs a **smoke kit**: a documented command that checks the published artifact
+  without an operator, run by an agent. `scripts/smoke-release.sh` is that kit, and
+  `.github/workflows/smoke-release.yml` runs it on every published release.
+- `B13` moved **down**, from pass to partial: the standard now counts any
+  hand-maintained restatement of a command, a version or runtime, or a policy, even one
+  that agrees with its home. This repository has some (see `B13` below).
+- `S02` moved up, from partial to pass, under the new definition of the main entry point
+  for a graphical application (the logic behind the action, reached without its views).
+- `S13` is `na`: no workflow uses `pull_request_target` or `workflow_run`, which is what
+  `scripts/assess.py` decides from the workflow files.
+
+The site also changed to meet `W03` and `W08` as now worded (see Notable passes).
+
 ## Profiles
 
 | Profile | Applies | Why |
@@ -81,20 +101,20 @@ Two changes to the standard, and a lot of work in the repository, moved results.
 
 ## Partials
 
-### `S02` — automated test coverage
+### `B13` — each fact has one home
 
-241 tests across 28 suites, all pure logic, plus a CI step that builds the app
-bundle unsigned on both runners and fails when it lacks its German localization or
-notices. That step exists because 0.2.0 shipped English-only while every test was
-green (the runner's SwiftPM copies string catalogs instead of compiling them), so the
-release path is now covered as well as the logic.
-
-What keeps this at `partial` is what tests still cannot reach: accessibility
-enumeration, ScreenCaptureKit, the event tap, and every SwiftUI view. That gap is
-filled by `openswitchr-diag`, which is run by hand and is not in CI, because it needs
-the Accessibility permission and real windows. Three release-blocking bugs have gone
-through exactly that gap (the app never starting, settings that could not be changed,
-a Dock hover that worked only the first time) while every test stayed green.
+**Partial.** The standard counts three kinds of fact in the README, `AGENTS.md`, the
+contributing guide and `docs/`: a command, a version or supported runtime, and a policy.
+A hand-maintained restatement that agrees with its home is a `Partial`; one that
+disagrees is a `Fail`. Nothing here disagrees, but some restatements remain: the build
+command appears in the README, `AGENTS.md` and on the site; the minimum macOS version is
+written in the README, the site and `Info.plist` (the badge and `scripts/check.sh` tie
+the last two to `Package.swift`); and the release command appears in the README and the
+release checklist. The duplicated prose that used to disagree was merged into one home
+each (the check.sh description, the shared-foundation rationale, the name), and links are
+used where a fact's home is another file. What would make this a pass is deleting the
+remaining restatements or generating them, which would make the README harder to read on
+its own, so the gap is recorded rather than closed.
 
 ## Results that are `na`, and why
 
@@ -109,6 +129,9 @@ a Dock hover that worked only the first time) while every test stayed green.
   lists. The only numerals a user sees are in fixed option labels such as
   "At most every 5 s", which are static strings rather than formatted values,
   so there is no locale-sensitive formatting to get right or wrong.
+- **`S13`** — no workflow here uses `pull_request_target` or `workflow_run`, so no
+  workflow can be triggered by an untrusted contribution with access to a secret (and
+  none references a `secrets.*` context at all).
 - **`A01`–`A04`** — actively developed, not archived.
 
 ## Notable passes
@@ -203,12 +226,14 @@ These are recorded because they took work, not because they were free.
   heading and the GitHub Release title are all `0.2.1`. `scripts/check.sh` fails in CI
   when the plist and changelog disagree, and the broker now titles releases with the
   tag (macos-notarization-broker#62).
-- **`R05`** — built artifacts smoke-tested. The published v0.2.1 DMG was verified with
-  `codesign`, `spctl` and `stapler`, and v0.2.0 was updated to v0.2.1 through the
-  in-app updater on a real Mac. The dated record, including what was not exercised
-  (a machine that had never run the app, the hotkey and Dock hover paths), is in
-  `docs/release-verification.md`. As of 1.13.0 one recorded test of the published
-  artifact suffices.
+- **`R05`** — built artifacts smoke-tested. `scripts/smoke-release.sh` is the smoke kit: it
+  downloads the published disk image, verifies its checksum, signature, Team ID,
+  Gatekeeper acceptance and stapled ticket, checks the bundle for its version, icon,
+  German localization and notices, and starts the app from a copy. It needs no operator.
+  It ran on the maintainer's Mac and on a clean macOS runner against v0.2.2 (all passed),
+  and it fails on v0.2.1 and v0.2.0, which shipped without the icon. The workflow
+  `smoke-release.yml` runs it whenever a release is published, the strongest form under
+  1.15.0. Dated runs and what was exercised by hand are in `docs/release-verification.md`.
 - **`R06`** — release notes. `CHANGELOG.md` follows Keep a Changelog, and the broker
   publishes the entry for the tag as the release notes, so the Releases page carries
   the maintained entry, including upgrade-relevant items (v0.2.1 says 0.2.0 shipped
@@ -226,12 +251,14 @@ These are recorded because they took work, not because they were free.
   what they do not: `provenance.json` is an attached file, not a signed GitHub
   Artifact Attestation. As of 1.13.0 the shared pipeline's verifiable record is
   sufficient evidence of origin.
-- **`B13`** — each fact has one home. A paragraph-similarity scan of `README.md`
-  against `AGENTS.md` found four overlaps; three were the same fact written twice
-  (what `scripts/check.sh` checks, why one shared foundation, the name rationale) and
-  each now lives in one file and is linked from the other. The fourth, the
-  diagnostics commands, serves two audiences and is not a duplicated fact. The scan is
-  not exhaustive.
+- **`S02`** — automated test coverage. 241 tests in 28 suites cover the logic behind the
+  app's main action, choosing a window: matching, most-recently-used ordering, filters
+  and per-app rules, selection, thumbnail retention and capture limiting, panel lifecycle
+  and placement, budgets and update scheduling, reached without any view. Failure paths
+  are asserted (rejected input, undecodable rules, empty and filtered states, a lock that
+  differs). CI runs them on two runners and builds the bundle unsigned, and the smoke kit
+  covers the published file. Limit: the event tap, ScreenCaptureKit and the views are
+  covered only by `openswitchr-diag`, which is run by hand.
 - **`P08`** — status badges. The licence, minimum-macOS and release badges are
   generated by `scripts/badges.py` in `stats.yml` and committed to the generated
   `repo-stats` branch; the CI badge is GitHub's own and the conformance badge is
@@ -294,9 +321,10 @@ These are recorded because they took work, not because they were free.
     same result without granting that.
   - `W02` — the repository `homepage` field is the site, and the site's footer
     and header link back to the repository.
-  - `W03`, `W04` — the landing view states what it is, that it is for people who
-    switch between many windows on a Mac, and its status and version, with the
-    build instructions, the one-sentence `Y01` disclosure, the repository,
+  - `W03`, `W04` — the first visible content, at the standard's 1280×800 reference viewport,
+    states what it is, who it is for (anyone who works across many windows), and its
+    status ("early, actively developed", with "this page describes the latest
+    release" linking to it), followed by how to get it, the one-sentence `Y01` disclosure, the repository,
     license, security policy and support links, and a last-reviewed date.
   - `W05`, `W06` — retired in 1.12.0, when the shared design language stopped being
     required. The site no longer uses it (see `W09`).
@@ -305,8 +333,10 @@ These are recorded because they took work, not because they were free.
     than `github.com` links a visitor has to click, and `docs/assets/site.css`
     contains no `http`, `@import` or `url()` reference. No script, no font
     request (system font stack), no cookie, no analytics.
-  - `W08` — one page, each fact stated once and linked to the repository for
-    depth. Nothing addressed to contributors lives on it.
+  - `W08` — one page. The features it summarises link to their full list in the README,
+    the install steps to the README's build section and the verification guide, and the
+    privacy statement to the README's Privacy section, so a repeated fact always links
+    to its home. Nothing addressed to contributors lives on it.
   The site is also a shipped interface, so accessibility applies to it: the page
   is semantic HTML with a skip link, a `lang` attribute, alt text on the
   picture (whose caption says it is a render with sample windows), and no
@@ -316,9 +346,10 @@ These are recorded because they took work, not because they were free.
 
 In order of how much each one moves:
 
-1. **Reduce the untestable surface (`S02`)**: the event tap, ScreenCaptureKit and the
-   views are still covered only by `openswitchr-diag`, run by hand.
-2. **A GitHub Artifact Attestation** would turn the `provenance.json` claim into
-   something a consumer can verify cryptographically. It needs `id-token: write` and
+1. **Close `B13`** by deleting or generating the remaining restatements of the build
+   command, the minimum macOS version and the release command.
+2. **A GitHub Artifact Attestation** would turn the `provenance.json` claim into something
+   a consumer can verify cryptographically. It needs `id-token: write` and
    `attestations: write` in the broker's `notarize.yml`, which the broker's own rules
-   forbid, so it is a decision about the broker's trust boundary, not a task.
+   forbid, so it is a decision about the broker's trust boundary, not a task. `R08` passes
+   without it under 1.14.0's statement rule.

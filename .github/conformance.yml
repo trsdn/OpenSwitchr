@@ -5,8 +5,8 @@
 # Do not edit a result here without editing the evidence there. A record that
 # disagrees with its evidence is worse than no record.
 
-standard_version: "1.13.0"
-assessed_on: "2026-09-19"
+standard_version: "1.15.0"
+assessed_on: "2026-09-20"
 state: "Healthy"
 evidence: "docs/self-assessment.md"
 
@@ -24,7 +24,7 @@ criteria:
   B10: pass
   B11: pass
   B12: pass
-  B13: pass
+  B13: partial
   B14: pass
   B15: pass
   B16: pass
@@ -44,7 +44,7 @@ criteria:
 
   # --- Software Repositories --------------------------------------------
   S01: pass
-  S02: partial
+  S02: pass
   S03: pass
   S04: pass
   S05: pass
@@ -55,7 +55,7 @@ criteria:
   S10: pass
   S11: pass
   S12: pass
-  S13: pass
+  S13: na
 
   # --- Deployable Repositories (nothing is deployed) --------------------
   D01: na
