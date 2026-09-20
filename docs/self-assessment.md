@@ -291,9 +291,6 @@ These are recorded because they took work, not because they were free.
   at the largest SwiftUI text size came out identical to the default, so there is no
   enlarged-text mode to clip. Verified by unit tests and by rendering the high-contrast
   appearance; **not** verified by toggling the real system settings on a live desktop.
-- **`S13`** — no workflow here references a `secrets.*` context, and none
-  triggers on `pull_request_target`, so there is no path from an untrusted
-  fork's pull request to a secret this repository holds (it holds none).
 - **`S12`** — was a fail as of the first pass of this reassessment:
   `actions/checkout@v4` (later `@v7` via #29) and the reusable conformance
   workflow pinned to `trsdn/.github/...@main` could both change underneath
