@@ -50,6 +50,8 @@ a:focus-visible, .btn:focus-visible, summary:focus-visible {
 h1 { font-size: clamp(2.3rem, 5.4vw, 3.9rem); line-height: 1.05; letter-spacing: -.035em; margin: 0 0 18px; font-weight: 750; }
 h1 em { font-style: normal; color: var(--blue); }
 .lede { font-size: 1.2rem; color: var(--ink-soft); max-width: 34ch; margin: 0 0 26px; }
+.status { margin: -10px 0 22px; color: var(--ink-soft); font-size: .98rem; max-width: 46ch; }
+.more { margin: 18px 0 0; color: var(--ink-soft); }
 .cta { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 22px; }
 .btn { display: inline-block; padding: 13px 22px; border-radius: 12px; font-weight: 650; text-decoration: none; border: 1.5px solid var(--line); color: var(--ink); background: var(--surface); }
 .btn.primary { background: linear-gradient(135deg, #5b86ff, #2a4bd6); border-color: transparent; color: #fff; box-shadow: 0 8px 22px rgb(47 86 224 / .32); }
