@@ -52,27 +52,30 @@ broker's `openswitchr` profile and `assemble_openswitchr` adapter.
   `Contents/Resources`, so verifying one would end in a `fatalError`. The Developer
   ID, Team ID and bundle identifier checks still apply.
 
-That was checked by running the real adapter against a clean clone of this repository
-with a real `swift build`, and the resulting tree passes the broker's `validate_app_tree`.
-It was **not** checked by a real notarized release.
+That was checked by running the real adapter, and then by real releases: v0.2.0 and
+v0.2.1 were built, signed and notarized by the broker, and `docs/release-verification.md`
+records what was verified about them and how to verify a download.
 
-**What is still open, and cannot be done by a change to either repository:**
+**What was learned, and stays true:**
 
-1. **No release with the updater exists.** `v0.1.0` predates it (it is well behind
-   `main`), so releasing that tag would ship an app with no updater and no German. The
-   first updater-capable release needs a new version: move the changelog entries out of
-   *Unreleased*, bump `Info.plist` (`scripts/check.sh` fails if it disagrees with the
-   changelog), tag, and run `scripts/request.sh openswitchr v<version> --publish` from a
-   broker checkout. The signing job runs in a protected environment that needs a human
-   approval.
+1. **A release needs no manual approval.** The broker's `macos-signing` environment has
+   no required reviewer, by design. What gates a release is the changelog: the broker
+   refuses `--publish` without an entry for the version, and publishes that entry as the
+   notes. To release: move the entries out of *Unreleased* into a new version heading
+   (`Info.plist` needs no change), tag, and run `scripts/request.sh openswitchr
+   v<version> --publish` from a broker checkout.
 2. **The signature must stay stable across updates.** Accessibility and Screen
    Recording grants are tied to the code signature, so a release signed with a different
-   identity silently loses both.
-3. **A real update has never been run.** After two releases, install the older on a Mac
-   other than the build machine and confirm the newer arrives and relaunches with its
-   permissions intact.
-4. **Existing installs have no updater**, so anyone running a build from before this one
-   installs the first updater-capable release by hand.
+   identity silently loses both. v0.2.0 and v0.2.1 share Team ID `G69Z5BNY97` and the
+   same designated requirement.
+3. **Check the bundle, not the build log.** 0.2.0 shipped without German because the
+   runner's SwiftPM copies string catalogs instead of compiling them. The broker now
+   compiles them itself and refuses to ship without `de.lproj`, `build-app.sh` does the
+   same, and CI builds the bundle on every run.
+4. **The updater refuses an app whose path contains a symlink**, such as one run from
+   `/tmp`; test an update from a normal folder.
+5. **Builds from before 0.2.0 have no updater**, so anyone still running one installs a
+   newer release by hand once.
 
 Per release, after the broker's artifact exists:
 `ls OpenSwitchr.app/Contents/Resources/de.lproj` should list `Localizable.strings`,
@@ -83,9 +86,10 @@ beside them. Absent means the broker profile regressed.
 
 1. Update `CHANGELOG.md`: move entries out of *Unreleased* into the new
    version, with the date.
-2. Bump `CFBundleShortVersionString` and `CFBundleVersion` in `Info.plist`.
-   The broker checks `CFBundleShortVersionString` against the tag and rejects a
-   mismatch, and `CFBundleVersion` must be a numeric dotted version.
+2. Nothing to bump in `Info.plist`: it holds a `__VERSION__` placeholder that
+   `scripts/build-app.sh` fills from the newest release heading in `CHANGELOG.md`
+   and the broker fills from the tag. `scripts/check.sh` fails if a version is typed
+   there. The broker still checks the built bundle against the tag.
 3. `swift build -Xswiftc -warnings-as-errors && swift test` — both must be
    clean. A warning in this project has repeatedly turned out to be a real bug,
    so it blocks the release.

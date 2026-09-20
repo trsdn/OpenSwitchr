@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- The switcher and the Dock preview now follow the system accessibility settings
+  Reduce Motion (the selection no longer animates into view), Reduce Transparency
+  (the blur becomes an opaque fill) and Increase Contrast (borders, tile fill,
+  selection and small marks step up). With all three off nothing looks different.
+
+### Changed
+
+- The version now has one home, the newest release heading in `CHANGELOG.md`. The
+  source `Info.plist` holds a `__VERSION__` placeholder that `scripts/build-app.sh`
+  and the release broker fill in, so a release no longer needs the number typed in
+  two places. `scripts/check.sh` fails if a version is typed into `Info.plist`.
+
 ## [0.2.1] - 2026-09-19
 
 ### Fixed

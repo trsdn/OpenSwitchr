@@ -81,7 +81,7 @@ criteria:
   I03: pass
   I04: pass
   I05: pass
-  I06: partial
+  I06: pass
 
   # --- Documentation Repositories (the product is an app) ---------------
   T01: na

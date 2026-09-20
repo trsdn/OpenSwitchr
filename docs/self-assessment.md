@@ -2,8 +2,8 @@
 
 Evidence for `.github/conformance.yml`. Assessed against version **1.13.0** of
 the [trsdn Repository Quality Standard](https://github.com/trsdn/.github/blob/main/docs/repository-quality-standard.md)
-on **2026-09-19**. Overall state: **Healthy**: no criterion fails, and the two
-that are `partial` (`S02`, `I06`) are minor gaps named below.
+on **2026-09-19**. Overall state: **Healthy**: no criterion fails, and the one
+that is `partial` (`S02`) is a minor gap named below.
 
 Every line here is evidence from the GitHub API, a workflow run, a measurement,
 or a file in the tree. Nothing is assumed. Where a result is `partial` or
@@ -96,22 +96,6 @@ the Accessibility permission and real windows. Three release-blocking bugs have 
 through exactly that gap (the app never starting, settings that could not be changed,
 a Dock hover that worked only the first time) while every test stayed green.
 
-### `I06` — identity metadata produced by the build
-
-Still hand-maintained. `CFBundleVersion` and `CFBundleShortVersionString` are
-typed into `Info.plist`; nothing derives them from the tag.
-
-What changed is that drift is now loud rather than silent: `scripts/check.sh`
-fails when the two plist versions disagree with each other or with the newest
-release heading in `CHANGELOG.md`, and CI runs that check on both runners. The
-standard accepts a check that fails on drift in place of derivation for badge
-values, which is why this is a `partial` rather than a `fail`.
-
-Deriving the version properly means changing how the bundle is produced, and
-the release bundle is assembled by the broker's `openswitchr-swiftpm` adapter
-rather than by `scripts/build-app.sh`. Doing it in only one of the two would
-make them disagree, so this needs a broker-side change first.
-
 ## Results that are `na`, and why
 
 - **`D01`–`D06`** — nothing is deployed. There is no environment, no runtime
@@ -193,6 +177,15 @@ These are recorded because they took work, not because they were free.
   protected branches. The card is served from `raw.githubusercontent.com` for this
   repository, not from a third-party image service. Caveat: a branch that only a
   workflow writes is not reviewed the way a pull request is.
+- **`I06`** — identity metadata produced by the build. The bundle's version is not
+  typed into `Info.plist` any more: the source plist holds a `__VERSION__` placeholder,
+  `scripts/build-app.sh` fills it from the newest release heading in `CHANGELOG.md`
+  (and verifies the built bundle carries that version), and the broker fills it from
+  the resolved release tag, as its sibling adapters already did. `scripts/check.sh`
+  fails if a version is typed into the source plist (mutation-tested), and CI builds
+  the bundle on both runners. Verified by running the real broker adapter on this
+  tree: it stamped the requested version and the result passed `validate_app_tree`.
+  The changelog heading is still written by hand, which is the release act itself.
 - **`R01`** — package metadata. SwiftPM has no field for a licence, a repository URL
   or a description, so under `R01` as of 1.13.0 they live in the artifact's own
   metadata: `Info.plist` carries the product name, both version strings, the repository
@@ -323,11 +316,9 @@ These are recorded because they took work, not because they were free.
 
 In order of how much each one moves:
 
-1. **Resolve the version derivation** with the broker so `I06` stops depending on a
-   human typing the same number in two files.
-2. **Reduce the untestable surface (`S02`)**: the event tap, ScreenCaptureKit and the
+1. **Reduce the untestable surface (`S02`)**: the event tap, ScreenCaptureKit and the
    views are still covered only by `openswitchr-diag`, run by hand.
-3. **A GitHub Artifact Attestation** would turn the `provenance.json` claim into
+2. **A GitHub Artifact Attestation** would turn the `provenance.json` claim into
    something a consumer can verify cryptographically. It needs `id-token: write` and
    `attestations: write` in the broker's `notarize.yml`, which the broker's own rules
    forbid, so it is a decision about the broker's trust boundary, not a task.
