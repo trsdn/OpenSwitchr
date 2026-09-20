@@ -5,97 +5,111 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>OpenSwitchr — Dock previews and a window switcher for macOS</title>
   <meta name="description" content="OpenSwitchr is a native macOS menu bar app that unifies Dock hover previews and a hold-and-Tab window switcher on one shared window index. MIT licensed.">
+  <meta name="color-scheme" content="light dark">
   <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32.png">
   <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
-  <link rel="stylesheet" href="assets/core.tokens.css">
-  <link rel="stylesheet" href="assets/instrument-workshop.css">
+  <link rel="stylesheet" href="assets/site.css">
 </head>
-<body class="iw-root">
-  <a class="iw-skip-link" href="#main">Skip to content</a>
+<body>
+  <a class="skip" href="#main">Skip to content</a>
 
-  <div class="iw-page">
-    <header class="iw-page-header">
-      <div>
-        <p class="iw-eyebrow">macOS menu bar app · MIT licensed</p>
-        <h1 class="iw-page-title">OpenSwitchr</h1>
-        <p>One app instead of two: Dock hover previews and a hold-and-Tab window
-          switcher, built on a single shared window index.</p>
+  <header class="wrap hero">
+    <div>
+      <div class="brand">
+        <img src="assets/icon-192.png" width="56" height="56" alt="">
+        <span>OpenSwitchr</span>
       </div>
-      <div>
-        <p><strong>Status:</strong> early, actively developed.
-          Signed, notarized builds are on the
-          <a href="https://github.com/trsdn/OpenSwitchr/releases/latest">latest release</a>
-          page, and the app updates itself from there.</p>
-        <p class="iw-row">
-          <a class="iw-button iw-button--primary" href="https://github.com/trsdn/OpenSwitchr/releases/latest">Download the latest release</a>
-          <a class="iw-button" href="https://github.com/trsdn/OpenSwitchr">Source on GitHub</a>
-        </p>
+      <h1>Switch <em>windows</em>, not just apps.</h1>
+      <p class="lede">Dock hover previews and a hold-and-Tab window switcher for macOS, built on one shared window index.</p>
+      <p class="cta">
+        <a class="btn primary" href="https://github.com/trsdn/OpenSwitchr/releases/latest">Download the latest release</a>
+        <a class="btn" href="https://github.com/trsdn/OpenSwitchr">Source on GitHub</a>
+      </p>
+      <ul class="facts" aria-label="Facts">
+        <li>macOS 15 or later</li>
+        <li>Apple silicon</li>
+        <li>Signed and notarized</li>
+        <li>MIT licensed</li>
+        <li>English and German</li>
+      </ul>
+    </div>
+    <figure>
+      <img class="art" src="assets/hero.svg" width="720" height="440"
+           alt="Illustration of the switcher: a panel of four window tiles in front of two stacked windows, the second tile selected.">
+      <figcaption>An illustration, not a screenshot.</figcaption>
+    </figure>
+  </header>
+
+  <main id="main" class="wrap">
+    <section aria-labelledby="what">
+      <h2 id="what">What it does</h2>
+      <div class="grid">
+        <article class="card">
+          <div class="glyph" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="14" height="12" rx="2"/><path d="M7 3h12a2 2 0 0 1 2 2v10"/></svg></div>
+          <h3>Windows, not applications</h3>
+          <p>macOS switches applications with ⌘-Tab. OpenSwitchr lists every window on the current Space, most recently used first, with live previews, and lets you type to filter by app or title.</p>
+        </article>
+        <article class="card">
+          <div class="glyph" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="11" rx="2"/><path d="M6 20h12"/></svg></div>
+          <h3>Hover the Dock</h3>
+          <p>Point at a Dock icon to see that application's windows, and click one to jump straight to it. Minimized windows are included, dimmed and marked.</p>
+        </article>
+        <article class="card">
+          <div class="glyph" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 3 8l9 5 9-5-9-5Z"/><path d="m3 13 9 5 9-5"/></svg></div>
+          <h3>One index, paid once</h3>
+          <p>Running a separate Dock previewer and a window switcher means paying twice for the same work. Here the window index and the thumbnail cache exist once and both surfaces read from them.</p>
+        </article>
       </div>
-    </header>
+    </section>
 
-    <main id="main" class="iw-stack iw-stack--section">
-      <section class="iw-section" aria-labelledby="what">
-        <h2 class="iw-section-title" id="what">What it does</h2>
-        <p>macOS switches <em>applications</em> with <kbd class="iw-kbd">⌘</kbd>-<kbd class="iw-kbd">Tab</kbd>,
-          not <em>windows</em>. OpenSwitchr lists every window on the current
-          Space, with live previews, and shows an application's windows when you
-          hover its Dock icon. The window index, event bus and thumbnail cache
-          exist once, so the two do not pay for the same work twice.</p>
-        <figure class="iw-figure">
-          <div class="iw-figure-frame">
-            <img src="assets/switcher-illustration.svg" width="640" height="360"
-                 alt="Illustration of the switcher: three window tiles with an icon and a title each, the middle one selected.">
-          </div>
-          <figcaption class="iw-caption">An illustration, not a screenshot.</figcaption>
-        </figure>
-        <p>Requires macOS 15 or later on Apple silicon, with the Accessibility
-          permission; Screen Recording adds live previews and the app falls back
-          to icons without it.</p>
-      </section>
+    <section aria-labelledby="keys">
+      <h2 id="keys">Keyboard first</h2>
+      <div class="keys">
+        <div><kbd>⌘</kbd> hold</div>
+        <div><kbd>Tab</kbd> next window</div>
+        <div><kbd>⇧</kbd><kbd>Tab</kbd> previous</div>
+        <div>type to filter</div>
+        <div><kbd>Esc</kbd> cancel</div>
+        <div>release to switch</div>
+      </div>
+    </section>
 
-      <section class="iw-section" aria-labelledby="get-it">
-        <h2 class="iw-section-title" id="get-it">How to get it</h2>
-        <p>Download the notarized disk image from the
-          <a href="https://github.com/trsdn/OpenSwitchr/releases/latest">latest release</a>,
-          drag OpenSwitchr to Applications and open it. It then checks for updates
-          once a day, which you can turn off. Or build from source; the full
-          steps, including signing, are in the
-          <a href="https://github.com/trsdn/OpenSwitchr#build">README</a>.</p>
-        <pre class="iw-code-block"><code>git clone https://github.com/trsdn/OpenSwitchr.git
+    <section aria-labelledby="get-it">
+      <h2 id="get-it">Get it</h2>
+      <ol class="steps">
+        <li><span>Download the notarized disk image from the <a href="https://github.com/trsdn/OpenSwitchr/releases/latest">latest release</a>.</span></li>
+        <li><span>Drag OpenSwitchr to Applications and open it. It runs from the menu bar.</span></li>
+        <li><span>Grant Accessibility so it can list and raise windows. Screen Recording adds live previews; without it the app shows icons.</span></li>
+      </ol>
+      <p>It checks GitHub for updates once a day, which you can turn off. Every download can be verified; see
+        <a href="https://github.com/trsdn/OpenSwitchr/blob/main/docs/release-verification.md">how</a>.</p>
+      <details>
+        <summary>Or build from source</summary>
+        <pre><code>git clone https://github.com/trsdn/OpenSwitchr.git
 cd OpenSwitchr
 bash scripts/build-app.sh</code></pre>
-      </section>
+        <p>The full steps, including signing, are in the <a href="https://github.com/trsdn/OpenSwitchr#build">README</a>.</p>
+      </details>
+    </section>
 
-      <section class="iw-section" aria-labelledby="privacy">
-        <h2 class="iw-section-title" id="privacy">Privacy</h2>
-        <p>OpenSwitchr collects nothing and sends no data about you or your
-          windows. Its one network connection is a daily update check to GitHub,
-          which you can turn off. Preferences are stored locally and thumbnails
-          live in memory only.
-          This page loads no third-party resources, sets no cookies and has no
-          analytics.
-          <a href="https://github.com/trsdn/OpenSwitchr#privacy">Details in the README.</a></p>
-      </section>
+    <section aria-labelledby="privacy">
+      <h2 id="privacy">Privacy</h2>
+      <div class="privacy">
+        <p><strong>OpenSwitchr collects nothing</strong> and sends no data about you or your windows. Its one network connection is the daily update check to GitHub, which you can turn off. Preferences are stored locally and thumbnails live in memory only. This page loads no third-party resources, sets no cookies and has no analytics. <a href="https://github.com/trsdn/OpenSwitchr#privacy">Details in the README.</a></p>
+      </div>
+    </section>
+  </main>
 
-      <section class="iw-section" aria-labelledby="links">
-        <h2 class="iw-section-title" id="links">Links</h2>
-        <ul>
-          <li><a href="https://github.com/trsdn/OpenSwitchr">Repository</a></li>
-          <li><a href="https://github.com/trsdn/OpenSwitchr/blob/main/LICENSE">License (MIT)</a></li>
-          <li><a href="https://github.com/trsdn/OpenSwitchr/security/policy">Security policy</a></li>
-          <li><a href="https://github.com/trsdn/OpenSwitchr#support-and-maintenance">Support</a> and
-            <a href="https://github.com/trsdn/OpenSwitchr/issues">issues</a></li>
-          <li><a href="https://github.com/trsdn/OpenSwitchr/blob/main/CHANGELOG.md">Changelog</a></li>
-        </ul>
-      </section>
-    </main>
-
-    <footer class="iw-section">
-      <p class="iw-caption">Page last reviewed 2026-09-19.
-        Styled with Instrument Workshop v1.5.1, vendored in
-        <code>docs/assets</code> (<a href="assets/VERSION">version record</a>).
-        <a href="https://github.com/trsdn/OpenSwitchr">OpenSwitchr on GitHub</a>.</p>
-    </footer>
-  </div>
+  <footer class="wrap">
+    <ul>
+      <li><a href="https://github.com/trsdn/OpenSwitchr">Repository</a></li>
+      <li><a href="https://github.com/trsdn/OpenSwitchr/blob/main/LICENSE">License (MIT)</a></li>
+      <li><a href="https://github.com/trsdn/OpenSwitchr/security/policy">Security policy</a></li>
+      <li><a href="https://github.com/trsdn/OpenSwitchr#support-and-maintenance">Support</a></li>
+      <li><a href="https://github.com/trsdn/OpenSwitchr/issues">Issues</a></li>
+      <li><a href="https://github.com/trsdn/OpenSwitchr/blob/main/CHANGELOG.md">Changelog</a></li>
+    </ul>
+    <p>Status: early, actively developed. Page last reviewed 2026-09-19.</p>
+  </footer>
 </body>
 </html>

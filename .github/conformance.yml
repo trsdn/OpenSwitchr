@@ -99,7 +99,7 @@ criteria:
   W06: na
   W07: pass
   W08: pass
-  W09: partial
+  W09: pass
 
   # --- Agent Readiness ---------------------------------------------------
   G01: pass

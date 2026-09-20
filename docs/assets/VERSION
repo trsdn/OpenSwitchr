@@ -1,8 +1,0 @@
-package: @trsdn/instrument-workshop
-tag: v1.5.1
-commit: 9f58bdba169bc0013dd8b9ec80b85f65325ac678
-source: https://github.com/trsdn/design-system.git (private; vendored copies of public sites are permitted by the trsdn Repository Quality Standard)
-vendored_on: 2026-09-19
-files: core.tokens.css, instrument-workshop.css (unmodified)
-sha256:core.tokens.css aab7797a2ff3e164b20e4f04d58e2506cadce72dd9b76cb8a8ec9da0fe52f988
-sha256:instrument-workshop.css 33e037f674dc7a0de9f087e040f01c9cf027c29328f375427ccf47deb50e58ec

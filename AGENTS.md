@@ -421,9 +421,12 @@ merge to `main`; there is deliberately no deployment workflow, because one needs
   script, no image from another host. Check with
   `grep -o -E '(src|href)="https?://[^"]+' docs/index.html`: only links a visitor
   clicks should remain.
-- **`docs/assets/core.tokens.css` and `instrument-workshop.css` are vendored
-  and unmodified.** `docs/assets/VERSION` records the tag, commit and SHA-256;
-  update it when the copy is refreshed, never edit the stylesheets by hand.
+- **`docs/assets/site.css` is hand-written for this page** (`W09`). The blue and
+  the stacked-window motif come from the app icon, and the illustration
+  `docs/assets/hero.svg` is drawn to match the app. Keep it self-contained: no
+  `http`, `@import` or `url()` in the stylesheet, system fonts only, light and dark
+  from `prefers-color-scheme`, and check the page at phone width for horizontal
+  overflow before publishing.
 - `docs/.nojekyll` keeps the Jekyll pass off so the markdown in `docs/` is not
   rendered as pages.
 - Update the "last reviewed" date on the page when its content is reviewed.
