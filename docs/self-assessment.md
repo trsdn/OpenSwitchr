@@ -2,8 +2,8 @@
 
 Evidence for `.github/conformance.yml`. Assessed against version **1.13.0** of
 the [trsdn Repository Quality Standard](https://github.com/trsdn/.github/blob/main/docs/repository-quality-standard.md)
-on **2026-09-19**. Overall state: **Healthy**: no criterion fails, and the three
-that are `partial` (`S02`, `I06`, `W09`) are minor gaps named below.
+on **2026-09-19**. Overall state: **Healthy**: no criterion fails, and the two
+that are `partial` (`S02`, `I06`) are minor gaps named below.
 
 Every line here is evidence from the GitHub API, a workflow run, a measurement,
 or a file in the tree. Nothing is assumed. Where a result is `partial` or
@@ -54,7 +54,7 @@ Two changes to the standard, and a lot of work in the repository, moved results.
   that release through a shared pipeline (this repository releases through the
   notarization broker). Those were the criteria that failed or were partial *because
   of that arrangement*, not because anything was missing. 1.12.0 retired `W05` and
-  `W06` (the mandatory design language) and added `W09`, assessed below.
+  `W06` (the mandatory design language) and added `W09`, assessed under Notable passes.
 - **The repository moved**: releases v0.2.0 and v0.2.1 exist and were tested; the
   activity card and badges are generated (`P09`, `P08`); the string catalogs are
   checked for orphans (`L04`); Swift formatting is enforced (`S03`); the display
@@ -95,18 +95,6 @@ filled by `openswitchr-diag`, which is run by hand and is not in CI, because it 
 the Accessibility permission and real windows. Three release-blocking bugs have gone
 through exactly that gap (the app never starting, settings that could not be changed,
 a Dock hover that worked only the first time) while every test stayed green.
-
-### `W09` — the site's visual design is made for this project
-
-**Partial.** Looking at the published page: it is a clean, readable, accessible
-single page, but its styling is the vendored Instrument Workshop framework, used
-unchanged, in its default dark theme. The only thing made for this project is the
-switcher illustration (labelled as an illustration, not a screenshot). Nothing in the
-colour, type or layout says "window switcher", and the hero carries neither the app
-icon nor a real screenshot. The standard allows Instrument Workshop where it fits but
-asks whether a visitor can tell the page was built for what it describes, and here
-they mostly cannot. Moving it means choosing colour and type from the product's own
-icon and adding a real screenshot; nothing on the page is inaccurate.
 
 ### `I06` — identity metadata produced by the build
 
@@ -293,6 +281,15 @@ These are recorded because they took work, not because they were free.
   SHA, with a trailing comment naming the tag for readability — the pattern
   GitHub itself recommends for third-party actions.
 
+- **`W09`** — the site's design is made for this project. Assessed by looking at the
+  published page in light and dark and at phone width, not by a checklist. The palette
+  (the icon's blue on paper or ink), the stacked-window motif, the app icon in the
+  hero and the illustration drawn to match the switcher panel all come from the
+  product; the stylesheet, `docs/assets/site.css`, is hand-written for this one page
+  and replaced the vendored framework. Focus is visible, contrast is set per theme,
+  and at 390 px the page has no horizontal overflow (measured: `scrollWidth` 390).
+  Limits: the picture is an illustration, labelled as one, not a screenshot, and the
+  page has not been audited with a screen reader.
 - **`W01`–`W08`** — the published site. It is one page, `docs/index.html`,
   served by GitHub's branch build from `main` / `docs` (`.nojekyll` disables the
   Jekyll pass so the markdown beside it is not rendered as pages).
@@ -307,16 +304,13 @@ These are recorded because they took work, not because they were free.
     switch between many windows on a Mac, and its status and version, with the
     build instructions, the one-sentence `Y01` disclosure, the repository,
     license, security policy and support links, and a last-reviewed date.
-  - `W05`, `W06` — retired in 1.12.0. The site is styled with Instrument Workshop
-    **v1.5.1**, two stylesheets vendored unmodified into `docs/assets`, with the tag,
-    commit and SHA-256 of each recorded in `docs/assets/VERSION`; whether that is
-    enough is now `W09`, above.
-  - `W07` — network review, done by reading the page and both stylesheets
+  - `W05`, `W06` — retired in 1.12.0, when the shared design language stopped being
+    required. The site no longer uses it (see `W09`).
+  - `W07` — network review, done by reading the page and its one stylesheet
     rather than trusting the claim: `docs/index.html` references no host other
-    than `github.com` links a visitor has to click, and neither stylesheet
-    contains an `http`, `@import` or `url()` reference. No script, no font
-    request (the design language falls back to the system font stack), no
-    cookie, no analytics.
+    than `github.com` links a visitor has to click, and `docs/assets/site.css`
+    contains no `http`, `@import` or `url()` reference. No script, no font
+    request (system font stack), no cookie, no analytics.
   - `W08` — one page, each fact stated once and linked to the repository for
     depth. Nothing addressed to contributors lives on it.
   The site is also a shipped interface, so accessibility applies to it: the page
@@ -328,8 +322,8 @@ These are recorded because they took work, not because they were free.
 
 In order of how much each one moves:
 
-1. **Give the site its own design (`W09`)**: colours and type from the app icon, and a
-   real screenshot in the hero.
+1. **Add a real screenshot to the site**, taken from a clean desktop with sample
+   windows, in place of the illustration.
 2. **Resolve the version derivation** with the broker so `I06` stops depending on a
    human typing the same number in two files.
 3. **Reduce the untestable surface (`S02`)**: the event tap, ScreenCaptureKit and the
