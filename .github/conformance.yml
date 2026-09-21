@@ -5,8 +5,8 @@
 # Do not edit a result here without editing the evidence there. A record that
 # disagrees with its evidence is worse than no record.
 
-standard_version: "1.15.0"
-assessed_on: "2026-09-20"
+standard_version: "1.17.0"
+assessed_on: "2026-09-21"
 state: "Healthy"
 evidence: "docs/self-assessment.md"
 
@@ -41,6 +41,8 @@ criteria:
   P09: pass
   P10: pass
   P11: pass
+  P12: pass
+  P13: pass
 
   # --- Software Repositories --------------------------------------------
   S01: pass

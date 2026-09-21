@@ -1,8 +1,8 @@
 # Self-assessment
 
-Evidence for `.github/conformance.yml`. Assessed against version **1.15.0** of
+Evidence for `.github/conformance.yml`. Assessed against version **1.17.0** of
 the [trsdn Repository Quality Standard](https://github.com/trsdn/.github/blob/main/docs/repository-quality-standard.md)
-on **2026-09-20**. Overall state: **Healthy**: no criterion fails, and the one
+on **2026-09-21**. Overall state: **Healthy**: no criterion fails, and the one
 that is `partial` (`B13`) is a minor gap named below.
 
 Every line here is evidence from the GitHub API, a workflow run, a measurement,
@@ -80,6 +80,16 @@ repository moved four results, in both directions:
   `scripts/assess.py` decides from the workflow files.
 
 The site also changed to meet `W03` and `W08` as now worded (see Notable passes).
+
+### 1.15.0 → 1.17.0
+
+Two versions in one day. 1.16.0 added `P12` (Dependabot alerts and security updates on a
+public repository) and `P13` (code scanning where CodeQL supports a language of the
+repository). 1.17.0 added implementation guides and starter kits and clarified `P13` (a
+repository is assessed on either the default setup or its own CodeQL workflow, not both);
+it changes no result. Both new criteria pass, verified through the API rather than assumed
+(see Notable passes), so nothing else moved. The record was checked against v1.16.0 and
+v1.17.0 with the same result, and is pinned to v1.17.0, the latest.
 
 ## Profiles
 
@@ -254,6 +264,15 @@ These are recorded because they took work, not because they were free.
   v0.2.2 predate the attestation, and it names the broker workflow and commit, not the
   source commit, which is only in the unsigned `provenance.json`. The smoke kit requires
   the attestation for every release after 0.2.2.
+- **`P12`** — Dependabot alerts and security updates. `GET /repos/trsdn/OpenSwitchr/
+  vulnerability-alerts` answers 204 (alerts enabled) and the repository's security settings
+  report `dependabot_security_updates=enabled`. `.github/dependabot.yml` covers the Swift
+  package and the GitHub Actions, which is the process half (`S08`).
+- **`P13`** — code scanning. CodeQL's default setup is configured for `actions`, `python` and
+  `swift` (weekly, default query suite), and its analyses complete for all three without
+  error (0 results on 2026-09-21), including Swift, so the default autobuild works here and
+  no workflow of the repository's own is needed. The analyses run on pull requests and are
+  not a required check; the Swift one takes the longest.
 - **`S02`** — automated test coverage. 241 tests in 28 suites cover the logic behind the
   app's main action, choosing a window: matching, most-recently-used ordering, filters
   and per-app rules, selection, thumbnail retention and capture limiting, panel lifecycle
