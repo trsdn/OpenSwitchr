@@ -295,10 +295,21 @@ struct SettingsView: View {
                 }
 
                 Text(
-                    "Icons and titles capture nothing, so they cost no CPU or memory for previews. Previews switch to icons on their own when Screen Recording is not granted, or when there are more than \(TileModePolicy.switcherWindowThreshold) windows. Takes effect the next time a panel opens."
+                    "Icons and titles capture nothing, so they cost no CPU or memory for previews. Previews switch to icons on their own when Screen Recording is not granted, or when the switcher lists more windows than the limit below. Takes effect the next time a panel opens."
                 )
                 .font(.caption)
                 .foregroundStyle(.secondary)
+
+                LabeledContent("Previews up to") {
+                    Stepper(
+                        "\(model.preferences.switcherPreviewLimit) windows",
+                        value: Binding(
+                            get: { model.preferences.switcherPreviewLimit },
+                            set: { model.preferences.switcherPreviewLimit = $0 }
+                        ),
+                        in: TileModePolicy.switcherPreviewLimitRange
+                    )
+                }
 
                 Picker(
                     "Refresh thumbnails",

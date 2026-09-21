@@ -7,8 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.3] - 2026-09-21
+
 ### Fixed
 
+- The switcher lost its previews and showed only icons whenever more than 12 windows were on the
+  Space, however large the display, so a Space with 28 windows had no previews at all. The limit
+  is now a setting, *Previews up to*, in the Appearance tab (4 to 60 windows, 30 by default). The
+  tile size keeps its own legibility floor, so previews that would be too small still fall back to
+  icons. The Dock preview keeps its own limit of 12, which is one application's windows.
 - "Restore the shipped defaults" in the Apps tab now asks first, since it replaces every rule
   including the ones you added.
 - The switcher and Dock preview tiles are now single buttons for VoiceOver, named
