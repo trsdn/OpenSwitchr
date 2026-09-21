@@ -74,7 +74,10 @@ records what was verified about them and how to verify a download.
    same, and CI builds the bundle on every run.
 4. **The updater refuses an app whose path contains a symlink**, such as one run from
    `/tmp`; test an update from a normal folder.
-5. **Builds from before 0.2.0 have no updater**, so anyone still running one installs a
+5. **Releases carry a build attestation** (the broker's `attest` job, after 0.2.2). It is
+   fail-closed: if that job fails the run fails and there is nothing to publish. The smoke
+   kit requires the attestation for every release after 0.2.2.
+6. **Builds from before 0.2.0 have no updater**, so anyone still running one installs a
    newer release by hand once.
 
 Per release, after the broker's artifact exists:

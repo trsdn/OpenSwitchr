@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Releases from now on carry a GitHub build attestation, signed with the release
+  pipeline's identity, so a download can be checked with
+  `gh attestation verify OpenSwitchr-X.Y.Z.dmg --repo trsdn/macos-notarization-broker`.
+  Nothing changes inside the app.
+
 ## [0.2.2] - 2026-09-20
 
 ### Added
