@@ -262,16 +262,6 @@
         }
       }
     },
-    "Check for Updates…": {
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Nach Updates suchen …"
-          }
-        }
-      }
-    },
     "Checking for Updates…": {
       "localizations": {
         "de": {
@@ -599,16 +589,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Nicht erlaubt"
-          }
-        }
-      }
-    },
-    "Once a day OpenSwitchr asks GitHub whether a newer release exists, and downloads it so installing is one click. This is the only network connection the app makes, and it goes to GitHub only. Turn it off and nothing is contacted unless you choose Check for Updates… yourself.": {
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Einmal am Tag fragt OpenSwitchr bei GitHub nach, ob eine neuere Version vorliegt, und lädt sie herunter, damit die Installation ein Klick ist. Das ist die einzige Netzwerkverbindung der App, und sie geht nur zu GitHub. Ist die Option aus, wird nichts kontaktiert, außer über „Nach Updates suchen …“ im Menü."
           }
         }
       }
@@ -1129,6 +1109,90 @@
           "stringUnit": {
             "state": "translated",
             "value": "⌘-Tab ist voreingestellt und ersetzt den App-Umschalter von macOS, solange OpenSwitchr läuft. Beim Beenden der App ist er wieder da."
+          }
+        }
+      }
+    },
+    "Check for Updates": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nach Updates suchen"
+          }
+        }
+      }
+    },
+    "Once a day OpenSwitchr asks GitHub whether a newer release exists, and downloads it so installing is one click. This is the only network connection the app makes, and it goes to GitHub only. Turn it off and nothing is contacted unless you choose Check for Updates yourself.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Einmal am Tag fragt OpenSwitchr bei GitHub nach, ob eine neuere Version vorliegt, und lädt sie herunter, damit die Installation ein Klick ist. Das ist die einzige Netzwerkverbindung der App, und sie geht nur zu GitHub. Ist die Option aus, wird nichts kontaktiert, außer über „Nach Updates suchen“ im Menü."
+          }
+        }
+      }
+    },
+    "Restore the shipped defaults?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Restore the shipped defaults?"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Standardregeln wiederherstellen?"
+          }
+        }
+      }
+    },
+    "This replaces every rule, including the ones you added.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This replaces every rule, including the ones you added."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dadurch werden alle Regeln ersetzt, auch selbst hinzugefügte."
+          }
+        }
+      }
+    },
+    "Cancel": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cancel"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abbrechen"
+          }
+        }
+      }
+    },
+    "Window titles and previews are read on this Mac and never sent anywhere.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Window titles and previews are read on this Mac and never sent anywhere."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fenstertitel und Vorschaubilder werden nur auf diesem Mac gelesen und nirgendwohin gesendet."
           }
         }
       }

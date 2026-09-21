@@ -91,6 +91,7 @@ public struct SwitcherView: View {
         HStack(spacing: 8) {
             Image(systemName: query.isEmpty ? "square.stack.3d.up" : "magnifyingglass")
                 .foregroundStyle(.secondary)
+                .accessibilityHidden(true)
 
             if query.isEmpty {
                 Text(selectionSubtitle)
@@ -106,6 +107,7 @@ public struct SwitcherView: View {
             Text("\(windows.count)")
                 .font(.system(size: 11).monospacedDigit())
                 .foregroundStyle(appearance.usesQuietMarks ? AnyShapeStyle(.tertiary) : AnyShapeStyle(.secondary))
+                .accessibilityLabel(Text(String(localized: "\(windows.count) windows", table: "UI", bundle: .main)))
         }
     }
 
@@ -121,6 +123,7 @@ public struct SwitcherView: View {
             Image(systemName: "macwindow.badge.plus")
                 .font(.system(size: 28))
                 .foregroundStyle(.tertiary)
+                .accessibilityHidden(true)
             Text(emptyMessage)
                 .font(.system(size: 12))
                 .foregroundStyle(.secondary)

@@ -72,12 +72,15 @@ struct SettingsView: View {
                 .foregroundStyle(.secondary)
 
                 if model.preferences.switcherEnabled && !model.switcherHotkeyActive {
-                    Label(
-                        "The keyboard hotkey is not installed. Check the Accessibility permission below.",
-                        systemImage: "exclamationmark.triangle"
-                    )
+                    // The tint stays on the icon: orange text on the light grouped
+                    // background is far below legible contrast at caption size.
+                    Label {
+                        Text("The keyboard hotkey is not installed. Check the Accessibility permission below.")
+                            .foregroundStyle(.secondary)
+                    } icon: {
+                        Image(systemName: "exclamationmark.triangle").foregroundStyle(.orange)
+                    }
                     .font(.caption)
-                    .foregroundStyle(.orange)
                 }
             }
 
@@ -237,7 +240,7 @@ struct SettingsView: View {
                     ))
 
                 Text(
-                    "Once a day OpenSwitchr asks GitHub whether a newer release exists, and downloads it so installing is one click. This is the only network connection the app makes, and it goes to GitHub only. Turn it off and nothing is contacted unless you choose Check for Updates… yourself."
+                    "Once a day OpenSwitchr asks GitHub whether a newer release exists, and downloads it so installing is one click. This is the only network connection the app makes, and it goes to GitHub only. Turn it off and nothing is contacted unless you choose Check for Updates yourself."
                 )
                 .font(.caption)
                 .foregroundStyle(.secondary)
@@ -381,13 +384,18 @@ struct SettingsView: View {
         settings: @escaping () -> Void
     ) -> some View {
         VStack(alignment: .leading, spacing: 8) {
-            Label(
-                LocalizedStringKey(granted ? "Granted" : "Not granted"),
-                systemImage: granted ? "checkmark.circle.fill" : "exclamationmark.triangle.fill"
-            )
-            .foregroundStyle(granted ? Color.green : Color.orange)
+            Label {
+                Text(LocalizedStringKey(granted ? "Granted" : "Not granted"))
+            } icon: {
+                Image(systemName: granted ? "checkmark.circle.fill" : "exclamationmark.triangle.fill")
+                    .foregroundStyle(granted ? Color.green : Color.orange)
+            }
 
             Text(title)
+                .font(.caption)
+                .foregroundStyle(.secondary)
+
+            Text("Window titles and previews are read on this Mac and never sent anywhere.")
                 .font(.caption)
                 .foregroundStyle(.secondary)
 

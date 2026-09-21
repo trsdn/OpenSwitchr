@@ -11,6 +11,7 @@ struct AppRulesView: View {
 
     @Bindable var model: AppModel
     @State private var newPrefix = ""
+    @State private var confirmingRestore = false
 
     private enum HideKind: String, CaseIterable {
         case never, always, titleContains
@@ -78,8 +79,18 @@ struct AppRulesView: View {
                 }
 
                 Button("Restore the shipped defaults") {
-                    model.preferences.appRules = .defaults
-                    model.applyPreferences()
+                    confirmingRestore = true
+                }
+                .confirmationDialog(
+                    "Restore the shipped defaults?", isPresented: $confirmingRestore, titleVisibility: .visible
+                ) {
+                    Button("Restore the shipped defaults", role: .destructive) {
+                        model.preferences.appRules = .defaults
+                        model.applyPreferences()
+                    }
+                    Button("Cancel", role: .cancel) {}
+                } message: {
+                    Text("This replaces every rule, including the ones you added.")
                 }
             }
         }

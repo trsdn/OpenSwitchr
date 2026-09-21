@@ -98,7 +98,7 @@ struct MenuBarView: View {
     }
 
     private var checkButton: some View {
-        Button("Check for Updates…") {
+        Button("Check for Updates") {
             Task { await model.updates.check(userInitiated: true) }
         }
     }

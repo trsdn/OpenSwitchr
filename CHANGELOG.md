@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- "Restore the shipped defaults" in the Apps tab now asks first, since it replaces every rule
+  including the ones you added.
+- The switcher and Dock preview tiles are now single buttons for VoiceOver, named
+  "application: window title", with their state ("Minimized", or a hint for applications
+  with no windows) spoken rather than shown only as a tooltip, and "Close window" and
+  "Quit application" offered as actions. The window count is announced as "3 windows",
+  and decorative symbols are hidden.
+- The orange warning and the green "Granted" text in Settings were too light on the light
+  background; the colour now stays on the icon and the text is the standard colour.
+- The Permissions tab says that window titles and previews are read on this Mac and never sent
+  anywhere.
+- "Check for Updates" no longer carries an ellipsis, since it acts immediately.
+
 ### Added
 
 - Releases from now on carry a GitHub build attestation, signed with the release
