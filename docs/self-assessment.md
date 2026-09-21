@@ -245,12 +245,15 @@ These are recorded because they took work, not because they were free.
   `## [Unreleased]` is empty, so no entry can be stranded. As of 1.13.0 a documented
   shared-pipeline gate qualifies.
 - **`R08`** — a consumer can verify origin. `docs/release-verification.md` gives the
-  commands (`shasum`, `codesign`, `spctl`, `stapler`) and says what they establish:
-  the Developer ID signature (Team `G69Z5BNY97`) and Apple's notarization, plus
-  `provenance.json` naming the source commit, the tag and the broker run. It also says
-  what they do not: `provenance.json` is an attached file, not a signed GitHub
-  Artifact Attestation. As of 1.13.0 the shared pipeline's verifiable record is
-  sufficient evidence of origin.
+  commands and says what they establish. The broker's `attest` job (from 2026-09-21) has
+  GitHub sign a build-provenance attestation for every notarized `.dmg` and `.zip`, so a
+  consumer can run `gh attestation verify <file> --repo trsdn/macos-notarization-broker`;
+  verified on a real run (digest equals the file's SHA-256, one appended byte is
+  rejected). Alongside it stay the Developer ID signature (Team `G69Z5BNY97`), Apple's
+  notarization and `provenance.json` naming the source commit. Limits: releases up to
+  v0.2.2 predate the attestation, and it names the broker workflow and commit, not the
+  source commit, which is only in the unsigned `provenance.json`. The smoke kit requires
+  the attestation for every release after 0.2.2.
 - **`S02`** — automated test coverage. 241 tests in 28 suites cover the logic behind the
   app's main action, choosing a window: matching, most-recently-used ordering, filters
   and per-app rules, selection, thumbnail retention and capture limiting, panel lifecycle
@@ -345,8 +348,3 @@ In order of how much each one moves:
 
 1. **Close `B13`** by deleting or generating the remaining restatements of the build
    command, the minimum macOS version and the release command.
-2. **A GitHub Artifact Attestation** would turn the `provenance.json` claim into something
-   a consumer can verify cryptographically. It needs `id-token: write` and
-   `attestations: write` in the broker's `notarize.yml`, which the broker's own rules
-   forbid, so it is a decision about the broker's trust boundary, not a task. `R08` passes
-   without it under 1.14.0's statement rule.

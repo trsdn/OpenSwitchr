@@ -12,6 +12,7 @@ a shared pipeline, not by a workflow in this repository. Every release carries
 `provenance.json`, and the app itself can be checked with the tools macOS ships:
 
 ```bash
+gh attestation verify OpenSwitchr-X.Y.Z.dmg --repo trsdn/macos-notarization-broker
 shasum -a 256 -c OpenSwitchr-X.Y.Z.dmg.sha256
 hdiutil attach OpenSwitchr-X.Y.Z.dmg
 codesign --verify --deep --strict --verbose=2 /Volumes/OpenSwitchr/OpenSwitchr.app
@@ -20,6 +21,11 @@ spctl -a -t exec -vv /Volumes/OpenSwitchr/OpenSwitchr.app                       
 xcrun stapler validate /Volumes/OpenSwitchr/OpenSwitchr.app
 ```
 
+- The **build attestation** (releases after 0.2.2) is a statement GitHub signed with the
+  broker workflow's own identity: this file's SHA-256 was produced by
+  `notarize.yml` in `trsdn/macos-notarization-broker` at the recorded broker commit. It
+  is verified with the first command above, which needs the GitHub CLI; a file changed by
+  even one byte no longer matches.
 - The **Developer ID signature** ties the app to Apple Team `G69Z5BNY97`, and
   Apple's **notarization** ties it to a scan Apple ran. Both are verified by macOS
   itself on first launch, and the in-app updater refuses an update whose Team ID,
@@ -28,10 +34,13 @@ xcrun stapler validate /Volumes/OpenSwitchr/OpenSwitchr.app
   its object, the broker commit and run id that built it, and the SHA-256 of every
   artifact.
 
-What this does **not** prove: `provenance.json` is a file attached to the release,
-not a signed GitHub Artifact Attestation, so it says where the build claims to have
-come from without letting a consumer verify that claim cryptographically. The
-signature proves who signed the app, not which commit it was built from.
+What this does **not** prove: the attestation names the broker workflow and commit, not
+the source commit that was built. That is in `provenance.json`, which is data attached to
+the release and not itself signed, so the source commit is a claim a consumer can read but
+not cryptographically verify. Releases up to 0.2.2 have no attestation, because it was
+added after them (a test run on 2026-09-21 verified with `gh attestation verify`: the
+signed digest equalled the file's SHA-256, and a copy with one byte appended was rejected).
+The signature proves who signed the app, not which commit it was built from.
 
 ## What the pipeline guarantees (`R03`, `R07`)
 

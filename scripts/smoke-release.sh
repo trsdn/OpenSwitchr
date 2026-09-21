@@ -54,6 +54,25 @@ ok "Gatekeeper accepts it"
 xcrun stapler validate "$APP" >/dev/null 2>&1 || fail "notarization ticket is not stapled"
 ok "notarization ticket stapled"
 
+# Build attestation: the broker's `attest` job has GitHub sign a provenance statement
+# about the published files. Releases up to 0.2.2 predate it, so it is required only
+# for later versions (OPENSWITCHR_SMOKE_REQUIRE_ATTESTATION=1 forces it).
+BROKER_REPO="trsdn/macos-notarization-broker"
+LAST_UNATTESTED="0.2.2"
+REQUIRE_ATTESTATION="${OPENSWITCHR_SMOKE_REQUIRE_ATTESTATION:-0}"
+if [[ "$REQUIRE_ATTESTATION" != "1" && "$VERSION" != "$LAST_UNATTESTED" ]] \
+    && [[ "$(printf '%s\n%s\n' "$LAST_UNATTESTED" "$VERSION" | sort -V | tail -1)" == "$VERSION" ]]; then
+    REQUIRE_ATTESTATION=1
+fi
+ATTESTATION="$(gh attestation verify "$WORK/OpenSwitchr-$VERSION.dmg" --repo "$BROKER_REPO" --format json 2>/dev/null || true)"
+if [[ "$ATTESTATION" == *"notarize.yml@refs/heads/main"* ]]; then
+    ok "build attestation verified (built by $BROKER_REPO notarize.yml)"
+elif [[ "$REQUIRE_ATTESTATION" == "1" ]]; then
+    fail "no valid build attestation from $BROKER_REPO for OpenSwitchr-$VERSION.dmg"
+else
+    echo "note: no build attestation (releases up to $LAST_UNATTESTED predate it)"
+fi
+
 plist() { /usr/libexec/PlistBuddy -c "Print :$1" "$APP/Contents/Info.plist" 2>/dev/null || true; }
 [[ "$(plist CFBundleShortVersionString)" == "$VERSION" ]] || fail "bundle version is $(plist CFBundleShortVersionString), expected $VERSION"
 ok "bundle version is $VERSION"
