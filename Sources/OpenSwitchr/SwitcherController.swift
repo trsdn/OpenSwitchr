@@ -141,7 +141,7 @@ public final class SwitcherController {
                 preference: preferences.tilePreference,
                 screenRecordingGranted: CGPreflightScreenCaptureAccess(),
                 windowCount: visibleWindows.count,
-                threshold: TileModePolicy.switcherWindowThreshold
+                threshold: preferences.switcherPreviewLimit
             )
             : .icons
 

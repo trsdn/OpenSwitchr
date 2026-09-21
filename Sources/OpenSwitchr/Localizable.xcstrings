@@ -463,16 +463,6 @@
         }
       }
     },
-    "Icons and titles capture nothing, so they cost no CPU or memory for previews. Previews switch to icons on their own when Screen Recording is not granted, or when there are more than %lld windows. Takes effect the next time a panel opens.": {
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Symbole und Titel nehmen nichts auf und kosten daher keine Rechenleistung oder Speicher für Vorschauen. Vorschauen wechseln von selbst zu Symbolen, wenn die Bildschirmaufnahme nicht erlaubt ist oder es mehr als %lld Fenster gibt. Wirkt beim nächsten Öffnen eines Fensters."
-          }
-        }
-      }
-    },
     "Icons and titles only": {
       "localizations": {
         "de": {
@@ -1193,6 +1183,66 @@
           "stringUnit": {
             "state": "translated",
             "value": "Fenstertitel und Vorschaubilder werden nur auf diesem Mac gelesen und nirgendwohin gesendet."
+          }
+        }
+      }
+    },
+    "Icons and titles capture nothing, so they cost no CPU or memory for previews. Previews switch to icons on their own when Screen Recording is not granted, or when the switcher lists more windows than the limit below. Takes effect the next time a panel opens.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Symbole und Titel nehmen nichts auf und kosten daher keine Rechenleistung oder Speicher für Vorschauen. Vorschauen wechseln von selbst zu Symbolen, wenn die Bildschirmaufnahme nicht erlaubt ist oder der Umschalter mehr Fenster listet als das Limit unten erlaubt. Wirkt beim nächsten Öffnen eines Fensters."
+          }
+        }
+      }
+    },
+    "Previews up to": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vorschauen bis"
+          }
+        }
+      }
+    },
+    "%lld windows": {
+      "localizations": {
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld window"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld windows"
+                }
+              }
+            }
+          }
+        },
+        "de": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld Fenster"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld Fenster"
+                }
+              }
+            }
           }
         }
       }

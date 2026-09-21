@@ -37,8 +37,23 @@ public enum TilePreference: String, CaseIterable, Sendable {
 ///   that.
 public enum TileModePolicy {
 
-    /// Past roughly a dozen tiles a preview stops being identifiable.
-    public static let switcherWindowThreshold = 12
+    /// The switcher's default: past this many windows it draws icons. It is a
+    /// setting (`PreferencesStore.switcherPreviewLimit`), because the right number
+    /// depends on the display: the legibility floor in `TileSizing` already stops
+    /// previews that would be too small to identify, so this only bounds the cost
+    /// of capturing a great many windows. It was 12 until a Space with 28 windows
+    /// on a large display lost its previews for no reason a user could see.
+    public static let switcherWindowThreshold = 30
+
+    /// What the setting may be. Below the floor a preview list is barely a list, and
+    /// past the ceiling the capture cost is what the limit exists to avoid.
+    public static let switcherPreviewLimitRange = 4...60
+
+    /// A stored value outside the range (an edited plist, a later version's
+    /// value) is pulled back into it rather than trusted.
+    public static func clampedSwitcherPreviewLimit(_ value: Int) -> Int {
+        min(max(value, switcherPreviewLimitRange.lowerBound), switcherPreviewLimitRange.upperBound)
+    }
 
     /// Separate from the switcher's, because the surfaces differ: a Dock hover
     /// is scoped to one application and rarely trips it, the switcher on a busy

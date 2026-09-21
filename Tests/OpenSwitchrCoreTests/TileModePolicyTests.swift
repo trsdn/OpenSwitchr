@@ -52,6 +52,25 @@ struct TileModePolicyTests {
         #expect(resolve(count: 10, threshold: 12) == .previews)
     }
 
+    @Test("The switcher's default limit is inside its own range, so the default is always valid")
+    func defaultLimitIsInRange() {
+        #expect(TileModePolicy.switcherPreviewLimitRange.contains(TileModePolicy.switcherWindowThreshold))
+    }
+
+    @Test("A stored limit is pulled back into the allowed range")
+    func limitIsClamped() {
+        #expect(TileModePolicy.clampedSwitcherPreviewLimit(-5) == 4)
+        #expect(TileModePolicy.clampedSwitcherPreviewLimit(0) == 4)
+        #expect(TileModePolicy.clampedSwitcherPreviewLimit(28) == 28)
+        #expect(TileModePolicy.clampedSwitcherPreviewLimit(500) == 60)
+    }
+
+    @Test("A busy Space with 28 windows keeps its previews at the default limit")
+    func busySpaceKeepsPreviews() {
+        #expect(resolve(count: 28, threshold: TileModePolicy.switcherWindowThreshold) == .previews)
+        #expect(resolve(count: 31, threshold: TileModePolicy.switcherWindowThreshold) == .icons)
+    }
+
     @Test("An empty list stays in the preferred mode")
     func emptyList() {
         #expect(resolve(count: 0) == .previews)

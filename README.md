@@ -43,8 +43,9 @@ overlay are thin readers on top.
   that have every window closed, after the windows, so you can switch to them.
   Choosing one activates it and asks it to open a window, as a Dock click does.
 - **Icons instead of previews** — pick icons and titles only in Settings, or
-  let it happen on its own when Screen Recording is not granted or a panel has
-  more than twelve windows. Icon mode captures nothing.
+  let it happen on its own when Screen Recording is not granted or the switcher
+  lists more windows than a limit you can set (30 by default). Icon mode captures
+  nothing.
 - **Dock hover previews** — hover a Dock icon to see that app's windows; click
   one to jump straight to it. The open delay applies to the first preview only,
   so moving along the Dock does not wait again.

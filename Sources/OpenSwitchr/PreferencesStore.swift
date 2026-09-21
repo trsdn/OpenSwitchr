@@ -19,6 +19,7 @@ public final class PreferencesStore {
         static let tileWidth = "tileWidth"
         static let showCloseButton = "showCloseButton"
         static let tilePreference = "tilePreference"
+        static let switcherPreviewLimit = "switcherPreviewLimit"
         static let appRules = "appRules"
         static let secondHotkeyEnabled = "secondHotkeyEnabled"
         static let dockScrollCycling = "dockScrollCycling"
@@ -128,6 +129,11 @@ public final class PreferencesStore {
         didSet { defaults.set(thumbnailBudgetMB, forKey: Key.thumbnailBudgetMB) }
     }
 
+    /// Past this many windows the switcher draws icons instead of previews.
+    public var switcherPreviewLimit: Int {
+        didSet { defaults.set(switcherPreviewLimit, forKey: Key.switcherPreviewLimit) }
+    }
+
     public var tileWidth: Double {
         didSet { defaults.set(tileWidth, forKey: Key.tileWidth) }
     }
@@ -212,6 +218,7 @@ public final class PreferencesStore {
             Key.tileWidth: 200.0,
             Key.showCloseButton: false,
             Key.tilePreference: Default.tilePreference.rawValue,
+            Key.switcherPreviewLimit: TileModePolicy.switcherWindowThreshold,
             Key.secondHotkeyEnabled: Default.secondHotkeyEnabled,
             Key.dockScrollCycling: Default.dockScrollCycling,
             Key.automaticUpdateChecks: Default.automaticUpdateChecks,
@@ -240,6 +247,8 @@ public final class PreferencesStore {
                 rawValue: defaults.string(forKey: Key.thumbnailRefreshRate) ?? ""
             ) ?? .default
         tileWidth = defaults.double(forKey: Key.tileWidth)
+        switcherPreviewLimit = TileModePolicy.clampedSwitcherPreviewLimit(
+            defaults.integer(forKey: Key.switcherPreviewLimit))
         showCloseButton = defaults.bool(forKey: Key.showCloseButton)
         fitTilesToWindowCount = defaults.bool(forKey: Key.fitTilesToWindowCount)
         appRules = AppRuleTable.decode(from: defaults.data(forKey: Key.appRules))
