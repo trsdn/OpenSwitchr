@@ -287,6 +287,13 @@ These are recorded because they took work, not because they were free.
   gesture on a pointer-native system surface, the Dock, and gives no window the
   keyboard cannot also reach. This is a pass, not a not-applicable: the criterion
   applies to this app and is met.
+- **`X01`/`X03` review** — on 2026-09-21 every surface was reviewed against the Apple Human
+  Interface Guidelines (`docs/hig-review.md`): rendered light, dark and High Contrast, read by an
+  independent reviewer, and each finding checked against the source. Seven were fixed, among them
+  VoiceOver access to the tile state and the close and quit actions (verified by reading the
+  rendered tiles' accessibility tree: one button per tile, with name, value and actions) and low
+  contrast of coloured text. What could not be checked is listed there, notably VoiceOver on a
+  live desktop.
 - **`X03`** — contrast, motion and colour. The panels honour Reduce Motion, Reduce
   Transparency and Increase Contrast through `AccessibilityAppearance` (pure, tested;
   with every setting off the panels draw exactly as before). Meaning never rests on

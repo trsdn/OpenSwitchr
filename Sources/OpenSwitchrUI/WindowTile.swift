@@ -93,7 +93,31 @@ public struct WindowTile: View {
             isPointerInside = hovering
             onHover(hovering)
         }
+        .accessibilityElement(children: .ignore)
         .accessibilityLabel(Text("\(window.appName): \(window.displayTitle)"))
+        .accessibilityValue(Text(window.isMinimized ? String(localized: "Minimized", table: "UI", bundle: .main) : ""))
+        .accessibilityHint(
+            Text(
+                window.isApplicationOnly
+                    ? String(
+                        localized:
+                            "No open windows: choosing this activates the application and asks it to open one",
+                        table: "UI", bundle: .main)
+                    : ""
+            )
+        )
+        .accessibilityAddTraits(.isButton)
+        .accessibilityAction(.default, onActivate)
+        // The close and quit controls only exist under the pointer, so the same
+        // actions are offered here for assistive technology and keyboard access.
+        .accessibilityActions {
+            if showsCloseButton, let onClose {
+                Button(String(localized: "Close window", table: "UI", bundle: .main), action: onClose)
+            }
+            if showsCloseButton, let onQuitApp {
+                Button(String(localized: "Quit \(window.appName)", table: "UI", bundle: .main), action: onQuitApp)
+            }
+        }
     }
 
     /// Only drawn while the pointer is on this tile. A permanent control would
@@ -209,6 +233,7 @@ public struct WindowTile: View {
                     .font(.system(size: 9))
                     .foregroundStyle(appearance.usesQuietMarks ? AnyShapeStyle(.tertiary) : AnyShapeStyle(.secondary))
                     .help(String(localized: "Minimized", table: "UI", bundle: .main))
+                    .accessibilityHidden(true)
             }
 
             if window.isApplicationOnly {
@@ -219,7 +244,9 @@ public struct WindowTile: View {
                         String(
                             localized:
                                 "No open windows: choosing this activates the application and asks it to open one",
-                            table: "UI", bundle: .main))
+                            table: "UI", bundle: .main)
+                    )
+                    .accessibilityHidden(true)
             }
         }
         .frame(width: thumbnailSize.width, alignment: .center)

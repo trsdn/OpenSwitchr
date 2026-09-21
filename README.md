@@ -389,8 +389,12 @@ What works, and what does not:
 
 - **The switcher is fully keyboard-driven.** Hold the modifier, `Tab` and
   `⇧-Tab` move the selection, typing filters, `Escape` cancels, releasing the
-  modifier commits. The selected tile carries a visible indicator, and tiles
-  expose an accessible name and role to VoiceOver, as does the menu bar item.
+  modifier commits. The selected tile carries a visible indicator. Each tile is a
+  single accessibility element: a button named "application: window title", with
+  its state ("Minimized", or a hint that choosing an application with no windows
+  opens one) and, when the close controls are enabled, "Close window" and "Quit
+  application" as actions, since the on-tile controls exist only under the pointer.
+  The menu bar item is named too.
 - **Meaning never rests on colour alone.** The quit control on a tile is red
   *and* a distinct glyph in the opposite corner from the close control; a
   minimized window is dimmed *and* explicitly marked.
@@ -398,8 +402,10 @@ What works, and what does not:
 Known limitations, stated rather than left implicit:
 
 - **Dock hover previews are pointer-only.** They are triggered by the pointer
-  entering a Dock icon, so there is no keyboard route to them. This is inherent
-  to the gesture; the switcher overlay reaches every window without a pointer.
+  entering a Dock icon, so the preview itself has no keyboard route. This is
+  inherent to the gesture; the same choice, among one application's windows, is
+  available by keyboard through the second hotkey, and the switcher overlay
+  reaches every window without a pointer.
 - **Text size does not follow a system setting, because macOS has none that
   reaches third-party apps.** The panels use fixed point sizes (11–12 pt). A
   render of Settings and the switcher with SwiftUI's largest text-size
@@ -416,7 +422,9 @@ Known limitations, stated rather than left implicit:
   paths were checked by tests and reading only, not by rendering.
 
 `openswitchr-diag` emits plain text with no colour and no Unicode decoration, so
-its output survives any pipe, log, or screen reader.
+its output survives any pipe, log, or screen reader. A review of every surface
+against Apple's Human Interface Guidelines, with what it found and what was
+fixed, is in [docs/hig-review.md](docs/hig-review.md).
 
 ## Support and maintenance
 
