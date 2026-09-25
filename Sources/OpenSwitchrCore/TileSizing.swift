@@ -19,8 +19,12 @@ public enum TileSizing {
     /// The granularity a width is snapped to.
     public static let step: CGFloat = 20
 
-    /// Below this a preview stops being identifiable; the answer is icon mode,
-    /// not a smaller image.
+    /// Below this a preview stops being identifiable, so it is where shrinking
+    /// stops. It is not where previews stop: a Space with more windows than fit
+    /// in `maxVisibleRows` at this width scrolls for the rest instead, because
+    /// the overlay's grid is already scrollable. Whether there are simply too
+    /// many windows to bother previewing at all is `TileModePolicy`'s call
+    /// (`switcherPreviewLimit`), not this floor's.
     public static let minimumPreviewWidth: CGFloat = 120
 
     /// How many rows the overlay shows before it scrolls.
@@ -35,26 +39,22 @@ public enum TileSizing {
         max(1, Int(((availableWidth - gridPadding) / (tileWidth + tileGutter)).rounded(.down)))
     }
 
-    public enum Fit: Equatable, Sendable {
-        case width(CGFloat)
-        /// Even the smallest legible tile would need more rows than the overlay
-        /// shows. The caller should use icon tiles instead.
-        case tooSmall
-    }
-
     /// The widest step, no wider than `configuredWidth`, at which `windowCount`
-    /// tiles fit in `maxVisibleRows` rows.
-    public static func fit(windowCount: Int, availableWidth: CGFloat, configuredWidth: CGFloat) -> Fit {
+    /// tiles fit in `maxVisibleRows` rows without scrolling; the floor
+    /// (`minimumPreviewWidth`) when even that width would need more rows, since
+    /// scrolling past `maxVisibleRows` is a scroll, not a reason to give up on
+    /// previews.
+    public static func fit(windowCount: Int, availableWidth: CGFloat, configuredWidth: CGFloat) -> CGFloat {
         let cap = max(minimumPreviewWidth, (configuredWidth / step).rounded(.down) * step)
-        guard windowCount > 0 else { return .width(cap) }
+        guard windowCount > 0 else { return cap }
 
         var width = cap
         while width >= minimumPreviewWidth {
             let columns = columns(availableWidth: availableWidth, tileWidth: width)
             let rows = (windowCount + columns - 1) / columns
-            if rows <= maxVisibleRows { return .width(width) }
+            if rows <= maxVisibleRows { return width }
             width -= step
         }
-        return .tooSmall
+        return minimumPreviewWidth
     }
 }

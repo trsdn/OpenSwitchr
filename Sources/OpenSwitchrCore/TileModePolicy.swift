@@ -39,10 +39,11 @@ public enum TileModePolicy {
 
     /// The switcher's default: past this many windows it draws icons. It is a
     /// setting (`PreferencesStore.switcherPreviewLimit`), because the right number
-    /// depends on the display: the legibility floor in `TileSizing` already stops
-    /// previews that would be too small to identify, so this only bounds the cost
-    /// of capturing a great many windows. It was 12 until a Space with 28 windows
-    /// on a large display lost its previews for no reason a user could see.
+    /// is a matter of taste, not legibility: `TileSizing` already shrinks tiles
+    /// to its own floor and lets the grid scroll for the rest, so this is the
+    /// only thing standing between a great many windows and a great many
+    /// captures. It was 12 until a Space with 28 windows on a large display lost
+    /// its previews for no reason a user could see.
     public static let switcherWindowThreshold = 30
 
     /// What the setting may be. Below the floor a preview list is barely a list, and

@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- The switcher still fell back to icons for a busy Space even under the new *Previews up to*
+  limit from 0.2.3, because a second, unrelated check — fitting every tile into three rows
+  without scrolling — forced icons on its own once a Space had about 28 windows, on any
+  display, regardless of the configured limit. Past that width and row ceiling, tiles now
+  shrink to their floor and the (already scrollable) switcher grid scrolls for the rest,
+  instead of giving up on previews. Only the *Previews up to* setting decides icons vs.
+  previews now.
+
 ## [0.2.3] - 2026-09-21
 
 ### Fixed

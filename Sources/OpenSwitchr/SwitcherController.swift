@@ -121,29 +121,19 @@ public final class SwitcherController {
 
         visibleWindows = baseWindows()
         previewWidth = preferences.tileWidth
-        var previewsAreLegible = true
         if preferences.fitTilesToWindowCount {
-            switch TileSizing.fit(
+            previewWidth = TileSizing.fit(
                 windowCount: visibleWindows.count,
                 availableWidth: Self.availableWidth(on: surfaceScreen),
                 configuredWidth: preferences.tileWidth
-            ) {
-            case .width(let width):
-                previewWidth = width
-            case .tooSmall:
-                previewsAreLegible = false
-            }
-        }
-        // Below the legible floor the answer is icons, not a smaller image.
-        tileMode =
-            previewsAreLegible
-            ? TileModePolicy.resolve(
-                preference: preferences.tilePreference,
-                screenRecordingGranted: CGPreflightScreenCaptureAccess(),
-                windowCount: visibleWindows.count,
-                threshold: preferences.switcherPreviewLimit
             )
-            : .icons
+        }
+        tileMode = TileModePolicy.resolve(
+            preference: preferences.tilePreference,
+            screenRecordingGranted: CGPreflightScreenCaptureAccess(),
+            windowCount: visibleWindows.count,
+            threshold: preferences.switcherPreviewLimit
+        )
 
         selectedIndex = SwitcherSelection.initialIndex(
             count: visibleWindows.count,
