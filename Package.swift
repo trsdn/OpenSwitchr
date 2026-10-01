@@ -11,7 +11,7 @@ let package = Package(
         // The one third-party dependency, for in-app updates from GitHub Releases.
         // Pinned exactly, with Package.resolved committed, so an update path that
         // downloads and installs code cannot drift underneath a release.
-        .package(url: "https://github.com/mxcl/AppUpdater.git", exact: "4.1.2")
+        .package(url: "https://github.com/mxcl/AppUpdater.git", exact: "4.2.0")
     ],
     targets: [
         .target(
